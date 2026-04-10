@@ -1,0 +1,291 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Bon de Retour de Prêt — {{ retour.code }}</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10.5pt;
+      line-height: 1.4;
+      color: #000;
+    }
+
+    .document { width: 100%; }
+
+    /* ── En-tête ── */
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 5px;
+    }
+    .header-table td {
+      width: 33.33%;
+      vertical-align: top;
+      padding: 3px 4px;
+      font-size: 9.5pt;
+    }
+    .h-center { text-align: center; border: 1px solid #000; padding: 5px 6px; }
+    .h-right  { text-align: right; font-size: 9pt; }
+
+    /* ── Réf. prêt ── */
+    .ref-bar {
+      border: 1px solid #000;
+      padding: 3px 7px;
+      font-size: 9pt;
+      margin-bottom: 4px;
+      background: #f9f9f9;
+    }
+
+    /* ── Tableau principal ── */
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+    }
+    .main-table th, .main-table td {
+      border: 1px solid #000;
+      padding: 3px 5px;
+      vertical-align: middle;
+    }
+    .main-table th {
+      font-weight: bold;
+      text-align: center;
+      font-size: 9pt;
+    }
+    .main-table td { vertical-align: top; }
+    .th-group {
+      font-weight: bold;
+      text-align: center;
+      text-decoration: underline;
+    }
+    .td-center { text-align: center; }
+    .td-num    { text-align: right; }
+    .solde-ok  { color: #166534; font-weight: bold; }
+    .solde-rest { color: #c05500; font-weight: bold; }
+    .empty-row { height: 22px; }
+    .empty-row td { padding: 0 5px; }
+
+    /* ── Section basse ── */
+    .bottom-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-top: 1px solid #000;
+      font-size: 8.5pt;
+      line-height: 1.5;
+    }
+    .bottom-table td {
+      border: 1px solid #000;
+      padding: 5px 6px;
+      vertical-align: top;
+      width: 33.33%;
+    }
+    .bottom-title {
+      font-weight: bold;
+      text-decoration: underline;
+      text-align: center;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .sig-area {
+      margin-top: 20px;
+      border-top: 1px solid #000;
+      padding-top: 2px;
+      font-size: 8pt;
+      text-align: center;
+    }
+    .dash { border-bottom: 1px solid #000; display: inline-block; min-width: 60px; }
+    .obs-block {
+      border: 1px solid #ccc;
+      padding: 4px 6px;
+      margin-top: 6px;
+      font-size: 9pt;
+      min-height: 20px;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+<div class="document">
+
+  <!-- ── En-tête ── -->
+  <table class="header-table">
+    <tr>
+      <td>
+        <strong>REPUBLIQUE DU SENEGAL</strong><br>
+        ——————————————<br>
+        MINISTERE ————————————<br>
+        SERVICE OU ETABLISSEMENT<br>
+        ——————————————
+      </td>
+      <td class="h-center">
+        <strong>BON DE RETOUR DE PRÊT</strong><br>
+        <strong>N°<span class="dash" style="min-width:120px;">&nbsp;</span></strong><br>
+        <small style="font-size:8.5pt;">Réf. : {{ retour.code }}</small>
+      </td>
+      <td class="h-right">
+        (Restitution de sortie provisoire)<br>
+        Art 12a, 12c, 19a<br><br>
+        Dakar, le {{ retour.date_retour|date:"d/m/Y" }}<br>
+        <strong>Dépôt : {{ retour.pret.depot.nom|default:"—" }}</strong>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Référence prêt d'origine -->
+  <div class="ref-bar">
+    <strong>Bon de prêt d'origine :</strong> {{ retour.pret.code }}
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>Date du prêt :</strong> {{ retour.pret.date_pret|date:"d/m/Y"|default:"—" }}
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>Service bénéficiaire :</strong> {{ retour.pret.service.libelle|default:"—" }}
+    {% if retour.numero_piece %}
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    <strong>N° pièce :</strong> {{ retour.numero_piece }}
+    {% endif %}
+  </div>
+
+  <!-- ── Tableau des matières retournées ── -->
+  <table class="main-table">
+    <thead>
+      <!-- Ligne 1 : groupes -->
+      <tr>
+        <th colspan="3" class="th-group">DESIGNATION DES MATIERES</th>
+        <th rowspan="2" style="width:9%;">Qté<br>prêtée</th>
+        <th rowspan="2" style="width:9%;">Qté<br>retournée<br>ce jour</th>
+        <th rowspan="2" style="width:9%;">Solde<br>restant<br>dû</th>
+        <th rowspan="2" style="width:7%;">Unité</th>
+        <th rowspan="2" style="width:20%;">État du bien /<br>Observations</th>
+      </tr>
+      <!-- Ligne 2 : sous-colonnes DESIGNATION -->
+      <tr>
+        <th style="width:9%;">N° compte<br>nomenclature</th>
+        <th style="width:22%;">NATURE DES MATIERES</th>
+        <th style="width:13%;">Spécification</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ligne in lignes %}
+      <tr>
+        <td class="td-center">{{ ligne.matiere.sous_compte.code|default:"—" }}</td>
+        <td>{{ ligne.matiere.designation }}</td>
+        <td class="td-center">{{ ligne.matiere.code_court }}</td>
+        <td class="td-num">{{ ligne.qte_pretee }}</td>
+        <td class="td-num td-center" style="font-weight:bold;">{{ ligne.quantite }}</td>
+        <td class="td-num {% if ligne.solde_restant == 0 %}solde-ok{% else %}solde-rest{% endif %}">
+          {{ ligne.solde_restant }}
+        </td>
+        <td class="td-center">{{ ligne.matiere.unite.symbole|default:"u" }}</td>
+        <td>{{ ligne.observation|default:"" }}</td>
+      </tr>
+      {% empty %}
+      {% for i in "xxxxxxxx" %}
+      <tr class="empty-row">
+        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        <td>&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+      {% for i in empty_rows %}
+      <tr class="empty-row">
+        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        <td>&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="4" class="td-center" style="font-weight:bold;border-top:2px solid #000;">TOTAL RESTITUÉ</td>
+        <td class="td-num" style="font-weight:bold;border-top:2px solid #000;">{{ retour.total_qte }}</td>
+        <td style="border-top:2px solid #000;">&nbsp;</td>
+        <td style="border-top:2px solid #000;">&nbsp;</td>
+        <td style="border-top:2px solid #000;">&nbsp;</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Statut clôture du prêt -->
+  <div style="border:1px solid #000;padding:3px 8px;font-size:9pt;margin-top:4px;background:#f9f9f9;">
+    <strong>Statut du prêt d'origine :</strong>
+    {% if pret_clos %}
+      <span style="color:#166534;font-weight:bold;">✅ Prêt entièrement soldé — toutes les matières ont été restituées</span>
+    {% else %}
+      <span style="color:#c05500;font-weight:bold;">🔄 Prêt partiellement soldé — des matières sont encore en attente de retour</span>
+    {% endif %}
+  </div>
+
+  {% if retour.commentaire %}
+  <div style="margin-top:4px;font-size:9pt;">
+    <strong>Observations :</strong>
+    <div class="obs-block">{{ retour.commentaire }}</div>
+  </div>
+  {% endif %}
+
+  <!-- ── Section basse 3 colonnes ── -->
+  <table class="bottom-table" style="margin-top:8px;">
+    <tr>
+      <!-- 1. RESTITUTION -->
+      <td>
+        <span class="bottom-title">RESTITUTION (Déposant)</span>
+        Je soussigné<br>
+        <span class="dash" style="min-width:90%;">&nbsp;</span><br>
+        Certifie avoir restitué les matières<br>
+        portées au présent bon dans l'état<br>
+        décrit ci-dessus.
+        <div class="sig-area">
+          A —— le ——<br>
+          <strong>Le bénéficiaire du prêt</strong><br>
+          (Nom, qualité &amp; signature)
+        </div>
+      </td>
+
+      <!-- 2. RECEPTION / VERIFICATION -->
+      <td>
+        <span class="bottom-title">RÉCEPTION &amp; VÉRIFICATION</span>
+        Le comptable des matières soussigné,<br>
+        certifie avoir réceptionné les matières<br>
+        portées au présent bon et vérifié leur<br>
+        conformité avec le prêt d'origine<br>
+        <strong>Réf. {{ retour.pret.code }}</strong>
+        <div class="sig-area">
+          A —— le ——<br>
+          <strong>Le Comptable des matières</strong><br>
+          (Timbre &amp; signature)
+        </div>
+      </td>
+
+      <!-- 3. VISA ADMINISTRATEUR -->
+      <td>
+        <span class="bottom-title">VISA DE L'ADMINISTRATEUR</span>
+        <span style="font-size:8pt;">
+          Le présent retour clôture {% if pret_clos %}intégralement{% else %}partiellement{% endif %}
+          le bon de sortie provisoire<br>
+          <strong>N° {{ retour.pret.code }}</strong><br>
+          du {{ retour.pret.date_pret|date:"d/m/Y"|default:"—" }}.
+        </span>
+        <div class="sig-area">
+          A —— le ——<br>
+          <strong>L'Administrateur des matières</strong><br>
+          (Timbre &amp; signature)
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div style="font-size:7.5pt;margin-top:6px;color:#444;">
+    <strong>Bon à établir en 03 exemplaires</strong> — (1) Administrateur des matières (2) Service bénéficiaire (3) Comptable des matières
+  </div>
+
+</div>
+</body>
+</html>

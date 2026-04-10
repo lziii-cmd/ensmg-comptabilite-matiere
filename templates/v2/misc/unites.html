@@ -1,0 +1,32 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Unités de mesure — ENSMG{% endblock %}
+{% block page_title_short %}Unités{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Unités de mesure</span>
+{% endblock %}
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Unités de mesure</div><div class="ph-sub">Référentiel des unités</div></div>
+    <div class="ph-right"><a href="{% url 'admin:catalog_unite_add' %}" class="btn btn-p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Ajouter</a></div>
+  </div>
+  <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Symbole</th><th>Libellé</th><th>Nb matières</th></tr></thead>
+        <tbody>
+          {% for unite in unites %}
+          <tr>
+            <td><span class="mono txt-a">{{ unite.symbole|default:unite.code }}</span></td>
+            <td style="color:var(--t1);font-weight:500">{{ unite.libelle }}</td>
+            <td class="mono">{{ unite.matieres.count }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3"><div class="empty-state"><div class="empty-state-text">Aucune unité de mesure configurée</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

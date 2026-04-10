@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Grand Livre des Comptes Complet — {{ exercice.code }}</title>
+<style>
+@page { size: A4 landscape; margin: 1.5cm 1.5cm 1.8cm 1.5cm; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Times New Roman", Times, serif; font-size: 9pt; color: #000; line-height: 1.35; }
+
+/* ── En-tête global (première page) ── */
+.entete { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.entete td { vertical-align: top; padding: 0; }
+.col-gauche { width: 30%; padding-right: 4px; }
+.col-gauche .rep { font-weight: bold; font-size: 9.5pt; text-transform: uppercase; }
+.col-gauche .art { font-size: 8.5pt; margin-top: 1px; }
+.col-gauche hr { border: none; border-top: 1px solid #000; margin: 4px 0; }
+.col-gauche .ministere { font-size: 8.5pt; border-bottom: 1px dotted #000; padding-bottom: 1px; margin-bottom: 3px; }
+.col-gauche .service { font-size: 8.5pt; }
+.col-centre { width: 40%; text-align: center; padding: 0 6px; }
+.col-centre .titre-principal { font-size: 14pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; letter-spacing: 1px; line-height: 1.2; }
+.col-centre .sous-titre { font-size: 8pt; font-style: italic; margin-top: 3px; }
+.col-droite { width: 30%; padding-left: 4px; }
+.col-droite .modele-ref { text-align: right; font-size: 8.5pt; font-weight: bold; margin-bottom: 4px; }
+.col-droite .info-ligne { font-size: 8.5pt; border-bottom: 1px dotted #000; padding: 2px 0; margin-bottom: 3px; }
+.col-droite .info-val { font-weight: bold; font-size: 8pt; }
+.sep-double { border: none; border-top: 3px double #000; margin: 5px 0 4px 0; }
+
+/* ── Titre de section (par sous-compte) ── */
+.section-header {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  margin-bottom: 2px;
+}
+.section-header td { vertical-align: middle; padding: 0; }
+.sh-gauche { width: 30%; padding-right: 4px; }
+.sh-gauche .rep { font-weight: bold; font-size: 8pt; text-transform: uppercase; }
+.sh-gauche .art { font-size: 7.5pt; }
+.sh-gauche hr { border: none; border-top: 1px solid #000; margin: 2px 0; }
+.sh-gauche .ministere { font-size: 7.5pt; border-bottom: 1px dotted #000; padding-bottom: 1px; }
+.sh-gauche .service { font-size: 7.5pt; }
+.sh-centre { width: 40%; text-align: center; padding: 0 4px; }
+.sh-centre .titre { font-size: 11pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; }
+.sh-droite { width: 30%; padding-left: 4px; }
+.sh-droite .modele-ref { text-align: right; font-size: 7.5pt; font-weight: bold; margin-bottom: 3px; }
+.sh-droite .info-ligne { font-size: 7.5pt; border-bottom: 1px dotted #000; padding: 1px 0; margin-bottom: 2px; }
+.sh-droite .info-val { font-weight: bold; font-size: 7pt; }
+.sh-sep { border: none; border-top: 2px solid #000; margin: 3px 0 3px 0; }
+
+/* ── Tableau GL — Modèle N°7 exact (1 seule ligne d'entête) ── */
+table.gl7 { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+table.gl7 thead th {
+  border: 1px solid #000;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  padding: 3px 2px;
+  font-size: 6.5pt;
+  line-height: 1.25;
+  background: #fff;
+}
+table.gl7 tbody td { border: 1px solid #000; padding: 3px 3px; vertical-align: middle; height: 18px; }
+table.gl7 tbody td.num  { text-align: right; font-variant-numeric: tabular-nums; }
+table.gl7 tbody td.ctr  { text-align: center; }
+table.gl7 tbody td.lib  { text-align: left; }
+table.gl7 tbody tr.row-si td { font-style: italic; }
+table.gl7 tfoot tr.row-total td { border: 1px solid #000; border-top: 2px solid #000; font-weight: bold; padding: 3px 3px; }
+table.gl7 tfoot tr.row-total td.num { text-align: right; }
+table.gl7 tfoot tr.row-total td.lbl { text-align: right; padding-right: 6px; font-weight: bold; }
+
+.c-date { width: 50px; }
+.c-bon  { width: 46px; }
+.c-lib  { }
+.c-ent  { width: 50px; }
+.c-sor  { width: 50px; }
+.c-pu   { width: 64px; }
+.c-exist{ width: 50px; }
+.c-mont { width: 72px; }
+.c-prov { width: 50px; }
+.c-ret  { width: 58px; }
+
+.page-break { page-break-before: always; }
+
+.pied { margin-top: 8px; text-align: center; font-size: 6.5pt; color: #444; border-top: 1px solid #999; padding-top: 3px; }
+
+@media screen {
+  body { background: #d1d5db; padding: 20px; }
+  .page-wrap { background: #fff; max-width: 1060px; margin: 0 auto; padding: 1.5cm 1.5cm 1.8cm 1.5cm; box-shadow: 0 4px 28px rgba(0,0,0,.20); border-radius: 3px; }
+}
+@media print {
+  .page-wrap { padding: 0; }
+  .no-print  { display: none !important; }
+  body { font-size: 8pt !important; }
+  table.gl7 { font-size: 6.5pt !important; }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<div class="no-print" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+  <a href="/documents/grand-livre-comptes/"
+    style="color:#1e3a5f;text-decoration:none;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;">
+    <span style="font-size:18px;">←</span> Retour à la liste
+  </a>
+  <button onclick="window.print()" style="background:#1e3a5f;color:#fff;border:none;border-radius:5px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;">
+    🖨 Imprimer / PDF
+  </button>
+</div>
+
+{# ════ EN-TÊTE PRINCIPAL ════ #}
+<table class="entete">
+  <tr>
+    <td class="col-gauche">
+      <div class="rep">République du Sénégal</div>
+      <div class="art">Un Peuple – Un But – Une Foi</div>
+      <hr>
+      <div class="ministere">Ministère de l'Éducation</div>
+      <div class="service">École normale supérieure des mines et de la géologie</div>
+    </td>
+    <td class="col-centre">
+      <div class="titre-principal">Grand Livre des Comptes</div>
+      <div class="sous-titre">Document complet — tous sous-comptes</div>
+    </td>
+    <td class="col-droite">
+      <div class="modele-ref">Modèle N° 7 — Art. 18a</div>
+      <div class="info-ligne">Exercice :&nbsp;<span class="info-val">{{ exercice_label }}</span></div>
+      <div class="info-ligne">Date d'édition :&nbsp;<span class="info-val">{{ date_doc|date:"d/m/Y" }}</span></div>
+    </td>
+  </tr>
+</table>
+<hr class="sep-double">
+
+{# ════ SECTIONS PAR SOUS-COMPTE ════ #}
+{% for s in sections %}
+{% if not forloop.first %}<div class="page-break"></div>{% endif %}
+
+{# En-tête de section (Modèle N°7 compact) #}
+<table class="section-header">
+  <tr>
+    <td class="sh-gauche">
+      <div class="rep">République du Sénégal</div>
+      <div class="art">Un Peuple – Un But – Une Foi</div>
+      <hr>
+      <div class="ministere">Ministère de l'Éducation</div>
+      <div class="service">École normale supérieure des mines et de la géologie</div>
+    </td>
+    <td class="sh-centre">
+      <div class="titre">Grand Livre des Comptes</div>
+    </td>
+    <td class="sh-droite">
+      <div class="modele-ref">Modèle N° 7 — Art. 18a</div>
+      <div class="info-ligne">Compte N° :&nbsp;<span class="info-val">{{ s.sc.code }}</span></div>
+      <div class="info-ligne">Intitulé :&nbsp;<span class="info-val">{{ s.sc.libelle }}</span></div>
+      <div class="info-ligne">Exercice :&nbsp;<span class="info-val">{{ exercice_label }}</span></div>
+    </td>
+  </tr>
+</table>
+<hr class="sh-sep">
+
+{# Tableau GL — 10 colonnes, 1 seule ligne d'en-tête #}
+<table class="gl7">
+  <thead>
+    <tr>
+      <th class="c-date">Date</th>
+      <th class="c-bon">N°&nbsp;Bon</th>
+      <th class="c-lib">Origine des entrées et destinations des sorties</th>
+      <th class="c-ent">Entrées</th>
+      <th class="c-sor">Sorties<br>définitives</th>
+      <th class="c-pu">Prix<br>unitaire<br>(F&nbsp;CFA)</th>
+      <th class="c-exist">Existant</th>
+      <th class="c-mont">Montant de<br>l'existant<br>(F&nbsp;CFA)</th>
+      <th class="c-prov">Pour mémoire<br>sorties<br>provisoires</th>
+      <th class="c-ret">Date de retour<br>des matières<br>sorties prov.</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="row-si">
+      <td class="ctr c-date">{{ s.si_date|date:"d/m/Y" }}</td>
+      <td class="ctr c-bon">SI</td>
+      <td class="lib c-lib">Balance d'entrée</td>
+      <td class="num c-ent">{% if s.si_qte %}{{ s.si_qte|floatformat:"-2" }}{% endif %}</td>
+      <td class="ctr c-sor"></td>
+      <td class="num c-pu">{% if s.si_pu %}{{ s.si_pu|floatformat:"-2" }}{% endif %}</td>
+      <td class="num c-exist">{{ s.si_qte|floatformat:"-2" }}</td>
+      <td class="num c-mont">{{ s.si_val|floatformat:"-2" }}</td>
+      <td class="ctr c-prov"></td>
+      <td class="ctr c-ret"></td>
+    </tr>
+    {% for l in s.lignes %}{% if not l.is_initial %}
+    <tr>
+      <td class="ctr c-date">{{ l.date|date:"d/m/Y" }}</td>
+      <td class="ctr c-bon">{{ l.piece }}</td>
+      <td class="lib c-lib">{{ l.libelle }}</td>
+      <td class="num c-ent">{% if l.ent_qte is not None %}{{ l.ent_qte|floatformat:"-2" }}{% endif %}</td>
+      <td class="num c-sor">{% if l.sor_def_qte is not None %}{{ l.sor_def_qte|floatformat:"-2" }}{% endif %}</td>
+      <td class="num c-pu">{{ l.ex_cump|floatformat:"-2" }}</td>
+      <td class="num c-exist">{{ l.ex_qte|floatformat:"-2" }}</td>
+      <td class="num c-mont">{{ l.ex_val|floatformat:"-2" }}</td>
+      <td class="num c-prov">{% if l.sor_prov_qte is not None %}{{ l.sor_prov_qte|floatformat:"-2" }}{% endif %}</td>
+      <td class="ctr c-ret">{% if l.date_retour %}{{ l.date_retour|date:"d/m/Y" }}{% endif %}</td>
+    </tr>
+    {% endif %}{% endfor %}
+    {% if not s.lignes %}
+    <tr><td colspan="10" class="ctr" style="padding:10px;font-style:italic;color:#666;">Aucun mouvement pour ce compte.</td></tr>
+    {% endif %}
+  </tbody>
+  <tfoot>
+    <tr class="row-total">
+      <td colspan="3" class="lbl">TOTAL</td>
+      <td class="num">{{ s.total_ent_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ s.total_sor_def_qte|floatformat:"-2" }}</td>
+      <td></td>
+      <td class="num">{{ s.solde_final_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ s.solde_final_val|floatformat:"-2" }}</td>
+      <td class="num">{{ s.total_sor_prov_qte|floatformat:"-2" }}</td>
+      <td></td>
+    </tr>
+  </tfoot>
+</table>
+{% empty %}
+<p style="text-align:center;font-style:italic;padding:30px;color:#777;">Aucune matière pour cet exercice.</p>
+{% endfor %}
+
+<div class="pied">
+  Grand Livre des Comptes Complet — École normale supérieure des mines et de la géologie &nbsp;|&nbsp; Exercice {{ exercice.annee }} &nbsp;|&nbsp; Édité le {{ date_doc|date:"d/m/Y" }}
+</div>
+</div>
+</body>
+</html>

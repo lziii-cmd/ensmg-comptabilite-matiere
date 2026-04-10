@@ -1,0 +1,79 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}{{ achat.code }} — Achat{% endblock %}
+{% block page_title_short %}{{ achat.code }}{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span>
+<a href="{% url 'frontend:achats' %}">Achats</a><span class="bread-sep">›</span>
+<span class="bread-cur">{{ achat.code }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="detail-hero au">
+    <div class="detail-hero-left">
+      <div class="detail-hero-bread">🏠 <a href="{% url 'frontend:dashboard' %}">Accueil</a> › <a href="{% url 'frontend:achats' %}">Achats</a> › {{ achat.code }}</div>
+      <div class="detail-hero-title">Achat <span class="code-badge">{{ achat.code }}</span></div>
+      <div class="detail-hero-actions">
+        <a href="{% url 'frontend:achats' %}" class="btn btn-o btn-sm">← Liste</a>
+        <a href="{% url 'admin:purchasing_achat_add' %}" class="btn btn-p btn-sm">+ Ajouter Achat</a>
+        <a href="{% url 'documents:pvr_achat' achat.pk %}" class="btn btn-save btn-sm" target="_blank">📄 PVR</a>
+        <a href="{% url 'documents:bon_entree_achat' achat.pk %}" class="btn btn-amber btn-sm" target="_blank">📋 BE</a>
+        <a href="{% url 'admin:purchasing_achat_change' achat.pk %}" class="btn btn-o btn-sm">✏ Modifier</a>
+        <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cet achat ?')">🗑 Supprimer</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section au d1">
+    <div class="info-section-head blue">Informations générales</div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-lbl">Référence</div><div class="info-cell-val mono accent">{{ achat.code }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Fournisseur</div><div class="info-cell-val">{{ achat.fournisseur.raison_sociale|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Date d'achat</div><div class="info-cell-val">{{ achat.date_achat|date:"d/m/Y" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Dépôt de réception</div><div class="info-cell-val">{{ achat.depot|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">N° Pièce / Facture</div><div class="info-cell-val txt-m">{{ achat.numero_facture|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">TVA active</div><div class="info-cell-val"><span class="{% if achat.tva_active %}txt-g{% else %}txt-m{% endif %}">{% if achat.tva_active %}✓ Oui{% else %}✕ Non{% endif %}</span></div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Total HT</div><div class="info-cell-val mono">{{ achat.total_ht|floatformat:0 }} F CFA</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Montant TVA</div><div class="info-cell-val mono">{{ achat.montant_tva|floatformat:0 }} F CFA</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Total TTC</div><div class="info-cell-val mono accent">{{ achat.total_ttc|floatformat:0 }} F CFA</div></div>
+    </div>
+  </div>
+
+  {% if achat.commentaire %}
+  <div class="info-section au d2">
+    <div class="info-section-head blue">Commentaire</div>
+    <div style="padding:14px 16px;background:var(--surface)">
+      <div style="font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Observations / Commentaire</div>
+      <div style="font-size:13px;color:var(--t1)">{{ achat.commentaire }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="info-section au d3">
+    <div class="info-section-head green">Lignes d'achat</div>
+    <table>
+      <thead><tr><th>Désignation</th><th style="text-align:right">Quantité</th><th style="text-align:right">PU HT</th><th style="text-align:right">TVA</th><th style="text-align:right">Total HT</th></tr></thead>
+      <tbody>
+        {% for ligne in lignes %}
+        <tr class="tr-click">
+          <td><span class="txt-a">{{ ligne.matiere.code_court }} — {{ ligne.matiere.designation }}</span></td>
+          <td class="mono" style="text-align:right">{{ ligne.quantite }}</td>
+          <td class="mono" style="text-align:right">{{ ligne.prix_unitaire_ht|floatformat:0 }} F CFA</td>
+          <td class="mono" style="text-align:right">{{ ligne.montant_tva|floatformat:0 }} F CFA</td>
+          <td class="mono" style="text-align:right;color:var(--green)">{{ ligne.total_ht|floatformat:0 }} F CFA</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty-state"><div class="empty-state-text">Aucune ligne</div></div></td></tr>
+        {% endfor %}
+        {% if lignes %}
+        <tr style="background:var(--surface2);border-top:2px solid var(--border)">
+          <td colspan="3" style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent)">TOTAL VALEUR HT</td>
+          <td class="mono" style="text-align:right;color:var(--t3)">{{ achat.montant_tva|floatformat:0 }} F CFA</td>
+          <td class="mono" style="text-align:right;color:var(--green);font-weight:700;font-size:13px">{{ achat.total_ht|floatformat:0 }} F CFA</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

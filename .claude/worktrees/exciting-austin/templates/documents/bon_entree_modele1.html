@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Bon d'Entrée — {{ numero_bon }}</title>
+<style>
+  @page { size: A4 landscape; margin: 1cm 1.5cm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 9.5pt; color: #000; }
+  
+  .responsable { font-size: 8.5pt; border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 6px; }
+  .responsable u { font-weight: bold; }
+  
+  .header-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  .header-table td { padding: 1px 4px; vertical-align: top; }
+  .header-table .col-left { width: 38%; }
+  .header-table .col-center { width: 30%; text-align: center; font-weight: bold; }
+  .header-table .col-right { width: 32%; text-align: right; font-size: 8.5pt; }
+  
+  .source-bar { background: #f0f0f0; border: 1px solid #999; padding: 4px 8px; margin-bottom: 6px; font-size: 8.5pt; }
+  
+  .main-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  .main-table th, .main-table td { border: 1px solid #000; padding: 2px 4px; vertical-align: middle; }
+  .main-table th { background: #fff; text-align: center; font-weight: bold; font-size: 8pt; }
+  .main-table .num { text-align: right; }
+  .main-table .data-row td { height: 18px; }
+  .main-table .totaux td { font-weight: bold; background: #f5f5f5; }
+  .main-table .compte-col { width: 10%; }
+  .main-table .nature-col { width: 14%; }
+  .main-table .spec-col { width: 18%; }
+  .main-table .qte-col { width: 7%; text-align: right; }
+  .main-table .unite-col { width: 7%; text-align: center; }
+  .main-table .pu-col { width: 11%; text-align: right; }
+  .main-table .montant-col { width: 11%; text-align: right; }
+  .main-table .bc-col { width: 11%; }
+  .main-table .obs-col { width: 11%; }
+  
+  .footer-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 8pt; }
+  .footer-table td { border: 1px solid #000; padding: 5px 7px; vertical-align: top; width: 33.33%; }
+  .footer-table .footer-title { font-weight: bold; text-decoration: underline; text-align: center; display: block; margin-bottom: 5px; }
+  .footer-table .sig-zone { margin-top: 30px; border-top: 1px solid #555; padding-top: 3px; font-size: 7.5pt; }
+  
+  .hdr-line { display: table; padding: 2px 0; }
+  .hdr-line::after { content: ''; display: block; border-bottom: 1px solid #000; margin-top: 3px; }
+
+  @media print {
+    .no-print { display: none; }
+    body { font-size: 9pt; }
+    @page { size: A4 landscape; margin: 1cm 1.5cm; }
+  }
+  @media screen {
+    body { background: #e5e5e5; padding: 20px; }
+    .page-wrap { background: white; max-width: 34cm; margin: auto; padding: 1.5cm; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .no-print { text-align: right; margin-bottom: 12px; display: flex; gap: 10px; justify-content: flex-end; }
+    .no-print button { border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+    .btn-print { background: #1e3a5f; color: white; }
+    .btn-pdf   { background: #166534; color: white; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<div class="no-print">
+  <button class="btn-pdf"   onclick="window.print()">💾 Enregistrer PDF</button>
+  <button class="btn-print" onclick="window.print()">🖨 Imprimer</button>
+</div>
+
+<!-- Responsable -->
+<p class="responsable"><u><strong>Responsable :</strong></u> Le bon d'entrée est établi par les soins de l'administrateur des matières</p>
+
+<!-- En-tête officiel -->
+<table class="header-table">
+  <tr>
+    <td class="col-left" style="font-size:9pt; text-transform:uppercase; font-weight:bold; vertical-align:middle;">
+      <div class="hdr-line">REPUBLIQUE DU SENEGAL</div>
+      <div class="hdr-line">MINISTERE DE L'EDUCATION</div>
+      <div style="padding:2px 0;">ECOLE NORMALE SUPERIEURE DES MINES ET DE LA GEOLOGIE</div>
+    </td>
+    <td class="col-center" style="font-size:11pt; white-space:nowrap;"><strong>BON D'ENTREE DANS L'EXISTANT</strong></td>
+    <td class="col-right">Modèle n° 1<br>Instruction générale<br>Art 12a, 12c, 19a</td>
+  </tr>
+  <tr>
+    <td class="col-left"></td>
+    <td class="col-center">N°— {{ numero_bon }}</td>
+    <td class="col-right"><strong>Année financière {{ annee }}</strong></td>
+  </tr>
+  <tr>
+    <td class="col-left"></td>
+    <td class="col-center"></td>
+    <td class="col-right">Chapitre</td>
+  </tr>
+  <tr>
+    <td class="col-left"></td>
+    <td class="col-center"></td>
+    <td class="col-right">N° du bon d'engagement : {{ reference|default:"—" }}</td>
+  </tr>
+</table>
+
+<!-- Bande source -->
+<div class="source-bar">
+  <strong>Type :</strong> {{ type_entree }} &nbsp;|&nbsp;
+  <strong>Source :</strong> {{ source_label }} &nbsp;|&nbsp;
+  <strong>Dépôt :</strong> {{ depot|default:"—" }} &nbsp;|&nbsp;
+  <strong>Date :</strong> {{ date_doc }}
+</div>
+
+<!-- Tableau principal -->
+<table class="main-table">
+  <thead>
+    <tr>
+      <th class="compte-col" rowspan="2">N°Compte<br>de nomenclature<br>(2)</th>
+      <th colspan="2">DESIGNATION DES MATIERES</th>
+      <th colspan="2">QUANTITE</th>
+      <th colspan="2">CHIFFRES A COMPTABILISER</th>
+      <th class="bc-col" rowspan="2">N° du bon<br>de commande</th>
+      <th class="obs-col" rowspan="2">Observations</th>
+    </tr>
+    <tr>
+      <th class="nature-col">Nature des Matières</th>
+      <th class="spec-col">Spécification (5)</th>
+      <th class="qte-col">Nombre<br>d'unités</th>
+      <th class="unite-col">Nature<br>des unités</th>
+      <th class="pu-col">Prix unitaire</th>
+      <th class="montant-col">Montant</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ligne in lignes %}
+    <tr class="data-row">
+      <td>{{ ligne.compte }}</td>
+      <td>{{ ligne.nature }}</td>
+      <td>{{ ligne.specification }}</td>
+      <td class="num">{{ ligne.nombre_unites }}</td>
+      <td style="text-align:center;">{{ ligne.nature_unites }}</td>
+      <td class="num">{{ ligne.prix_unitaire }}</td>
+      <td class="num">{{ ligne.montant }}</td>
+      <td>{{ ligne.num_bon_commande }}</td>
+      <td>{{ ligne.observations }}</td>
+    </tr>
+    {% empty %}
+    <tr class="data-row"><td colspan="9" style="text-align:center;color:#999;">Aucune ligne</td></tr>
+    {% endfor %}
+    <!-- Totaux -->
+    <tr class="totaux">
+      <td colspan="3" style="text-align:left;">Totaux</td>
+      <td class="num">{{ total_qte_str }}</td>
+      <td></td>
+      <td></td>
+      <td class="num">{{ total_montant_str }}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Pied de page -->
+<table class="footer-table">
+  <tr>
+    <td>
+      <span class="footer-title">CERTIFICATIONS</span>
+      Arrêté le présent bon à <strong>{{ total_qte_str }}</strong> unités<br>
+      Représentant une valeur de <strong>{{ total_montant_str }}</strong> francs<br>
+      dont je certifie l'entrée<br>
+      A<br>
+      L'Administrateur des matières (4)
+      <div class="sig-zone">Dakar, le {{ date_doc }}</div>
+    </td>
+    <td>
+      <span class="footer-title">AUGMENTATION DES PRISES EN CHARGE</span>
+      Le comptable des matières soussigné déclare ce jour,<br>
+      augmenter mes prises en charge de <strong>{{ total_qte_str }}</strong> unités<br>
+      représentant une valeur de <strong>{{ total_montant_str }}</strong> Francs<br>
+      <br>
+      Le comptable des matières (4)
+      <div class="sig-zone">Dakar, le {{ date_doc }}</div>
+    </td>
+    <td style="font-size:7.5pt;">
+      <span class="footer-title">EMPLOI DE L'IMPRIME</span>
+      (1) Numérotation ininterrompue pour la gestion<br>
+      (2) Dans l'ordre des articles décrits sur pièces justificatives ou dans l'ordre des comptes de la nomenclature<br>
+      (3) Litre, kg, mètre, nombre etc.<br>
+      (4) Timbre et signature<br>
+      (5) Marque, code etc.<br>
+      <br>
+      <strong>NB :</strong> Bon à établir en trois exemplaires dont 1 destiné aux archives du service
+    </td>
+  </tr>
+</table>
+
+</div>
+</body>
+</html>

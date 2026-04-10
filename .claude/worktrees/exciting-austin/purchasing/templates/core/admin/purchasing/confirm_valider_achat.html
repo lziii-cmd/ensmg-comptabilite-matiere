@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block content %}
+  <h1>{% trans "Validation des achats sélectionnés" %}</h1>
+  <p>{% trans "Vous êtes sur le point de valider les achats suivants. Cette action va générer un code pièce (ACH-YYYY-#####) et verrouiller les enregistrements." %}</p>
+
+  <ul>
+    {% for a in achats %}
+      <li>
+        {% if a.code %}<strong>{{ a.code }}</strong>{% else %}Achat brouillon #{{ a.id }}{% endif %}
+        — {{ a.date_achat }} — {{ a.fournisseur }} — {{ a.total_ttc }} FCFA
+      </li>
+    {% endfor %}
+  </ul>
+
+  <form method="post">{% csrf_token %}
+    {% for k,v in request.POST.items %}
+      {% if k != "csrfmiddlewaretoken" %}
+        <input type="hidden" name="{{ k|escape }}" value="{{ v|escape }}">
+      {% endif %}
+    {% endfor %}
+    <input type="hidden" name="confirm" value="1">
+    <div class="submit-row">
+      <input type="submit" class="default" value="{% trans "Confirmer la validation" %}">
+      <a href=".." class="deletelink">{% trans "Annuler" %}</a>
+    </div>
+  </form>
+{% endblock %}

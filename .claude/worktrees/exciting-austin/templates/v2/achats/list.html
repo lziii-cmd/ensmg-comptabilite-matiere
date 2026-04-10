@@ -1,0 +1,81 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Achats — ENSMG{% endblock %}
+{% block page_title_short %}Achats{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Achats</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Achats</div><div class="ph-sub">Liste et gestion des achats fournisseurs</div></div>
+    <div class="ph-right">
+      <button class="btn btn-o" onclick="window.print()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Exporter</button>
+      <a href="{% url 'admin:purchasing_achat_add' %}" class="btn btn-p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Ajouter</a>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="g4 au d1">
+    <div class="kpi">
+      <div class="kpi-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
+      <div><div class="kpi-v txt-a">{{ kpi_total }}</div><div class="kpi-l">Total achats</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      <div><div class="kpi-v txt-g">{{ kpi_tva }}</div><div class="kpi-l">TVA active</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+      <div><div class="kpi-v txt-am" style="font-size:15px">{{ kpi_total_ht|floatformat:0|default:"0" }}</div><div class="kpi-l">Total HT (F CFA)</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico r"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div>
+      <div><div class="kpi-v txt-r">{{ kpi_ce_mois }}</div><div class="kpi-l">Ce mois</div></div>
+    </div>
+  </div>
+
+  <div class="card au d2" style="flex:1;display:flex;flex-direction:column">
+    <div class="ch" style="flex-shrink:0">
+      <form method="get" style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap">
+        <div class="sb-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sb-inp" name="q" value="{{ q }}" placeholder="Référence, fournisseur…"></div>
+        <div class="chip-row">
+          <a href="?{% if q %}q={{ q }}{% endif %}" class="chip {% if not tva_filter %}on{% endif %}">Toutes dates</a>
+          <a href="?tva=1{% if q %}&q={{ q }}{% endif %}" class="chip {% if tva_filter %}on{% endif %}">TVA active</a>
+        </div>
+      </form>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th style="width:32px"><input type="checkbox" class="cb-box"></th><th>Référence</th><th>Fournisseur</th><th>Date</th><th>TVA</th><th style="text-align:right">Total HT</th><th style="text-align:right">Total TTC</th><th></th></tr></thead>
+        <tbody>
+          {% for achat in achats %}
+          <tr class="tr-click" onclick="location.href='{% url 'frontend:achat_detail' achat.pk %}'">
+            <td onclick="event.stopPropagation()"><input type="checkbox" class="cb-box"></td>
+            <td><span class="mono txt-a" style="font-size:10.5px">{{ achat.code }}</span></td>
+            <td><span style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0"></span><span style="color:var(--t1)">{{ achat.fournisseur.raison_sociale|default:"—" }}</span></span></td>
+            <td class="mono">{{ achat.date_achat|date:"d/m/Y" }}</td>
+            <td style="text-align:center"><span class="{% if achat.tva_active %}txt-g{% else %}txt-r{% endif %}" style="font-size:13px">{% if achat.tva_active %}✓{% else %}✕{% endif %}</span></td>
+            <td class="mono" style="text-align:right;color:var(--t1)">{{ achat.total_ht|floatformat:0 }}</td>
+            <td class="mono" style="text-align:right;color:var(--t1)">{{ achat.total_ttc|floatformat:0 }}</td>
+            <td><button class="btn btn-ghost" style="padding:3px 7px;font-size:11px" onclick="event.stopPropagation()">···</button></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8"><div class="empty-state"><div class="empty-state-text">Aucun achat trouvé</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj %}
+    <div class="pgr" style="flex-shrink:0">
+      <div class="pgr-info">Affichage <span>{{ page_obj.start_index }}</span>–<span>{{ page_obj.end_index }}</span> sur <span>{{ page_obj.paginator.count }}</span></div>
+      <div class="pgr-btns">
+        {% if page_obj.has_previous %}<a class="pgr-btn" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">‹</a>{% endif %}
+        {% for n in page_obj.paginator.page_range %}<a class="pgr-btn {% if n == page_obj.number %}act{% endif %}" href="?page={{ n }}{% if q %}&q={{ q }}{% endif %}">{{ n }}</a>{% endfor %}
+        {% if page_obj.has_next %}<a class="pgr-btn" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">›</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

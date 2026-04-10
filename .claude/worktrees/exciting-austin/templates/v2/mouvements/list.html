@@ -1,0 +1,57 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Mouvements — ENSMG{% endblock %}
+{% block page_title_short %}Mouvements{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Mouvements</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Mouvements de stock</div><div class="ph-sub">Historique de tous les mouvements</div></div>
+  </div>
+
+  <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+    <div class="ch">
+      <form method="get" style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap">
+        <div class="sb-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sb-inp" name="q" value="{{ q }}" placeholder="Référence, matière…"></div>
+        <div class="chip-row">
+          <a href="?{% if q %}q={{ q }}{% endif %}" class="chip {% if not type_filter %}on{% endif %}">Tous types</a>
+          <a href="?type=ENTREE{% if q %}&q={{ q }}{% endif %}" class="chip {% if type_filter == 'ENTREE' %}on{% endif %}">Entrées</a>
+          <a href="?type=SORTIE{% if q %}&q={{ q }}{% endif %}" class="chip {% if type_filter == 'SORTIE' %}on{% endif %}">Sorties</a>
+          <a href="?type=TRANSFERT{% if q %}&q={{ q }}{% endif %}" class="chip {% if type_filter == 'TRANSFERT' %}on{% endif %}">Transferts</a>
+        </div>
+      </form>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Matière</th><th>Dépôt</th><th style="text-align:right">Qté</th><th style="text-align:right">CUMP</th></tr></thead>
+        <tbody>
+          {% for mv in mouvements %}
+          <tr class="tr-click" onclick="location.href='{% url 'frontend:mouvement_detail' mv.pk %}'">
+            <td>{{ mv.date_mouvement|date:"d/m/Y" }}</td>
+            <td><span class="badge-solid {% if mv.type_mouvement == 'ENTREE' %}bg{% elif mv.type_mouvement == 'SORTIE' %}amber{% else %}blue{% endif %}">{{ mv.get_type_mouvement_display|default:mv.type_mouvement }}</span></td>
+            <td><span class="txt-a">{{ mv.matiere.code_court }}</span> — {{ mv.matiere.designation }}</td>
+            <td>{{ mv.depot.code|default:"—" }}</td>
+            <td class="mono" style="text-align:right">{{ mv.quantite }}</td>
+            <td class="mono" style="text-align:right">{{ mv.cump|floatformat:0|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">Aucun mouvement trouvé</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj %}
+    <div class="pgr" style="flex-shrink:0">
+      <div class="pgr-info">Affichage <span>{{ page_obj.start_index }}</span>–<span>{{ page_obj.end_index }}</span> sur <span>{{ page_obj.paginator.count }}</span></div>
+      <div class="pgr-btns">
+        {% if page_obj.has_previous %}<a class="pgr-btn" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">‹</a>{% endif %}
+        {% for n in page_obj.paginator.page_range %}<a class="pgr-btn {% if n == page_obj.number %}act{% endif %}" href="?page={{ n }}{% if q %}&q={{ q }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">{{ n }}</a>{% endfor %}
+        {% if page_obj.has_next %}<a class="pgr-btn" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">›</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

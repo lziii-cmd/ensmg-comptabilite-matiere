@@ -1,0 +1,43 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Paramètres — ENSMG{% endblock %}
+{% block page_title_short %}Paramètres{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Paramètres</span>
+{% endblock %}
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Paramètres</div><div class="ph-sub">Configuration du système ENSMG</div></div>
+  </div>
+  <div class="settings-grid au d1">
+    <div class="card" style="padding:10px">
+      <div class="settings-nav">
+        <div class="sn-item on">Général</div>
+        <div class="sn-item">Notifications</div>
+        <div class="sn-item">Sécurité</div>
+        <div class="sn-item">Exercice comptable</div>
+        <div class="sn-item">Dépôts</div>
+        <div class="sn-item">Apparence</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <div class="ch-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div><div class="ch-title">Paramètres généraux</div></div>
+      </div>
+      <div class="cb">
+        <div class="fgrid" style="gap:12px">
+          <div class="field"><div class="flbl">Nom de l'institution</div><input class="fi" value="École normale supérieure des mines et de la géologie" readonly></div>
+          <div class="field"><div class="flbl">Abréviation</div><input class="fi" value="ENSMG" readonly></div>
+          <div class="field"><div class="flbl">Devise</div><input class="fi" value="F CFA (XOF)" readonly></div>
+          <div class="field"><div class="flbl">Pays</div><input class="fi" value="Sénégal" readonly></div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:var(--rs);border:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--t2)">Pour modifier ces paramètres, accédez à l'interface d'administration.</div>
+          <a href="/admin/" class="btn btn-o btn-sm" style="margin-top:8px;display:inline-flex">Ouvrir l'administration</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

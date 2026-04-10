@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block titre_page %}Document — École normale supérieure des mines et de la géologie{% endblock %}</title>
+  <style>
+    /* ═══════════════════════════════════════
+       MISE EN PAGE GLOBALE
+    ═══════════════════════════════════════ */
+    @page {
+      size: A4;
+      margin: 2cm 2.5cm 2.5cm 2.5cm;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+      color: #000;
+      line-height: 1.4;
+    }
+
+    /* ═══════════════════════════════════════
+       EN-TÊTE OFFICIEL
+    ═══════════════════════════════════════ */
+    .entete {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .entete-gauche {
+      text-align: center;
+      width: 45%;
+      font-size: 9pt;
+      line-height: 1.6;
+    }
+
+    .entete-droite {
+      text-align: center;
+      width: 45%;
+      font-size: 9pt;
+      line-height: 1.6;
+    }
+
+    .entete .republique {
+      font-weight: bold;
+      font-size: 9.5pt;
+      text-transform: uppercase;
+    }
+
+    .entete .devise {
+      font-style: italic;
+      font-size: 8.5pt;
+    }
+
+    .entete .etablissement {
+      font-weight: bold;
+      font-size: 10pt;
+      text-transform: uppercase;
+    }
+
+    .entete .service {
+      font-size: 9pt;
+    }
+
+    /* Ligne de séparation */
+    .separateur {
+      border: none;
+      border-top: 2px solid #000;
+      margin: 8px 0 16px 0;
+    }
+
+    .separateur-leger {
+      border: none;
+      border-top: 1px solid #000;
+      margin: 10px 0;
+    }
+
+    /* ═══════════════════════════════════════
+       TITRE DU DOCUMENT
+    ═══════════════════════════════════════ */
+    .titre-document {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .titre-document h1 {
+      font-size: 14pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-decoration: underline;
+      margin-bottom: 4px;
+    }
+
+    .titre-document .numero {
+      font-size: 12pt;
+      font-weight: bold;
+    }
+
+    /* ═══════════════════════════════════════
+       BLOC D'INFORMATIONS (références)
+    ═══════════════════════════════════════ */
+    .infos-bloc {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-size: 10.5pt;
+    }
+
+    .infos-bloc .info-item {
+      display: flex;
+      gap: 6px;
+    }
+
+    .infos-bloc .label {
+      font-weight: bold;
+    }
+
+    /* ═══════════════════════════════════════
+       TABLEAUX
+    ═══════════════════════════════════════ */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10pt;
+      margin-bottom: 12px;
+    }
+
+    table th {
+      background-color: #d9d9d9;
+      font-weight: bold;
+      text-align: center;
+      padding: 5px 6px;
+      border: 1px solid #000;
+      font-size: 9.5pt;
+    }
+
+    table td {
+      padding: 4px 6px;
+      border: 1px solid #000;
+      vertical-align: middle;
+    }
+
+    table td.num {
+      text-align: right;
+    }
+
+    table td.center {
+      text-align: center;
+    }
+
+    table tr:nth-child(even) td {
+      background-color: #f8f8f8;
+    }
+
+    .ligne-total td {
+      background-color: #e8e8e8 !important;
+      font-weight: bold;
+      border-top: 2px solid #000;
+    }
+
+    /* ═══════════════════════════════════════
+       BLOC OBSERVATIONS
+    ═══════════════════════════════════════ */
+    .observations {
+      margin: 12px 0;
+      font-size: 10pt;
+    }
+
+    .observations label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .observations .contenu {
+      border: 1px solid #000;
+      min-height: 40px;
+      padding: 6px;
+    }
+
+    /* ═══════════════════════════════════════
+       ZONE DE SIGNATURES
+    ═══════════════════════════════════════ */
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      font-size: 10pt;
+    }
+
+    .signature-bloc {
+      text-align: center;
+      width: 30%;
+    }
+
+    .signature-bloc .titre-sig {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 9.5pt;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #000;
+      padding-bottom: 2px;
+    }
+
+    .signature-bloc .ligne-sig {
+      margin-top: 50px;
+      border-top: 1px solid #000;
+      font-size: 9pt;
+      padding-top: 2px;
+    }
+
+    /* ═══════════════════════════════════════
+       PIED DE PAGE
+    ═══════════════════════════════════════ */
+    .pied-page {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 8pt;
+      color: #555;
+      border-top: 1px solid #ccc;
+      padding-top: 6px;
+    }
+
+    /* ═══════════════════════════════════════
+       UTILITAIRES
+    ═══════════════════════════════════════ */
+    .bold { font-weight: bold; }
+    .italic { font-style: italic; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .small { font-size: 9pt; }
+    .mt-sm { margin-top: 8px; }
+    .mt-md { margin-top: 16px; }
+    .page-break { page-break-before: always; }
+
+    /* Badge type matière */
+    .badge-consommable { font-weight: bold; color: #7c3d12; }
+    .badge-reutilisable { font-weight: bold; color: #14532d; }
+
+    /* ═══════════════════════════════════════
+       AFFICHAGE ÉCRAN (centrage A4)
+    ═══════════════════════════════════════ */
+    @media screen {
+      body {
+        background: #e5e7eb;
+        padding: 30px 20px;
+      }
+      .entete, .titre-document, table, .signatures, .pied-page {
+        background: #fff;
+      }
+    }
+
+    /* ═══════════════════════════════════════
+       IMPRESSION : tout sur une page
+    ═══════════════════════════════════════ */
+    @media print {
+      .no-print { display: none !important; }
+      html, body {
+        background: #fff !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+      }
+      /* Éviter les sauts de page intempestifs dans les tableaux */
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+      thead { display: table-header-group; }
+      tfoot { display: table-footer-group; }
+      /* Réduire légèrement pour faire tenir sur une page */
+      body { font-size: 9.5pt !important; }
+      table { font-size: 8.5pt !important; }
+    }
+  </style>
+  {% block extra_style %}{% endblock %}
+</head>
+<body>
+
+  {# ═══════════ EN-TÊTE ═══════════ #}
+  <div class="entete">
+    <div class="entete-gauche">
+      <div class="republique">République du Sénégal</div>
+      <div class="devise">Un Peuple – Un But – Une Foi</div>
+      <div class="separateur-leger" style="border-top: 1px solid #000; margin: 4px 0;"></div>
+      <div>Ministère de l'Éducation</div>
+      <div class="etablissement">École normale supérieure des mines et de la géologie</div>
+      <div class="service">Comptabilité des Matières</div>
+    </div>
+    <div class="entete-droite">
+      <div style="font-size: 8pt; margin-bottom: 4px;">{{ exercice_label|default:"" }}</div>
+      <div class="bold" style="font-size: 10pt;">N° {% block numero_doc %}—{% endblock %}</div>
+      <div style="margin-top: 4px;">Dakar, le {{ date_doc|date:"d F Y" }}</div>
+    </div>
+  </div>
+
+  <hr class="separateur">
+
+  {# ═══════════ TITRE ═══════════ #}
+  <div class="titre-document">
+    <h1>{% block titre_doc %}Document Officiel{% endblock %}</h1>
+    {% block sous_titre %}{% endblock %}
+  </div>
+
+  {# ═══════════ CONTENU ═══════════ #}
+  {% block contenu %}{% endblock %}
+
+  {# ═══════════ PIED ═══════════ #}
+  <div class="pied-page">
+    Document généré par le Système de Comptabilité des Matières — École normale supérieure des mines et de la géologie
+  </div>
+
+</body>
+</html>

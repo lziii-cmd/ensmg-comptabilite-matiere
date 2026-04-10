@@ -1,0 +1,73 @@
+{% extends "documents/_base.html" %}
+
+{% block titre_page %}PV de Réception Don — {{ don.code }}{% endblock %}
+{% block numero_doc %}{{ don.code }}{% endblock %}
+{% block titre_doc %}Procès-Verbal de Réception de Don{% endblock %}
+
+{% block contenu %}
+<div class="infos-bloc">
+  <div><span class="label">Donateur :</span> {{ don.donateur.raison_sociale }}</div>
+  <div><span class="label">Date :</span> {{ don.date_don|date:"d/m/Y" }}</div>
+</div>
+<div class="infos-bloc">
+  <div><span class="label">Dépôt :</span> {{ don.depot.nom }}</div>
+  <div><span class="label">N° Pièce :</span> {{ don.numero_piece|default:"—" }}</div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:5%">N°</th>
+      <th style="width:12%">Code</th>
+      <th>Désignation</th>
+      <th style="width:10%">Unité</th>
+      <th style="width:10%">Quantité</th>
+      <th style="width:14%">Val. unitaire</th>
+      <th style="width:16%">Valeur totale</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ligne in don.lignes.all %}
+    <tr>
+      <td class="center">{{ forloop.counter }}</td>
+      <td class="center">{{ ligne.matiere.code_court }}</td>
+      <td>{{ ligne.matiere.designation }}</td>
+      <td class="center">{{ ligne.matiere.unite.abreviation|default:"—" }}</td>
+      <td class="num">{{ ligne.quantite|floatformat:"-3" }}</td>
+      <td class="num">{{ ligne.prix_unitaire|floatformat:"0"|default:"—" }}</td>
+      <td class="num">{{ ligne.total_ligne|floatformat:"0"|default:"—" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="center italic">Aucune ligne</td></tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="ligne-total">
+      <td colspan="6" class="right bold">VALEUR ESTIMÉE TOTALE :</td>
+      <td class="num bold">{{ don.total_valeur|floatformat:"0" }} F CFA</td>
+    </tr>
+  </tfoot>
+</table>
+
+{% if don.commentaire %}
+<div class="observations">
+  <label>Observations :</label>
+  <div class="contenu">{{ don.commentaire }}</div>
+</div>
+{% endif %}
+
+<div class="signatures">
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Donateur</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Comptable des Matières</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Directeur</div>
+    <div class="ligne-sig">Visa &amp; Signature</div>
+  </div>
+</div>
+{% endblock %}

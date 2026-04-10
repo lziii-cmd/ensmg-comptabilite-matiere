@@ -1,0 +1,263 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Bon de Sortie Provisoire — Modèle n°2 bis</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10.5pt;
+      line-height: 1.4;
+      color: #000;
+    }
+
+    .document { width: 100%; }
+
+    /* ── En-tête ── */
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 5px;
+    }
+    .header-table td {
+      width: 33.33%;
+      vertical-align: top;
+      padding: 3px 4px;
+      font-size: 9.5pt;
+    }
+    .h-center {
+      text-align: center;
+      border: 1px solid #000;
+      padding: 4px 6px;
+    }
+    .h-right { text-align: right; font-size: 9pt; }
+
+    /* ── Tableau principal ── */
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+    }
+    .main-table th, .main-table td {
+      border: 1px solid #000;
+      padding: 3px 5px;
+      vertical-align: middle;
+    }
+    .main-table th {
+      font-weight: bold;
+      text-align: center;
+      font-size: 9pt;
+    }
+    .main-table td { vertical-align: top; }
+    .th-group {
+      font-weight: bold;
+      text-align: center;
+      text-decoration: underline;
+    }
+    .td-center { text-align: center; }
+    .td-num    { text-align: right; }
+    .empty-row { height: 22px; }
+    .empty-row td { padding: 0 5px; }
+
+    /* ── Section basse — 4 colonnes ── */
+    .bottom-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-top: 1px solid #000;
+      font-size: 8.5pt;
+      line-height: 1.5;
+    }
+    .bottom-table td {
+      border: 1px solid #000;
+      padding: 5px 6px;
+      vertical-align: top;
+      width: 25%;
+    }
+    .bottom-title {
+      font-weight: bold;
+      text-decoration: underline;
+      text-align: center;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .sig-area {
+      margin-top: 20px;
+      border-top: 1px solid #000;
+      padding-top: 2px;
+      font-size: 8pt;
+      text-align: center;
+    }
+    .dash { border-bottom: 1px solid #000; display: inline-block; min-width: 60px; }
+    .notes-list { font-size: 7.5pt; line-height: 1.7; }
+  </style>
+</head>
+<body>
+<div class="document">
+
+  <!-- ── En-tête institutionnel ── -->
+  <table class="header-table">
+    <tr>
+      <td>
+        <strong>REPUBLIQUE DU SENEGAL</strong><br>
+        ——————————————<br>
+        MINISTERE ————————————<br>
+        SERVICE OU ETABLISSEMENT<br>
+        ——————————————
+      </td>
+      <td class="h-center">
+        <strong>BON DE SORTIE PROVISOIRE</strong><br>
+        <strong>N°<span class="dash" style="min-width:120px;">&nbsp;</span> (1)</strong><br>
+        <small style="font-size:8.5pt;">Réf. interne : {{ pret.code }}</small>
+      </td>
+      <td class="h-right">
+        Modèle n°2 bis<br>
+        Instruction générale<br>
+        Art 12a, 12c, 19a<br><br>
+        Dakar, le {% if pret.date_pret %}{{ pret.date_pret|date:"d/m/Y" }}{% else %}——{% endif %}<br>
+        <strong>Dépôt : {{ pret.depot.nom|default:"—" }}</strong>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Barre service -->
+  <div style="border:1px solid #000;padding:3px 7px;font-size:9pt;margin-bottom:4px;">
+    <strong>Service bénéficiaire :</strong> {{ pret.service.libelle|default:"—" }}
+    &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+    <strong>Date de retour prévue :</strong>
+    {% if pret.date_retour_prevue %}{{ pret.date_retour_prevue|date:"d/m/Y" }}{% else %}——{% endif %}
+  </div>
+
+  <!-- ── Tableau des matières ── -->
+  <table class="main-table">
+    <thead>
+      <!-- Ligne 1 : groupes -->
+      <tr>
+        <th colspan="3" class="th-group">DESIGNATION DES MATIERES</th>
+        <th colspan="2" class="th-group">QUANTITE</th>
+        <th rowspan="2" style="width:11%;">Prix<br>unitaire</th>
+        <th rowspan="2" style="width:11%;">Montant</th>
+        <th rowspan="2" style="width:12%;">Observations</th>
+      </tr>
+      <!-- Ligne 2 : sous-colonnes -->
+      <tr>
+        <th style="width:9%;">N° compte<br>nomenclature<br><i style="font-weight:normal;">(2)</i></th>
+        <th style="width:22%;">NATURE DES MATIERES</th>
+        <th style="width:14%;">Spécification<br>des matières</th>
+        <th style="width:9%;">Nombre<br>d'unités</th>
+        <th style="width:9%;">Nature<br>de l'unité<br><i style="font-weight:normal;">(3)</i></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ligne in lignes %}
+      <tr>
+        <td class="td-center">{{ ligne.matiere.sous_compte.code|default:"—" }}</td>
+        <td>{{ ligne.matiere.designation }}</td>
+        <td class="td-center">{{ ligne.matiere.code_court }}</td>
+        <td class="td-num">{{ ligne.quantite }}</td>
+        <td class="td-center">{{ ligne.matiere.unite.symbole|default:"u" }}</td>
+        <td class="td-num">{% if ligne.prix_unitaire %}{{ ligne.prix_unitaire|floatformat:0 }}{% else %}—{% endif %}</td>
+        <td class="td-num">{% if ligne.total_ligne %}{{ ligne.total_ligne|floatformat:0 }}{% else %}—{% endif %}</td>
+        <td>&nbsp;</td>
+      </tr>
+      {% empty %}
+      {% for i in "xxxxxxxx" %}
+      <tr class="empty-row">
+        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        <td>&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+      {% for i in empty_rows %}
+      <tr class="empty-row">
+        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+        <td>&nbsp;</td><td>&nbsp;</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" class="td-center" style="font-weight:bold;border-top:2px solid #000;">TOTAUX</td>
+        <td class="td-num" style="font-weight:bold;border-top:2px solid #000;">{{ pret.total_quantite|default:"" }}</td>
+        <td style="border-top:2px solid #000;">&nbsp;</td>
+        <td style="border-top:2px solid #000;">&nbsp;</td>
+        <td class="td-num" style="font-weight:bold;border-top:2px solid #000;">{{ pret.total_valeur|default:""|floatformat:0 }}</td>
+        <td style="border-top:2px solid #000;">&nbsp;</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- ── Section basse 4 colonnes ── -->
+  <table class="bottom-table">
+    <tr>
+      <!-- 1. CERTIFICATION -->
+      <td>
+        <span class="bottom-title">CERTIFICATION</span>
+        Arrêté le présent bon à
+        <span class="dash" style="min-width:50px;">&nbsp;</span>
+        Unités représentant une valeur de
+        <span class="dash" style="min-width:60px;">&nbsp;</span>
+        francs dont je<br>
+        Certifie la sortie provisoire.
+        <div class="sig-area">
+          A —— le ——<br>
+          <strong>L'Administrateur des matières</strong><br>
+          (5)
+        </div>
+      </td>
+
+      <!-- 2. DIMINUTION DES PRISES EN CHARGE -->
+      <td>
+        <span class="bottom-title">DIMINUTION DES PRISES EN CHARGE</span>
+        Le comptable des matières soussigné,
+        s'engage à faire diligence pour réintégrer
+        les matières portées au présent bon dans
+        l'enceinte du service
+        <div class="sig-area">
+          A —— le ——<br>
+          <strong>Le Comptable des matières</strong><br>
+          (5)
+        </div>
+      </td>
+
+      <!-- 3. RECIPISSE -->
+      <td>
+        <span class="bottom-title">RECIPISSE</span>
+        Je soussigné<br>
+        <span class="dash" style="min-width:90%;">&nbsp;</span><br>
+        <span class="dash" style="min-width:90%;">&nbsp;</span><br><br>
+        Reconnais avoir reçu les matières portées
+        au présent bon
+        <div class="sig-area">
+          A —— le ——<br>
+          <strong>Le Réceptionniste</strong><br>
+          (5)
+        </div>
+      </td>
+
+      <!-- 4. Notes -->
+      <td>
+        <div class="notes-list">
+          <strong>(1)</strong> Numérotation ininterrompue pour la gestion.<br>
+          <strong>(2)</strong> Dans l'ordre des articles décrits sur les pièces justificatives ou dans l'ordre des comptes de la nomenclature.<br>
+          <strong>(3)</strong> Litre, kg, mètre, nombre etc.<br>
+          <strong>(4)</strong> Nom et qualité<br>
+          <strong>(5)</strong> Timbre et signature<br><br>
+          <strong>Bon à établir en 03 exemplaires</strong>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+</div>
+</body>
+</html>

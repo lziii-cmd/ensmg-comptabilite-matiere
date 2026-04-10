@@ -1,0 +1,56 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Prêts — ENSMG{% endblock %}
+{% block page_title_short %}Prêts{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Prêts</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Prêts de matières</div><div class="ph-sub">Sorties temporaires par prêt</div></div>
+    <div class="ph-right"><a href="{% url 'admin:purchasing_pret_add' %}" class="btn btn-p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Nouveau prêt</a></div>
+  </div>
+
+  <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+    <div class="ch">
+      <form method="get" style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap">
+        <div class="sb-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sb-inp" name="q" value="{{ q }}" placeholder="Référence, service…"></div>
+        <div class="chip-row">
+          <a href="?{% if q %}q={{ q }}{% endif %}" class="chip {% if not statut_filter %}on{% endif %}">Tous</a>
+          <a href="?statut=EN_COURS{% if q %}&q={{ q }}{% endif %}" class="chip {% if statut_filter == 'EN_COURS' %}on{% endif %}">En cours</a>
+          <a href="?statut=CLOS{% if q %}&q={{ q }}{% endif %}" class="chip {% if statut_filter == 'CLOS' %}on{% endif %}">Clôturés</a>
+        </div>
+      </form>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Référence</th><th>Date prêt</th><th>Service emprunteur</th><th>Dépôt</th><th>Statut</th></tr></thead>
+        <tbody>
+          {% for pret in prets %}
+          <tr class="tr-click" onclick="location.href='{% url 'frontend:pret_detail' pret.pk %}'">
+            <td><span class="mono txt-a">{{ pret.code }}</span></td>
+            <td>{{ pret.date_pret|date:"d/m/Y" }}</td>
+            <td>{{ pret.service|default:"—" }}</td>
+            <td>{{ pret.depot|default:"—" }}</td>
+            <td><span class="badge {% if pret.est_clos %}bg{% else %}ba{% endif %}">{% if pret.est_clos %}Clôturé{% else %}En cours{% endif %}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="empty-state"><div class="empty-state-text">Aucun prêt enregistré</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj %}
+    <div class="pgr" style="flex-shrink:0">
+      <div class="pgr-info">Affichage <span>{{ page_obj.start_index }}</span>–<span>{{ page_obj.end_index }}</span> sur <span>{{ page_obj.paginator.count }}</span></div>
+      <div class="pgr-btns">
+        {% if page_obj.has_previous %}<a class="pgr-btn" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">‹</a>{% endif %}
+        {% for n in page_obj.paginator.page_range %}<a class="pgr-btn {% if n == page_obj.number %}act{% endif %}" href="?page={{ n }}{% if q %}&q={{ q }}{% endif %}">{{ n }}</a>{% endfor %}
+        {% if page_obj.has_next %}<a class="pgr-btn" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">›</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

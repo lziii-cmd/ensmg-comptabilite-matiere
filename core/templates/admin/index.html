@@ -1,0 +1,434 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static dashboard_tags %}
+{% get_dashboard_stats as stats %}
+
+{% block title %}Tableau de bord | ENSMG{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<div style="padding:4px 0 28px;">
+
+  {# ── Bannière ─────────────────────────────────────────── #}
+  <div class="db-banner">
+    <div>
+      <p class="db-banner-title">Bienvenue, {{ user.get_full_name|default:user.username }} 👋</p>
+      <p class="db-banner-sub">ENSMG</p>
+    </div>
+    {% if stats.exercice_ouvert %}
+      <div class="db-badge db-badge-open">
+        <span class="db-badge-lbl">Exercice en cours</span>
+        <span class="db-badge-val">{{ stats.exercice_ouvert.code }}</span>
+      </div>
+    {% else %}
+      <div class="db-badge db-badge-none">
+        <span class="db-badge-lbl">Exercice</span>
+        <span class="db-badge-val">Aucun ouvert</span>
+      </div>
+    {% endif %}
+  </div>
+
+  {# ── Cartes de statistiques ───────────────────────────── #}
+  {# Chaque carte = compteur + icône. Cliquez sur "Voir →" pour accéder à la liste #}
+  <div class="db-stats">
+
+    <div class="db-card">
+      <div class="db-card-left">
+        <span class="db-card-val">{{ stats.nb_matieres }}</span>
+        <span class="db-card-lbl">Matières actives</span>
+        <a href="/admin/catalog/matiere/" class="db-card-link">Voir →</a>
+      </div>
+      <div class="db-card-icon">📦</div>
+    </div>
+
+    <div class="db-card c-gold">
+      <div class="db-card-left">
+        <span class="db-card-val">{{ stats.nb_achats }}</span>
+        <span class="db-card-lbl">Achats enregistrés</span>
+        <a href="/admin/purchasing/achat/" class="db-card-link">Voir →</a>
+      </div>
+      <div class="db-card-icon">🛒</div>
+    </div>
+
+    <div class="db-card c-green">
+      <div class="db-card-left">
+        <span class="db-card-val">{{ stats.nb_dons }}</span>
+        <span class="db-card-lbl">Dons reçus</span>
+        <a href="/admin/purchasing/don/" class="db-card-link">Voir →</a>
+      </div>
+      <div class="db-card-icon">🎁</div>
+    </div>
+
+    <div class="db-card c-amber">
+      <div class="db-card-left">
+        <span class="db-card-val">{{ stats.nb_mouvements }}</span>
+        <span class="db-card-lbl">Mouvements de stock</span>
+        <a href="/admin/inventory/mouvementstock/" class="db-card-link">Voir →</a>
+      </div>
+      <div class="db-card-icon">🔄</div>
+    </div>
+
+    <div class="db-card">
+      <div class="db-card-left">
+        <span class="db-card-val">{{ stats.nb_fournisseurs }}</span>
+        <span class="db-card-lbl">Fournisseurs</span>
+        <a href="/admin/core/fournisseur/" class="db-card-link">Voir →</a>
+      </div>
+      <div class="db-card-icon">🏢</div>
+    </div>
+
+    <div class="db-card c-green">
+      <div class="db-card-left">
+        <span class="db-card-val">{{ stats.nb_depots }}</span>
+        <span class="db-card-lbl">Dépôts actifs</span>
+        <a href="/admin/core/depot/" class="db-card-link">Voir →</a>
+      </div>
+      <div class="db-card-icon">🏬</div>
+    </div>
+
+    <div class="db-card c-gold">
+      <div class="db-card-left">
+        <span class="db-card-val">{{ stats.nb_exercices }}</span>
+        <span class="db-card-lbl">Exercices comptables</span>
+        <a href="/admin/core/exercice/" class="db-card-link">Voir →</a>
+      </div>
+      <div class="db-card-icon">📅</div>
+    </div>
+
+    <div class="db-card c-amber">
+      <div class="db-card-left">
+        <span class="db-card-val">{{ stats.nb_lignes_stock }}</span>
+        <span class="db-card-lbl">Lignes de stock</span>
+        <a href="/admin/inventory/stockcourant/" class="db-card-link">Voir →</a>
+      </div>
+      <div class="db-card-icon">📊</div>
+    </div>
+
+  </div>
+
+
+  {# ── Graphiques ───────────────────────────────────────── #}
+  <div class="db-charts">
+
+    {# Donut : matières par catégorie #}
+    <div class="db-chart-card">
+      <div class="db-chart-hdr">
+        <span class="db-chart-ico">🍩</span>
+        <span class="db-chart-ttl">Matières par catégorie</span>
+      </div>
+      <div class="db-chart-body">
+        <canvas id="chartCat" height="200"></canvas>
+      </div>
+    </div>
+
+    {# Barres : activité mensuelle achats + dons #}
+    <div class="db-chart-card db-chart-wide">
+      <div class="db-chart-hdr">
+        <span class="db-chart-ico">📈</span>
+        <span class="db-chart-ttl">Activité mensuelle (6 derniers mois)</span>
+      </div>
+      <div class="db-chart-body">
+        <canvas id="chartActivite" height="180"></canvas>
+      </div>
+    </div>
+
+    {# Donut : mouvements par type #}
+    <div class="db-chart-card">
+      <div class="db-chart-hdr">
+        <span class="db-chart-ico">🔄</span>
+        <span class="db-chart-ttl">Mouvements par type</span>
+      </div>
+      <div class="db-chart-body">
+        <canvas id="chartMouv" height="200"></canvas>
+      </div>
+    </div>
+
+    {# Barres horizontales : top stock #}
+    <div class="db-chart-card db-chart-wide">
+      <div class="db-chart-hdr">
+        <span class="db-chart-ico">📦</span>
+        <span class="db-chart-ttl">Top 8 matières en stock (quantité)</span>
+      </div>
+      <div class="db-chart-body">
+        <canvas id="chartStock" height="180"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  {# Données JSON pour Chart.js #}
+  <script id="chartDataCat" type="application/json">{{ stats.chart_matieres_cat_json|safe }}</script>
+  <script id="chartDataActivite" type="application/json">{{ stats.chart_activite_json|safe }}</script>
+  <script id="chartDataMouv" type="application/json">{{ stats.chart_mouvements_json|safe }}</script>
+  <script id="chartDataStock" type="application/json">{{ stats.chart_stock_top_json|safe }}</script>
+
+  {# ── Chargement Chart.js + initialisation des graphiques ── #}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+  <script>
+  (function() {
+    'use strict';
+
+    /* ── Palette ENSMG ── */
+    var NAVY   = '#1e3a5f';
+    var BLUE   = '#2a4f80';
+    var GOLD   = '#b8962e';
+    var GREEN  = '#1e6b3a';
+    var AMBER  = '#c97c1a';
+    var RED    = '#dc2626';
+    var MUTED  = '#9ca3af';
+    var PALETTE = [NAVY, GOLD, GREEN, AMBER, BLUE, RED, '#7c3aed', '#0891b2'];
+
+    function readJson(id) {
+      var el = document.getElementById(id);
+      if (!el) { console.warn('[Charts] Élément introuvable: #' + id); return null; }
+      try { return JSON.parse(el.textContent || el.innerText); }
+      catch(e) { console.error('[Charts] JSON invalide dans #' + id, e); return null; }
+    }
+
+    function isEmpty(d) {
+      return !d || !d.values || d.values.length === 0
+             || d.values.every(function(v) { return !v || v === 0; });
+    }
+
+    function showEmpty(canvasId, msg) {
+      var canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      canvas.style.display = 'none';
+      var div = document.createElement('div');
+      div.className = 'db-chart-empty';
+      div.innerHTML = '📊<br>' + (msg || 'Aucune donnée<br>disponible');
+      div.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;color:#9ca3af;font-size:13px;gap:8px;';
+      canvas.parentNode.insertBefore(div, canvas.nextSibling);
+    }
+
+    function initCharts() {
+      if (typeof Chart === 'undefined') {
+        console.error('[Charts] Chart.js non disponible — rechargez la page.');
+        ['chartCat','chartActivite','chartMouv','chartStock'].forEach(function(id) {
+          showEmpty(id, 'Chart.js non chargé');
+        });
+        return;
+      }
+
+      /* Defaults globaux */
+      Chart.defaults.font.family = "'Segoe UI', system-ui, Arial, sans-serif";
+      Chart.defaults.font.size   = 12;
+      Chart.defaults.color       = '#6b7280';
+      Chart.defaults.plugins.legend.labels.usePointStyle = true;
+      Chart.defaults.plugins.legend.labels.padding = 14;
+
+      /* ── 1. Donut : Matières par catégorie ── */
+      (function() {
+        var d = readJson('chartDataCat');
+        if (isEmpty(d)) { showEmpty('chartCat'); return; }
+        new Chart(document.getElementById('chartCat'), {
+          type: 'doughnut',
+          data: {
+            labels: d.labels,
+            datasets: [{
+              data: d.values,
+              backgroundColor: PALETTE,
+              borderWidth: 2, borderColor: '#fff', hoverOffset: 6,
+            }]
+          },
+          options: {
+            cutout: '62%',
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 10 } },
+              tooltip: { callbacks: {
+                label: function(ctx) { return ' ' + ctx.label + ': ' + ctx.raw + ' matières'; }
+              }}
+            }
+          }
+        });
+      })();
+
+      /* ── 2. Barres : activité mensuelle ── */
+      (function() {
+        var d = readJson('chartDataActivite');
+        if (!d || !d.labels || d.labels.length === 0) { showEmpty('chartActivite'); return; }
+        var hasData = (d.achats||[]).some(function(v){return v>0;}) || (d.dons||[]).some(function(v){return v>0;});
+        if (!hasData) { showEmpty('chartActivite', 'Aucune activité<br>sur 6 mois'); return; }
+        new Chart(document.getElementById('chartActivite'), {
+          type: 'bar',
+          data: {
+            labels: d.labels,
+            datasets: [
+              { label: 'Achats', data: d.achats||[], backgroundColor: NAVY, borderRadius: 5, borderSkipped: false },
+              { label: 'Dons',   data: d.dons||[],  backgroundColor: GOLD, borderRadius: 5, borderSkipped: false }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+              y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 }, grid: { color: '#f3f4f6' } }
+            }
+          }
+        });
+      })();
+
+      /* ── 3. Donut : mouvements par type ── */
+      (function() {
+        var d = readJson('chartDataMouv');
+        if (isEmpty(d)) { showEmpty('chartMouv'); return; }
+        var mvColors = { 'Entrées': GREEN, 'Sorties': RED, 'Ajustements': AMBER, 'Transferts': BLUE };
+        var colors = d.labels.map(function(l) { return mvColors[l] || MUTED; });
+        new Chart(document.getElementById('chartMouv'), {
+          type: 'doughnut',
+          data: {
+            labels: d.labels,
+            datasets: [{ data: d.values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+          },
+          options: {
+            cutout: '62%',
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 10 } },
+              tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.label + ': ' + ctx.raw; } } }
+            }
+          }
+        });
+      })();
+
+      /* ── 4. Barres horizontales : top stock ── */
+      (function() {
+        var d = readJson('chartDataStock');
+        if (isEmpty(d)) { showEmpty('chartStock'); return; }
+        new Chart(document.getElementById('chartStock'), {
+          type: 'bar',
+          data: {
+            labels: d.labels,
+            datasets: [{
+              label: 'Quantité en stock',
+              data: d.values,
+              backgroundColor: d.labels.map(function(_, i) { return PALETTE[i % PALETTE.length]; }),
+              borderRadius: 4, borderSkipped: false,
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { precision: 0 } },
+              y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+            }
+          }
+        });
+      })();
+    }
+
+    /* Lancer après chargement complet du DOM */
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCharts);
+    } else {
+      initCharts();
+    }
+
+  })();
+  </script>
+
+  {# ── Modules ──────────────────────────────────────────── #}
+  <div class="db-apps">
+
+    {% for app in app_list %}
+
+      {% if app.app_label == 'core' %}
+      <div class="db-app">
+        <div class="db-app-hdr" style="background:#1e3a5f;">
+          <span>⚙️</span><strong>Référentiels</strong>
+        </div>
+        {% for m in app.models %}
+        <div class="db-app-row">
+          <a href="{{ m.admin_url }}">{{ m.name }}</a>
+          <div class="db-app-acts">
+            {% if m.admin_url %}<a href="{{ m.admin_url }}">Liste</a>{% endif %}
+            {% if m.add_url %}<a href="{{ m.add_url }}">+ Ajouter</a>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if app.app_label == 'catalog' %}
+      <div class="db-app">
+        <div class="db-app-hdr" style="background:#2a4f80;">
+          <span>📋</span><strong>Catalogue des matières</strong>
+        </div>
+        {% for m in app.models %}
+        <div class="db-app-row">
+          <a href="{{ m.admin_url }}">{{ m.name }}</a>
+          <div class="db-app-acts">
+            {% if m.admin_url %}<a href="{{ m.admin_url }}">Liste</a>{% endif %}
+            {% if m.add_url %}<a href="{{ m.add_url }}">+ Ajouter</a>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if app.app_label == 'inventory' %}
+      <div class="db-app">
+        <div class="db-app-hdr" style="background:#1e6b3a;">
+          <span>📊</span><strong>Inventaire &amp; Stock</strong>
+        </div>
+        {% for m in app.models %}
+        <div class="db-app-row">
+          <a href="{{ m.admin_url }}">{{ m.name }}</a>
+          <div class="db-app-acts">
+            {% if m.admin_url %}<a href="{{ m.admin_url }}">Liste</a>{% endif %}
+            {% if m.add_url %}<a href="{{ m.add_url }}">+ Ajouter</a>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if app.app_label == 'purchasing' %}
+      <div class="db-app">
+        <div class="db-app-hdr" style="background:#7d3c11;">
+          <span>🛒</span><strong>Achats, Dons &amp; Prêts</strong>
+        </div>
+        {% for m in app.models %}
+        <div class="db-app-row">
+          <a href="{{ m.admin_url }}">{{ m.name }}</a>
+          <div class="db-app-acts">
+            {% if m.admin_url %}<a href="{{ m.admin_url }}">Liste</a>{% endif %}
+            {% if m.add_url %}<a href="{{ m.add_url }}">+ Ajouter</a>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if app.app_label == 'auth' %}
+      <div class="db-app">
+        <div class="db-app-hdr" style="background:#4a1d78;">
+          <span>🔐</span><strong>Utilisateurs &amp; Droits</strong>
+        </div>
+        {% for m in app.models %}
+        <div class="db-app-row">
+          <a href="{{ m.admin_url }}">{{ m.name }}</a>
+          <div class="db-app-acts">
+            {% if m.admin_url %}<a href="{{ m.admin_url }}">Liste</a>{% endif %}
+            {% if m.add_url %}<a href="{{ m.add_url }}">+ Ajouter</a>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    {% endfor %}
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+{% endblock %}
+
+{% block footer %}{{ block.super }}{% endblock %}

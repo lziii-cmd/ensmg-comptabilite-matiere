@@ -1,0 +1,72 @@
+{% extends "documents/_base.html" %}
+{% block titre_page %}Balance Générale — {{ exercice.code }}{% endblock %}
+{% block numero_doc %}{{ exercice.code }}{% endblock %}
+{% block titre_doc %}Balance Générale des Matières{% endblock %}
+{% block sous_titre %}
+<p class="small italic center">Exercice {{ exercice.code }} — du {{ exercice.date_debut|date:"d/m/Y" }} au {{ exercice.date_fin|date:"d/m/Y" }}</p>
+{% endblock %}
+
+{% block contenu %}
+<table>
+  <thead>
+    <tr>
+      <th style="width:10%">Compte</th>
+      <th>Intitulé</th>
+      <th style="width:13%">Solde initial<br>(F CFA)</th>
+      <th style="width:12%">Total<br>Entrées (F)</th>
+      <th style="width:12%">Total<br>Sorties (F)</th>
+      <th style="width:13%">Solde final<br>(F CFA)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ligne in lignes %}
+    {% if ligne.is_principal %}
+    <tr style="background: #2c3e6b; color: #fff;">
+      <td class="bold small">{{ ligne.code }}</td>
+      <td class="bold small" colspan="5">{{ ligne.libelle }}</td>
+    </tr>
+    {% elif ligne.is_divisionnaire %}
+    <tr style="background: #c8d4e8;">
+      <td class="small">&nbsp;&nbsp;{{ ligne.code }}</td>
+      <td class="bold small" colspan="5">&nbsp;&nbsp;{{ ligne.libelle }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td class="small center">&nbsp;&nbsp;&nbsp;&nbsp;{{ ligne.code }}</td>
+      <td class="small">&nbsp;&nbsp;&nbsp;&nbsp;{{ ligne.libelle }}</td>
+      <td class="num">{{ ligne.solde_initial|floatformat:"0" }}</td>
+      <td class="num">{{ ligne.total_entrees|floatformat:"0" }}</td>
+      <td class="num">{{ ligne.total_sorties|floatformat:"0" }}</td>
+      <td class="num bold">{{ ligne.solde_final|floatformat:"0" }}</td>
+    </tr>
+    {% endif %}
+    {% empty %}
+    <tr><td colspan="6" class="center italic">Aucune donnée</td></tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="ligne-total">
+      <td colspan="2" class="right bold">TOTAUX GÉNÉRAUX :</td>
+      <td class="num bold">{{ total_solde_initial|floatformat:"0" }}</td>
+      <td class="num bold">{{ total_entrees|floatformat:"0" }}</td>
+      <td class="num bold">{{ total_sorties|floatformat:"0" }}</td>
+      <td class="num bold">{{ total_solde_final|floatformat:"0" }}</td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="signatures" style="margin-top: 40px;">
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Comptable des Matières</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Vérificateur</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Directeur</div>
+    <div class="ligne-sig">Visa &amp; Signature</div>
+  </div>
+</div>
+{% endblock %}

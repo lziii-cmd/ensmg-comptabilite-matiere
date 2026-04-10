@@ -1,0 +1,144 @@
+{% extends "documents/_base.html" %}
+
+{% block titre_page %}Fiche de Stock — {{ matiere.designation }}{% endblock %}
+{% block numero_doc %}{{ matiere.code_court }}{% endblock %}
+{% block titre_doc %}Fiche de Stock{% endblock %}
+
+{% block sous_titre %}
+<p class="bold center" style="font-size: 12pt;">{{ matiere.designation }}</p>
+<p class="small italic center">
+  Compte : {{ matiere.sous_compte.code }} — {{ matiere.sous_compte.libelle }}
+  &nbsp;|&nbsp; Exercice : {{ exercice.code }}
+</p>
+{% endblock %}
+
+{% block contenu %}
+{# ── Infos matière ── #}
+<div class="infos-bloc">
+  <div><span class="label">Catégorie :</span> {{ matiere.sous_categorie.categorie.libelle }}</div>
+  <div><span class="label">Sous-catégorie :</span> {{ matiere.sous_categorie.libelle }}</div>
+</div>
+<div class="infos-bloc">
+  <div><span class="label">Unité :</span> {{ matiere.unite.libelle|default:"—" }}</div>
+  <div><span class="label">Type :</span>
+    {% if matiere.type_matiere == "consommable" %}
+      <span class="badge-consommable">Consommable</span>
+    {% else %}
+      <span class="badge-reutilisable">Réutilisable</span>
+    {% endif %}
+  </div>
+</div>
+<div class="infos-bloc">
+  <div><span class="label">Stock initial :</span>
+    {{ stock_initial_qte|floatformat:"-3" }} {{ matiere.unite.abreviation|default:"" }}
+    (C.U. initial : {{ stock_initial_cu|floatformat:"0" }} F CFA)
+  </div>
+  <div><span class="label">Seuil d'alerte :</span> {{ matiere.seuil_min|floatformat:"-3" }}</div>
+</div>
+
+<hr class="separateur-leger">
+
+{# ── Mouvements ── #}
+<table>
+  <thead>
+    <tr>
+      <th style="width:9%">Date</th>
+      <th style="width:12%">N° Pièce</th>
+      <th>Libellé opération</th>
+      <th style="width:10%">Dépôt</th>
+      <th style="width:9%">Entrée</th>
+      <th style="width:9%">Sortie</th>
+      <th style="width:10%">C.U. (F)</th>
+      <th style="width:11%">Stock</th>
+      <th style="width:11%">Valeur (F)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {# Stock initial — première ligne #}
+    <tr>
+      <td class="center">{{ exercice.date_debut|date:"d/m/Y" }}</td>
+      <td class="center italic small">Balance</td>
+      <td class="italic">Stock initial (balance d'entrée)</td>
+      <td class="center small">—</td>
+      <td class="num bold">{{ stock_initial_qte|floatformat:"-3" }}</td>
+      <td></td>
+      <td class="num">{{ stock_initial_cu|floatformat:"0" }}</td>
+      <td class="num bold">{{ stock_initial_qte|floatformat:"-3" }}</td>
+      <td class="num">{{ valeur_initiale|floatformat:"0" }}</td>
+    </tr>
+
+    {% for mouv in mouvements %}
+    <tr>
+      <td class="center small">{{ mouv.date|date:"d/m/Y" }}</td>
+      <td class="center small">{{ mouv.reference|default:"—" }}</td>
+      <td class="small">{{ mouv.libelle }}</td>
+      <td class="center small">{{ mouv.depot_label }}</td>
+      {% if mouv.type == "ENTREE" %}
+        <td class="num">{{ mouv.quantite|floatformat:"-3" }}</td>
+        <td></td>
+      {% elif mouv.type == "SORTIE" or mouv.type == "TRANSFERT_SORTIE" %}
+        <td></td>
+        <td class="num">{{ mouv.quantite|floatformat:"-3" }}</td>
+      {% else %}
+        <td class="num">{{ mouv.quantite|floatformat:"-3" }}</td>
+        <td></td>
+      {% endif %}
+      <td class="num">{{ mouv.cout_unitaire|floatformat:"0"|default:"—" }}</td>
+      <td class="num">{{ mouv.stock_apres|floatformat:"-3" }}</td>
+      <td class="num">{{ mouv.valeur_apres|floatformat:"0" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="9" class="center italic small">Aucun mouvement enregistré</td></tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="ligne-total">
+      <td colspan="3" class="right bold">STOCK FINAL :</td>
+      <td></td>
+      <td class="num bold">{{ total_entrees|floatformat:"-3" }}</td>
+      <td class="num bold">{{ total_sorties|floatformat:"-3" }}</td>
+      <td></td>
+      <td class="num bold">{{ stock_final|floatformat:"-3" }}</td>
+      <td class="num bold">{{ valeur_finale|floatformat:"0" }} F</td>
+    </tr>
+  </tfoot>
+</table>
+
+{# ── Récapitulatif par dépôt ── #}
+{% if stocks_par_depot %}
+<div class="mt-md">
+  <p class="bold" style="text-decoration: underline; margin-bottom: 6px;">Répartition par dépôt :</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Dépôt</th>
+        <th style="width:15%">Quantité</th>
+        <th style="width:15%">C.U.M.P.</th>
+        <th style="width:20%">Valeur (F CFA)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in stocks_par_depot %}
+      <tr>
+        <td>{{ s.depot__nom }}</td>
+        <td class="num">{{ s.quantite|floatformat:"-3" }}</td>
+        <td class="num">{{ s.cump|floatformat:"2" }}</td>
+        <td class="num">{{ s.valeur|floatformat:"0" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="signatures" style="margin-top: 24px;">
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Comptable des Matières</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Directeur</div>
+    <div class="ligne-sig">Visa &amp; Signature</div>
+  </div>
+</div>
+{% endblock %}

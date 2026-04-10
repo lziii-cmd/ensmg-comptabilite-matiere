@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>PVR — {{ numero_doc }}</title>
+  <style>
+    /* ── Mise en page A4 ── */
+    @page {
+      size: A4;
+      margin: 20mm 22mm 20mm 22mm;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+      color: #000;
+      line-height: 1.45;
+    }
+
+    /* ════════════════════════════════════
+       RECTO — page 1
+    ════════════════════════════════════ */
+    .page-recto {
+      width: 100%;
+      page-break-after: always;
+    }
+
+    /* Grille deux colonnes en table HTML pure
+       (fiable sous WeasyPrint et sous navigateur) */
+    table.recto-cadre {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #000;
+    }
+    table.recto-cadre > tbody > tr > td {
+      vertical-align: top;
+      border: none;
+      padding: 14px 14px;
+    }
+    td.col-g { width: 44%; border-right: 1px solid #000; }
+    td.col-d { width: 56%; }
+
+    /* ── colonne gauche ── */
+    .lg-para {
+      margin-bottom: 16px;
+      font-size: 11pt;
+    }
+    .lg-para p { margin: 0; }
+    .blank-qty {
+      display: inline-block;
+      border-bottom: 1px solid #000;
+      min-width: 40px;
+      text-align: center;
+    }
+    .pieces-titre {
+      text-decoration: underline;
+      font-weight: normal;
+    }
+    .piece-item {
+      margin-left: 4px;
+      margin-top: 3px;
+    }
+
+    /* ── colonne droite ── */
+    /* En-tête institution */
+    table.entete {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+    table.entete td {
+      padding: 0;
+      vertical-align: top;
+      font-size: 10.5pt;
+    }
+    .et-nom   { width: 58%; }
+    .et-model { width: 42%; text-align: right; font-size: 10pt; }
+
+    /* Titre du PV */
+    .titre-pv {
+      text-align: center;
+      font-weight: bold;
+      font-size: 13pt;
+      text-transform: uppercase;
+      margin: 10px 0 2px;
+    }
+    .numero-pv {
+      text-align: center;
+      font-weight: bold;
+      font-size: 11pt;
+      margin-bottom: 12px;
+    }
+
+    .info { margin: 4px 0; font-size: 11pt; }
+    .info-source { margin: 4px 0 10px; font-size: 11pt; }
+    .membre-item {
+      font-size: 11pt;
+      margin: 3px 0;
+    }
+
+    /* ════════════════════════════════════
+       VERSO — page 2
+    ════════════════════════════════════ */
+    .page-verso {
+      width: 100%;
+    }
+
+    /* En-tête verso */
+    table.verso-hdr {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+    }
+    table.verso-hdr td { padding: 0; }
+    .vh-titre  {
+      font-weight: bold;
+      font-size: 12pt;
+      text-transform: uppercase;
+      vertical-align: bottom;
+    }
+    .vh-ref {
+      text-align: right;
+      font-size: 10.5pt;
+      vertical-align: bottom;
+    }
+
+    /* Tableau des matières */
+    table.matieres {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5pt;
+    }
+    table.matieres th,
+    table.matieres td {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      vertical-align: middle;
+    }
+    table.matieres th {
+      font-weight: normal;   /* comme sur la photo — pas de gras sur les en-têtes */
+      text-align: left;
+      background: #fff;
+    }
+    table.matieres th.center { text-align: center; }
+    table.matieres td.center { text-align: center; }
+    table.matieres td.right  { text-align: right; }
+    table.matieres td.left   { text-align: left; }
+    table.matieres tr.total-row td {
+      font-weight: bold;
+      font-size: 11pt;
+    }
+
+    /* Footnote */
+    .footnote {
+      margin-top: 10px;
+      font-size: 9.5pt;
+      font-style: italic;
+    }
+
+    /* Bouton impression (masqué à l'impression) */
+    .print-btn {
+      display: block;
+      margin: 24px auto 0;
+      padding: 8px 28px;
+      background: #1e3a5f;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 11pt;
+      cursor: pointer;
+    }
+    @media print { .print-btn { display: none !important; } }
+  </style>
+</head>
+<body>
+
+<!-- PAGE 1 — RECTO -->
+<div class="page-recto">
+  <table class="recto-cadre">
+    <tbody>
+      <tr>
+
+        {# ── Colonne gauche ── #}
+        <td class="col-g">
+
+          <div class="lg-para">
+            <p>Arrêté le présent PV à
+              <span class="blank-qty">{% if total_quantite %}{{ total_quantite|floatformat:"-3" }}{% endif %}</span>
+              unités que nous certifions avoir réceptionnées
+            </p>
+          </div>
+
+          <div class="lg-para">
+            <p>Visa du C.O.F ou du C.R.F</p>
+          </div>
+
+          <div class="lg-para">
+            <p>Énumération des pièces justificatives (1)</p>
+          </div>
+
+          <div class="lg-para">
+            <p class="pieces-titre">Pièces justificatives jointes</p>
+            {% for piece in reference_pieces %}
+            <p class="piece-item">- {{ piece }}</p>
+            {% empty %}
+            <p class="piece-item">-&nbsp;</p>
+            <p class="piece-item">-&nbsp;</p>
+            {% endfor %}
+          </div>
+
+        </td>
+
+        {# ── Colonne droite ── #}
+        <td class="col-d">
+
+          {# Entête institution #}
+          <table class="entete">
+            <tr>
+              <td class="et-nom">
+                <div>République du Sénégal</div>
+                <div>Ministère de l'Éducation</div>
+                <div>École normale supérieure des mines et de la géologie</div>
+              </td>
+              <td class="et-model">
+                <div>Modèle N°3</div>
+                <div>Art 2b, 7b, 7c, 19b</div>
+              </td>
+            </tr>
+          </table>
+
+          {# Titre #}
+          <div class="titre-pv">Procès-Verbal de Réception</div>
+          <div class="numero-pv">N° {{ numero_doc }}</div>
+
+          {# Informations #}
+          <div class="info">Date de la réception : {{ date_reception|date:"d/m/Y" }}</div>
+
+          <div class="info">Noms et qualités des fournisseurs</div>
+          <div class="info-source">
+            {{ source_nom }}{% if source_detail %} — {{ source_detail }}{% endif %}
+          </div>
+
+          {# Commission de réception #}
+          <div class="info" style="margin-top: 12px;">Noms et qualités des membres de la commission de réception</div>
+          {% for m in commission_membres %}
+          <div class="membre-item">- {{ m }}</div>
+          {% empty %}
+          <div class="membre-item">- <span style="display:inline-block;border-bottom:1px solid #000;min-width:200px;">&nbsp;</span></div>
+          <div class="membre-item">- <span style="display:inline-block;border-bottom:1px solid #000;min-width:200px;">&nbsp;</span></div>
+          <div class="membre-item">- <span style="display:inline-block;border-bottom:1px solid #000;min-width:200px;">&nbsp;</span></div>
+          {% endfor %}
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PAGE 2 — VERSO -->
+<div class="page-verso">
+
+  <table class="verso-hdr">
+    <tr>
+      <td class="vh-titre">Procès-Verbal de Réception</td>
+      <td class="vh-ref">Modèle n° 3 &nbsp; Art 2 b, 7 b, 7 c, 19 b</td>
+    </tr>
+  </table>
+
+  <table class="matieres">
+    <thead>
+      {# Ligne 1 : en-têtes principaux #}
+      <tr>
+        <th style="width:30%">Désignations des matières (2)</th>
+        <th class="center" colspan="2">Unités</th>
+        <th class="center" style="width:16%">Prix Unitaire</th>
+        <th class="center" style="width:14%">Montant</th>
+        <th class="center" style="width:16%">Observations</th>
+      </tr>
+      {# Ligne 2 : sous-en-têtes Unités #}
+      <tr>
+        <th></th>
+        <th class="center" style="width:10%">Nombre</th>
+        <th style="width:14%">Nature</th>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ligne in lignes %}
+      <tr>
+        <td class="left">{{ ligne.designation }}</td>
+        <td class="center">{{ ligne.quantite|floatformat:"-3" }}</td>
+        <td class="left">{{ ligne.unite }}{% if ligne.specification %}<br><span style="font-size:9.5pt;">{{ ligne.specification }}</span>{% endif %}</td>
+        <td class="right">{{ ligne.prix_unitaire|floatformat:"0" }}</td>
+        <td class="right">{{ ligne.montant|floatformat:"0" }}</td>
+        <td class="left">{{ ligne.observation|default:"" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="center" style="padding:12px;font-style:italic;">Aucune ligne</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td class="left">TOTAUX</td>
+        <td colspan="5" class="right">
+          Montant total général&nbsp;: <strong>{{ total_montant|floatformat:"0" }} FCFA</strong>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <p class="footnote">(2) Dans le même ordre que celui qui existe sur les pièces justificatives</p>
+
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>
+
+</body>
+</html>

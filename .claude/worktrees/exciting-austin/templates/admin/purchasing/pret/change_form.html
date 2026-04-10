@@ -1,0 +1,15 @@
+<!-- templates/admin/purchasing/pret/change_form.html -->
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+  {% if not add %}
+    <li>
+      <a href="/documents/pret/{{ object_id }}/imprimer/"
+         target="_blank"
+         style="background:#1e6b3a;color:#fff;padding:6px 14px;border-radius:4px;font-weight:600;text-decoration:none;display:inline-block;">
+        🖨️ Bon de sortie provisoire
+      </a>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

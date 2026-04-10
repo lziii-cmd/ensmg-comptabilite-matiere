@@ -1,0 +1,47 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Mouvement #{{ mouvement.pk }} — ENSMG{% endblock %}
+{% block page_title_short %}Mouvement{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span>
+<a href="{% url 'frontend:mouvements' %}">Mouvements</a><span class="bread-sep">›</span>
+<span class="bread-cur">#{{ mouvement.pk }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="detail-hero au">
+    <div class="detail-hero-left">
+      <div class="detail-hero-bread">🏠 <a href="{% url 'frontend:dashboard' %}">Accueil</a> › <a href="{% url 'frontend:mouvements' %}">Mouvements</a> › #{{ mouvement.pk }}</div>
+      <div class="detail-hero-title">Mouvement <span class="code-badge {% if mouvement.type_mouvement == 'ENTREE' %}green{% elif mouvement.type_mouvement == 'SORTIE' %}amber{% else %}blue{% endif %}">#{{ mouvement.pk }}</span></div>
+      <div class="detail-hero-actions">
+        <a href="{% url 'frontend:mouvements' %}" class="btn btn-o btn-sm">← Liste</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section au d1">
+    <div class="info-section-head blue">Informations du mouvement</div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-lbl">Type</div><div class="info-cell-val"><span class="badge-solid {% if mouvement.type_mouvement == 'ENTREE' %}bg{% elif mouvement.type_mouvement == 'SORTIE' %}amber{% else %}blue{% endif %}">{{ mouvement.get_type_mouvement_display|default:mouvement.type_mouvement }}</span></div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Date</div><div class="info-cell-val">{{ mouvement.date_mouvement|date:"d/m/Y" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Matière</div><div class="info-cell-val"><span class="txt-a">{{ mouvement.matiere.code_court }}</span> — {{ mouvement.matiere.designation }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Dépôt</div><div class="info-cell-val">{{ mouvement.depot.code|default:"—" }} — {{ mouvement.depot.libelle|default:"" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Quantité</div><div class="info-cell-val mono accent">{{ mouvement.quantite }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">CUMP</div><div class="info-cell-val mono">{{ mouvement.cump|floatformat:0|default:"—" }} F CFA</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Valeur</div><div class="info-cell-val mono" style="color:var(--green)">{{ mouvement.valeur|floatformat:0|default:"—" }} F CFA</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Sous-type</div><div class="info-cell-val txt-m">{{ mouvement.sous_type|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Référence pièce</div><div class="info-cell-val mono txt-m">{{ mouvement.reference_piece|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Exercice</div><div class="info-cell-val">{{ mouvement.exercice|default:"—" }}</div></div>
+    </div>
+  </div>
+
+  {% if mouvement.motif %}
+  <div class="info-section au d2">
+    <div class="info-section-head blue">Motif / Observation</div>
+    <div style="padding:14px 16px;background:var(--surface)">
+      <div style="font-size:13px;color:var(--t1)">{{ mouvement.motif }}</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

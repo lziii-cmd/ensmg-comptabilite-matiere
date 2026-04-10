@@ -1,0 +1,83 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}{{ pret.code }} — Prêt{% endblock %}
+{% block page_title_short %}{{ pret.code }}{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span>
+<a href="{% url 'frontend:prets' %}">Prêts (sorties)</a><span class="bread-sep">›</span>
+<span class="bread-cur">{{ pret.code }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="detail-hero au">
+    <div class="detail-hero-left">
+      <div class="detail-hero-bread">🏠 <a href="{% url 'frontend:dashboard' %}">Accueil</a> › <a href="{% url 'frontend:prets' %}">Prêts (sorties)</a> › {{ pret.code }}</div>
+      <div class="detail-hero-title">Prêt (sortie) <span class="code-badge">{{ pret.code }}</span></div>
+      <div class="detail-hero-actions">
+        <a href="{% url 'frontend:prets' %}" class="btn btn-o btn-sm">← Liste</a>
+        <a href="{% url 'admin:purchasing_pret_add' %}" class="btn btn-p btn-sm">+ Ajouter Prêt</a>
+        <a href="#" class="btn btn-amber btn-sm" target="_blank">📋 Bon de prêt</a>
+        <a href="{% url 'admin:purchasing_pret_change' pret.pk %}" class="btn btn-o btn-sm">✏ Modifier</a>
+        <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce prêt ?')">🗑 Supprimer</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section au d1">
+    <div class="info-section-head blue">Informations du prêt</div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-lbl">Code</div><div class="info-cell-val mono accent">{{ pret.code }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Service</div><div class="info-cell-val">{{ pret.service|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Dépôt</div><div class="info-cell-val">{{ pret.depot|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Date du prêt</div><div class="info-cell-val">{{ pret.date_pret|date:"d/m/Y" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Statut</div><div class="info-cell-val"><span class="badge {% if pret.est_clos %}bg{% else %}ba{% endif %}">{% if pret.est_clos %}Clôturé{% else %}En cours{% endif %}</span></div></div>
+    </div>
+  </div>
+
+  <div class="info-section au d2">
+    <div class="info-section-head blue">Commentaire</div>
+    <div style="padding:14px 16px;background:var(--surface)">
+      <div style="font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Observations / Commentaire</div>
+      <div style="font-size:13px;color:var(--t1)">{{ pret.commentaire|default:"Aucun commentaire" }}</div>
+    </div>
+  </div>
+
+  <div class="info-section au d3">
+    <div class="info-section-head green">Matières prêtées</div>
+    <table>
+      <thead><tr><th>Désignation</th><th style="text-align:right">Quantité</th><th>Observation</th></tr></thead>
+      <tbody>
+        {% for ligne in lignes %}
+        <tr class="tr-click">
+          <td><span class="txt-a">{{ ligne.matiere.code_court }} — {{ ligne.matiere.designation }}</span></td>
+          <td class="mono" style="text-align:right">{{ ligne.quantite }}</td>
+          <td style="font-size:11px;color:var(--t3)">{{ ligne.observation|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3"><div class="empty-state"><div class="empty-state-text">Aucune ligne</div></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if retours %}
+  <div class="info-section au d4">
+    <div class="info-section-head amber">Retours enregistrés</div>
+    <table>
+      <thead><tr><th>Code retour</th><th>Date retour</th><th style="text-align:right">Qté totale</th><th>N° Pièce</th><th>Commentaire</th></tr></thead>
+      <tbody>
+        {% for retour in retours %}
+        <tr class="tr-click" onclick="location.href='{% url 'frontend:retour_pret_detail' retour.pk %}'">
+          <td><span class="txt-a">{{ retour.code }}</span></td>
+          <td class="mono">{{ retour.date_retour|date:"d/m/Y" }}</td>
+          <td class="mono" style="text-align:right">{{ retour.total_qte }}</td>
+          <td class="txt-m">{{ retour.numero_piece|default:"—" }}</td>
+          <td style="font-size:11px;color:var(--t3)">{{ retour.commentaire|default:"Retour du prêt" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

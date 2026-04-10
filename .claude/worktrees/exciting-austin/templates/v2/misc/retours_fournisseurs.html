@@ -1,0 +1,33 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Retours fournisseurs — ENSMG{% endblock %}
+{% block page_title_short %}Retours fourn.{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Retours fournisseurs</span>
+{% endblock %}
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Retours fournisseurs</div><div class="ph-sub">Matières retournées aux fournisseurs</div></div>
+  </div>
+  <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Référence</th><th>Date</th><th>Fournisseur</th><th>Dépôt</th><th style="text-align:right">Nb lignes</th></tr></thead>
+        <tbody>
+          {% for ret in retours %}
+          <tr>
+            <td><span class="mono txt-a">{{ ret.code }}</span></td>
+            <td>{{ ret.date_retour|date:"d/m/Y" }}</td>
+            <td>{{ ret.fournisseur|default:"—" }}</td>
+            <td>{{ ret.depot|default:"—" }}</td>
+            <td class="mono" style="text-align:right">{{ ret.lignes.count }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="empty-state"><div class="empty-state-text">Aucun retour fournisseur enregistré</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

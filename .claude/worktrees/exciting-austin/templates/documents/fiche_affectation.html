@@ -1,0 +1,231 @@
+{% extends "documents/_base.html" %}
+
+{% block titre_page %}Fiche d'Affectation — {{ numero_fa }}{% endblock %}
+{% block numero_doc %}{{ numero_fa }}{% endblock %}
+{% block titre_doc %}Fiche d'Affectation de Matières{% endblock %}
+
+{% block sous_titre %}
+<p class="small italic center" style="margin-top:2px;">
+  Biens durables (1er groupe) — Affectation à titre de dépôt
+  — Article 16 du Règlement de Comptabilité des Matières
+</p>
+{% endblock %}
+
+{% block extra_style %}
+<style>
+  /* Grille de fiche */
+  .fiche-grille {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 10.5pt;
+  }
+  .fiche-grille td {
+    border: 1px solid #000;
+    padding: 5px 10px;
+    vertical-align: middle;
+  }
+  .fiche-grille .lbl {
+    background: #d9d9d9;
+    font-weight: bold;
+    width: 28%;
+    white-space: nowrap;
+  }
+  .fiche-grille .val {
+    width: 22%;
+  }
+
+  /* Bandeau statut */
+  .statut-bandeau {
+    text-align: center;
+    font-weight: bold;
+    font-size: 11pt;
+    letter-spacing: 1px;
+    padding: 5px 0;
+    margin-bottom: 16px;
+    border: 2px solid #1e3a5f;
+    background: #dbeafe;
+    color: #1e3a5f;
+    text-transform: uppercase;
+  }
+
+  /* Section titre */
+  .section-titre {
+    background: #1e3a5f;
+    color: #fff;
+    font-weight: bold;
+    font-size: 10pt;
+    padding: 4px 10px;
+    margin: 14px 0 6px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Bloc observations */
+  .obs-bloc {
+    margin: 12px 0;
+    font-size: 10pt;
+  }
+  .obs-bloc label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .obs-bloc .contenu {
+    border: 1px solid #000;
+    min-height: 36px;
+    padding: 5px 8px;
+  }
+
+  /* Signatures — 3 blocs */
+  .signatures-3 {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 28px;
+    font-size: 10pt;
+  }
+  .signatures-3 .sig-bloc {
+    text-align: center;
+    width: 30%;
+  }
+  .signatures-3 .sig-titre {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 9pt;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 2px;
+  }
+  .signatures-3 .sig-sous-titre {
+    font-size: 8.5pt;
+    font-style: italic;
+    color: #444;
+    margin-bottom: 40px;
+  }
+  .signatures-3 .sig-ligne {
+    border-top: 1px solid #000;
+    padding-top: 2px;
+    font-size: 8.5pt;
+    color: #444;
+  }
+
+  /* Avertissement légal */
+  .avertissement {
+    margin-top: 16px;
+    font-size: 8.5pt;
+    font-style: italic;
+    border: 1px solid #b8962e;
+    background: #fefce8;
+    padding: 6px 10px;
+    color: #713f12;
+  }
+</style>
+{% endblock %}
+
+{% block contenu %}
+
+{# ═══════ BANDEAU STATUT ═══════ #}
+<div class="statut-bandeau">
+  Statut : {{ statut }}
+</div>
+
+{# ═══════ SECTION — BIEN AFFECTÉ ═══════ #}
+<div class="section-titre">📦 Identification du Bien Affecté</div>
+<table class="fiche-grille">
+  <tr>
+    <td class="lbl">Code matière</td>
+    <td class="val">{{ code_matiere }}</td>
+    <td class="lbl">Sous-compte</td>
+    <td class="val">{{ sous_compte }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">Désignation</td>
+    <td colspan="3">{{ designation }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">Unité de mesure</td>
+    <td class="val">{{ unite }}</td>
+    <td class="lbl">Quantité affectée</td>
+    <td class="val bold">{{ quantite }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">Prix unitaire</td>
+    <td class="val">{{ prix_unitaire }} F CFA</td>
+    <td class="lbl">Valeur totale</td>
+    <td class="val bold">{{ valeur_totale }} F CFA</td>
+  </tr>
+</table>
+
+{# ═══════ SECTION — AFFECTATAIRE ═══════ #}
+<div class="section-titre">👤 Affectataire (Dépositaire)</div>
+<table class="fiche-grille">
+  <tr>
+    <td class="lbl">Nom / Prénom</td>
+    <td colspan="3">{{ beneficiaire }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">Service / Bureau</td>
+    <td class="val">{{ service }}</td>
+    <td class="lbl">Dépôt source</td>
+    <td class="val">{{ depot_source }}</td>
+  </tr>
+  <tr>
+    <td class="lbl">Date d'affectation</td>
+    <td class="val bold">{{ date_doc|date:"d/m/Y" }}</td>
+    <td class="lbl">N° Fiche</td>
+    <td class="val bold">{{ numero_fa }}</td>
+  </tr>
+</table>
+
+{# ═══════ SECTION — DOTATION SOURCE ═══════ #}
+<div class="section-titre">📄 Document Source (Bon de Dotation)</div>
+<table class="fiche-grille">
+  <tr>
+    <td class="lbl">Code bon de dotation</td>
+    <td class="val">{{ dotation_code }}</td>
+    <td class="lbl">Date du bon</td>
+    <td class="val">{{ dotation_date }}</td>
+  </tr>
+</table>
+
+{# ═══════ OBSERVATIONS ═══════ #}
+{% if observations %}
+<div class="obs-bloc">
+  <label>Observations :</label>
+  <div class="contenu">{{ observations }}</div>
+</div>
+{% else %}
+<div class="obs-bloc">
+  <label>Observations :</label>
+  <div class="contenu" style="min-height:28px;">&nbsp;</div>
+</div>
+{% endif %}
+
+{# ═══════ AVERTISSEMENT LÉGAL ═══════ #}
+<div class="avertissement">
+  ⚠️ Le matériel affecté reste la propriété de l'École normale supérieure des mines et de la géologie.
+  L'affectataire est responsable de sa bonne conservation et de sa restitution en cas de mutation,
+  de cessation de fonctions ou sur demande du Comptable des Matières.
+  Toute perte ou détérioration peut engager la responsabilité pécuniaire de l'affectataire.
+</div>
+
+{# ═══════ SIGNATURES ═══════ #}
+<div class="signatures-3">
+  <div class="sig-bloc">
+    <div class="sig-titre">L'Affectataire</div>
+    <div class="sig-sous-titre">Reconnaît avoir pris<br>possession du bien</div>
+    <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+  </div>
+  <div class="sig-bloc">
+    <div class="sig-titre">Le Chef de Service</div>
+    <div class="sig-sous-titre">Certifie l'affectation<br>à son service</div>
+    <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+  </div>
+  <div class="sig-bloc">
+    <div class="sig-titre">Le Comptable des Matières</div>
+    <div class="sig-sous-titre">Visa — Inscription au registre<br>des affectations</div>
+    <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+  </div>
+</div>
+
+{% endblock %}

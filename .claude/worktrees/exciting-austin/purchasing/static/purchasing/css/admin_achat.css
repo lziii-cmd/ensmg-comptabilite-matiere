@@ -1,0 +1,5 @@
+/* purchasing/static/purchasing/css/admin_achat.css */
+#ligneachat_set-group table.inline-related td,
+#ligneachat_set-group table.inline-related th {
+  vertical-align: middle;
+}

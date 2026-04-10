@@ -1,0 +1,133 @@
+{% extends "documents/_base.html" %}
+
+{% block titre_page %}PV de Réception — {{ don.code }}{% endblock %}
+{% block numero_doc %}{{ don.code }}{% endblock %}
+{% block titre_doc %}Procès-Verbal de Réception{% endblock %}
+
+{% block sous_titre %}
+<p class="small italic center">
+  (Don / Donation — montant supérieur ou égal à 300 000 F CFA — Commission de réception)
+</p>
+{% endblock %}
+
+{% block contenu %}
+{# ── Commission ── #}
+<p class="bold mt-sm">La Commission de réception s'est réunie le
+  <span style="border-bottom: 1px solid #000; min-width: 100px; display: inline-block;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+  et a procédé à la réception des matières ci-après :
+</p>
+
+<div class="infos-bloc mt-md">
+  <div>
+    <span class="label">Donateur :</span>
+    {{ don.donateur.raison_sociale }}
+  </div>
+  <div>
+    <span class="label">Date de réception :</span> {{ don.date_don|date:"d/m/Y" }}
+  </div>
+</div>
+<div class="infos-bloc">
+  <div>
+    <span class="label">N° Pièce / Référence :</span> {{ don.numero_piece|default:"—" }}
+  </div>
+  <div>
+    <span class="label">Dépôt destinataire :</span> {{ don.depot.nom|default:"—" }}
+  </div>
+</div>
+
+{# ── Tableau des matières reçues ── #}
+<table>
+  <thead>
+    <tr>
+      <th style="width:5%">N°</th>
+      <th style="width:12%">Code</th>
+      <th>Désignation</th>
+      <th style="width:10%">Unité</th>
+      <th style="width:9%">Qté<br>annoncée</th>
+      <th style="width:9%">Qté<br>reçue</th>
+      <th style="width:9%">Qté<br>conforme</th>
+      <th style="width:13%">P.U. (F CFA)</th>
+      <th style="width:14%">Montant (F CFA)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ligne in don.lignes.all %}
+    <tr>
+      <td class="center">{{ forloop.counter }}</td>
+      <td class="center">{{ ligne.matiere.code_court }}</td>
+      <td>{{ ligne.matiere.designation }}</td>
+      <td class="center">{{ ligne.matiere.unite.abreviation|default:"—" }}</td>
+      <td class="num">{{ ligne.quantite|floatformat:"-3" }}</td>
+      <td class="num">{{ ligne.quantite|floatformat:"-3" }}</td>
+      <td class="num"></td>
+      <td class="num">{{ ligne.prix_unitaire|floatformat:"0" }}</td>
+      <td class="num">{{ ligne.total_ligne|floatformat:"0" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="9" class="center italic">Aucune ligne</td></tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="ligne-total">
+      <td colspan="8" class="right bold">VALEUR TOTALE :</td>
+      <td class="num bold">{{ don.total_valeur|floatformat:"0" }} F CFA</td>
+    </tr>
+  </tfoot>
+</table>
+
+{# ── Observation de la commission ── #}
+<div class="observations">
+  <label>Observations de la commission :</label>
+  <div class="contenu" style="min-height: 60px;">{{ don.commentaire|default:"" }}</div>
+</div>
+
+{# ── Avis de la commission ── #}
+<div class="infos-bloc mt-md">
+  <div>
+    <span class="bold">Avis de la commission :</span>
+    &nbsp;&nbsp;
+    ☐ Conforme &nbsp;&nbsp;&nbsp; ☐ Non conforme &nbsp;&nbsp;&nbsp; ☐ Conforme avec réserves
+  </div>
+</div>
+
+{# ── Membres de la commission ── #}
+<div class="mt-md">
+  <p class="bold" style="text-decoration: underline; margin-bottom: 8px;">Membres de la commission :</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:5%">N°</th>
+        <th>Nom et Prénom</th>
+        <th style="width:30%">Fonction</th>
+        <th style="width:20%">Signature</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in "123" %}
+      <tr style="height: 28px;">
+        <td class="center">{{ forloop.counter }}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# ── Signatures ── #}
+<div class="signatures">
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Donateur</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Comptable des Matières</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Directeur</div>
+    <div class="ligne-sig">Visa &amp; Signature</div>
+  </div>
+</div>
+{% endblock %}

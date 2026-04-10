@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relevé Récapitulatif - Modèle n°9</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000;
+        }
+        
+        .document {
+            width: 100%;
+            max-width: 210mm;
+        }
+        
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
+            border-collapse: collapse;
+        }
+        
+        .header-cell {
+            display: table-cell;
+            width: 33.33%;
+            padding: 5px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 10pt;
+        }
+        
+        .header-left {
+            text-align: left;
+            font-weight: normal;
+        }
+        
+        .header-right {
+            text-align: right;
+            font-weight: normal;
+        }
+        
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 13pt;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            font-size: 10pt;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        td {
+            vertical-align: top;
+        }
+        
+        .numeric {
+            text-align: right;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .notes {
+            font-size: 8pt;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+        
+        .empty-row {
+            height: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-cell header-left">
+                <strong>REPUBLIQUE DU SENEGAL</strong><br/>
+                MINISTERE<br/>
+                SERVICE OU ETABLISSEMENT
+            </div>
+            <div class="header-cell">
+                <strong>RELEVE RECAPITULATIF</strong><br/>
+                <strong>DES MATIERES</strong><br/>
+                <strong>A LA DATE DU {{ date_doc|date:"d/m/Y" }}</strong>
+            </div>
+            <div class="header-cell header-right">
+                Modèle n°9<br/>
+                Instruction Générale<br/>
+                Art n°17b, 18c
+            </div>
+        </div>
+        
+        <!-- MAIN TABLE -->
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 10%;">N°Compte<br/>nomenclature<br/><span style="font-size: 9pt;">(2)</span></th>
+                    <th style="width: 25%;">DESIGNATION<br/>DES MATIERES</th>
+                    <th style="width: 13%;">EN ATTENTE<br/>D'AFFECTATION</th>
+                    <th style="width: 13%;">EN SERVICE<br/><span style="font-size: 9pt;">(4)</span></th>
+                    <th style="width: 13%;">EN SORTIE<br/>PROVISOIRE</th>
+                    <th style="width: 13%;">TOTAL<br/><span style="font-size: 9pt;">(3)</span></th>
+                    <th style="width: 13%;">OBSERVATIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in lignes %}
+                <tr>
+                    <td class="center">{{ ligne.compte_code }}</td>
+                    <td>{{ ligne.designation }}</td>
+                    <td class="numeric">{{ ligne.en_attente|default:"—" }}</td>
+                    <td class="numeric">{{ ligne.en_service|default:"—" }}</td>
+                    <td class="numeric">{{ ligne.en_sortie_provisoire|default:"—" }}</td>
+                    <td class="numeric" style="font-weight: bold;">{{ ligne.total|default:"—" }}</td>
+                    <td>{{ ligne.observations|default:"" }}</td>
+                </tr>
+                {% empty %}
+                {% for i in "xxxxxxxxxxxx" %}
+                <tr class="empty-row">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; background-color: #f0f0f0;">
+                    <td colspan="2" class="center">TOTAUX</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">
+                        {% if lignes %}{{ lignes|length }}{% else %}—{% endif %}
+                    </td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td style="border-top: 2px solid #000;">&nbsp;</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <!-- NOTES -->
+        <div class="notes">
+            <p><strong>Remarques:</strong></p>
+            <ul style="margin-left: 20px;">
+                <li>Il est établi en fin de gestion et lors de tout arrêté des écritures</li>
+                <li><strong>(2)</strong> Dans l'ordre des comptes de la nomenclature</li>
+                <li><strong>(3)</strong> Reporter l'existant du grand livre</li>
+                <li><strong>(4)</strong> Sommation des quantités de chaque article à partir des fiches d'inventaire contradictoire des matières</li>
+            </ul>
+            <p style="margin-top: 15px;">
+                <strong>Le Comptable des matières:</strong> Prénom — Nom<br/>
+                Timbre et signature
+            </p>
+        </div>
+    </div>
+</body>
+</html>

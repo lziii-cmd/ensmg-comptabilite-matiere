@@ -1,0 +1,289 @@
+{% extends "documents/_base.html" %}
+{#
+  Template multi-pages : une fiche d'affectation par page.
+  Généré en une seule requête pour toute la dotation.
+  Le bloc "contenu" de _base.html est remplacé intégralement.
+#}
+
+{% block titre_page %}Fiches d'Affectation — {{ dotation_code }}{% endblock %}
+{% block numero_doc %}{{ dotation_code }}{% endblock %}
+{% block titre_doc %}Fiches d'Affectation de Matières{% endblock %}
+
+{% block sous_titre %}
+<p class="small italic center" style="margin-top:2px;">
+  Biens durables (1er groupe) — {{ nb_fiches }} fiche{{ nb_fiches|pluralize }}
+  · Bénéficiaire&nbsp;: <strong>{{ beneficiaire }}</strong>
+  {% if service and service != "—" %}· Service&nbsp;: <strong>{{ service }}</strong>{% endif %}
+</p>
+{% endblock %}
+
+{% block extra_style %}
+<style>
+  /* ── Chaque fiche commence sur une nouvelle page (sauf la première) ── */
+  .fiche-page + .fiche-page {
+    page-break-before: always;
+    padding-top: 0;
+  }
+
+  /* ── Répète l'en-tête ENSMG sur chaque page (en-tête du _base répété par CSS) ── */
+  @media print {
+    .fiche-page + .fiche-page .entete-fiche { display: block; }
+  }
+
+  /* Grille de fiche */
+  .fiche-grille {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 10.5pt;
+  }
+  .fiche-grille td {
+    border: 1px solid #000;
+    padding: 5px 10px;
+    vertical-align: middle;
+  }
+  .fiche-grille .lbl {
+    background: #d9d9d9;
+    font-weight: bold;
+    width: 28%;
+    white-space: nowrap;
+  }
+  .fiche-grille .val { width: 22%; }
+
+  /* Numéro de fiche en haut à droite */
+  .fiche-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .fiche-numero {
+    font-size: 13pt;
+    font-weight: bold;
+    color: #1e3a5f;
+    border: 2px solid #1e3a5f;
+    padding: 3px 14px;
+    border-radius: 4px;
+  }
+  .fiche-statut {
+    font-size: 10pt;
+    font-weight: bold;
+    padding: 3px 12px;
+    border-radius: 4px;
+    background: #dbeafe;
+    color: #1e3a5f;
+    border: 1px solid #93c5fd;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Section titre */
+  .section-titre {
+    background: #1e3a5f;
+    color: #fff;
+    font-weight: bold;
+    font-size: 10pt;
+    padding: 4px 10px;
+    margin: 12px 0 5px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Observations */
+  .obs-contenu {
+    border: 1px solid #000;
+    min-height: 28px;
+    padding: 5px 8px;
+    font-size: 10pt;
+    margin-bottom: 12px;
+  }
+
+  /* Avertissement légal */
+  .avertissement {
+    margin-top: 10px;
+    font-size: 8.5pt;
+    font-style: italic;
+    border: 1px solid #b8962e;
+    background: #fefce8;
+    padding: 5px 10px;
+    color: #713f12;
+  }
+
+  /* Signatures — 3 blocs */
+  .signatures-3 {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    font-size: 10pt;
+  }
+  .signatures-3 .sig-bloc {
+    text-align: center;
+    width: 30%;
+  }
+  .signatures-3 .sig-titre {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 9pt;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 2px;
+  }
+  .signatures-3 .sig-sous-titre {
+    font-size: 8.5pt;
+    font-style: italic;
+    color: #444;
+    margin-bottom: 36px;
+  }
+  .signatures-3 .sig-ligne {
+    border-top: 1px solid #000;
+    padding-top: 2px;
+    font-size: 8.5pt;
+    color: #444;
+  }
+
+  /* Séparateur visible écran entre fiches */
+  @media screen {
+    .fiche-page + .fiche-page {
+      border-top: 3px dashed #b8962e;
+      margin-top: 40px;
+      padding-top: 30px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block contenu %}
+
+{% if not fiches %}
+{# ── Aucune fiche (dotation 2e groupe pur) ── #}
+<div style="text-align:center;padding:40px 0;color:#6b7280;font-size:12pt;">
+  <p style="font-size:20pt;margin-bottom:10px;">ℹ️</p>
+  <p>Cette dotation ne contient aucun bien du 1er groupe.</p>
+  <p class="small italic" style="margin-top:6px;">
+    Les fiches d'affectation ne sont générées que pour les matières durables (immobilisations).
+  </p>
+</div>
+
+{% else %}
+
+{% for fiche in fiches %}
+<div class="fiche-page">
+
+  {# Répéter l'en-tête ENSMG pour les pages suivantes (impression) #}
+  {% if not forloop.first %}
+  <div class="entete-fiche" style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:9pt;">
+      <div style="text-align:center;width:45%;">
+        <div style="font-weight:bold;font-size:9.5pt;text-transform:uppercase;">République du Sénégal</div>
+        <div style="font-style:italic;font-size:8.5pt;">Un Peuple – Un But – Une Foi</div>
+        <hr style="margin:3px 0;">
+        <div>Ministère de l'Éducation</div>
+        <div style="font-weight:bold;text-transform:uppercase;">École normale supérieure des mines et de la géologie</div>
+        <div>Comptabilité des Matières</div>
+      </div>
+      <div style="text-align:center;width:45%;">
+        <div style="font-weight:bold;font-size:10pt;">N° {{ fiche.numero_fa }}</div>
+        <div>Dakar, le {{ fiche.date_doc|date:"d F Y" }}</div>
+      </div>
+    </div>
+    <hr style="border-top:2px solid #000;margin:8px 0 14px 0;">
+    <div style="text-align:center;margin-bottom:14px;">
+      <h1 style="font-size:14pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;text-decoration:underline;">
+        Fiche d'Affectation de Matières
+      </h1>
+      <p style="font-size:9pt;font-style:italic;">
+        Biens durables (1er groupe) — Article 16 du Règlement de Comptabilité des Matières
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── En-tête de la fiche ── #}
+  <div class="fiche-header">
+    <div class="fiche-numero">{{ fiche.numero_fa }}</div>
+    <div class="fiche-statut">{{ fiche.statut }}</div>
+  </div>
+
+  {# ── Bien affecté ── #}
+  <div class="section-titre">📦 Identification du Bien Affecté</div>
+  <table class="fiche-grille">
+    <tr>
+      <td class="lbl">Code matière</td>
+      <td class="val">{{ fiche.code_matiere }}</td>
+      <td class="lbl">Sous-compte</td>
+      <td class="val">{{ fiche.sous_compte }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Désignation</td>
+      <td colspan="3">{{ fiche.designation }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Unité de mesure</td>
+      <td class="val">{{ fiche.unite }}</td>
+      <td class="lbl">Quantité affectée</td>
+      <td class="val" style="font-weight:bold;">{{ fiche.quantite }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Prix unitaire</td>
+      <td class="val">{{ fiche.prix_unitaire }} F CFA</td>
+      <td class="lbl">Valeur totale</td>
+      <td class="val" style="font-weight:bold;">{{ fiche.valeur_totale }} F CFA</td>
+    </tr>
+  </table>
+
+  {# ── Affectataire ── #}
+  <div class="section-titre">👤 Affectataire (Dépositaire)</div>
+  <table class="fiche-grille">
+    <tr>
+      <td class="lbl">Nom / Prénom</td>
+      <td colspan="3">{{ fiche.beneficiaire }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Service / Bureau</td>
+      <td class="val">{{ fiche.service }}</td>
+      <td class="lbl">Dépôt source</td>
+      <td class="val">{{ fiche.depot_source }}</td>
+    </tr>
+    <tr>
+      <td class="lbl">Date d'affectation</td>
+      <td class="val" style="font-weight:bold;">{{ fiche.date_doc|date:"d/m/Y" }}</td>
+      <td class="lbl">Bon de dotation</td>
+      <td class="val">{{ fiche.dotation_code }}</td>
+    </tr>
+  </table>
+
+  {# ── Observations ── #}
+  <div class="section-titre" style="font-size:9pt;">📝 Observations</div>
+  <div class="obs-contenu">{{ fiche.observations|default:"&nbsp;" }}</div>
+
+  {# ── Avertissement légal ── #}
+  <div class="avertissement">
+    ⚠️ Le matériel affecté reste la propriété de l'ENSMG. L'affectataire est responsable de sa
+    conservation et doit le restituer en cas de mutation ou de cessation de fonctions.
+    Toute perte ou détérioration peut engager la responsabilité pécuniaire de l'affectataire.
+  </div>
+
+  {# ── Signatures ── #}
+  <div class="signatures-3">
+    <div class="sig-bloc">
+      <div class="sig-titre">L'Affectataire</div>
+      <div class="sig-sous-titre">Reconnaît avoir pris<br>possession du bien</div>
+      <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+    </div>
+    <div class="sig-bloc">
+      <div class="sig-titre">Le Chef de Service</div>
+      <div class="sig-sous-titre">Certifie l'affectation<br>à son service</div>
+      <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+    </div>
+    <div class="sig-bloc">
+      <div class="sig-titre">Le Comptable des Matières</div>
+      <div class="sig-sous-titre">Visa — Inscription au registre<br>des affectations</div>
+      <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+    </div>
+  </div>
+
+</div>
+{% endfor %}
+
+{% endif %}
+{% endblock %}

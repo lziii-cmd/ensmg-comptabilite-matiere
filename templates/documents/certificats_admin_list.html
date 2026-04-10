@@ -1,0 +1,106 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ titre_page }} | ENSMG{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Accueil</a>
+  &rsaquo; <a href="/documents/">Documents &amp; Registres</a>
+  &rsaquo; {{ titre_page }}
+</div>
+{% endblock %}
+
+{% block content_title %}<h1>{{ titre_page }}</h1>{% endblock %}
+
+{% block content %}
+<style>
+  #content, #content-main, .content, #main, #content-wrapper, .content-wrapper {
+    max-width: none !important; width: 100% !important;
+  }
+  .ops-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 18px;
+  }
+  .ops-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ops-table th {
+    background: #f3f4f6; font-weight: 600; text-align: left;
+    padding: 8px 12px; border-bottom: 2px solid #d1d5db; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .05em; color: #374151;
+  }
+  .ops-table td {
+    padding: 9px 12px; border-bottom: 1px solid #e5e7eb; vertical-align: middle;
+  }
+  /* Ligne cliquable */
+  .ops-table tbody tr {
+    cursor: pointer; transition: background .12s;
+  }
+  .ops-table tbody tr:hover td { background: #eff6ff; }
+  .ops-table tbody tr td:last-child::after {
+    content: "📜";
+    float: right; opacity: 0; transition: opacity .15s;
+  }
+  .ops-table tbody tr:hover td:last-child::after { opacity: 1; }
+
+  .badge-depot {
+    display: inline-block; background: #dbeafe; color: #1e40af;
+    border-radius: 10px; padding: 2px 8px; font-size: 11px; font-weight: 600;
+  }
+  .nb-lignes {
+    display: inline-block; background: #f3f4f6; color: #374151;
+    border-radius: 10px; padding: 1px 7px; font-size: 11px;
+  }
+  .ops-empty {
+    text-align: center; padding: 40px; color: #9ca3af; font-size: 13px;
+  }
+  .ops-tip {
+    display: flex; align-items: center; gap: 6px;
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px;
+    padding: 8px 14px; font-size: 12px; color: #1d4ed8; margin-bottom: 14px;
+  }
+</style>
+
+<div class="ops-toolbar">
+  <div>
+    <strong>{{ sorties|length }}</strong> certificat{% if sorties|length != 1 %}s{% endif %} administratif{% if sorties|length != 1 %}s{% endif %}
+  </div>
+  <a href="/admin/inventory/operationsortie/add/" class="addlink">+ Nouveau certificat</a>
+</div>
+
+{% if sorties %}
+<div class="ops-tip">
+  💡 Cliquez sur une ligne pour générer directement le Certificat Administratif en PDF.
+</div>
+<table class="ops-table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Date</th>
+      <th>Dépôt</th>
+      <th>Motif</th>
+      <th>Matières</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in sorties %}
+    <tr onclick="window.open('/documents/certificat-administratif/{{ s.pk }}/', '_blank')">
+      <td><strong>{{ s.code }}</strong></td>
+      <td>{{ s.date_sortie|date:"d/m/Y" }}</td>
+      <td><span class="badge-depot">{{ s.depot.identifiant }} — {{ s.depot.nom }}</span></td>
+      <td>{{ s.motif_principal|default:"—"|truncatechars:60 }}</td>
+      <td><span class="nb-lignes">{{ s.lignes.count }} article{% if s.lignes.count != 1 %}s{% endif %}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="ops-empty">
+  <div style="font-size: 32px; margin-bottom: 10px;">📜</div>
+  <div>Aucun certificat administratif enregistré.</div>
+  <div style="margin-top: 8px;">
+    <a href="/admin/inventory/operationsortie/add/">Créer une nouvelle opération</a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,31 @@
+C:/Users/User/Desktop/ENSMG/PROJETS/ensmg_comptabilite_matieres/.venv/Scripts/Activate.ps1
+
+python manage.py runserver   
+
+python manage.py seed_all --reset 
+>> python manage.py seed_all
+
+del db.sqlite3
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+
+
+python manage.py seed_catalog
+python manage.py seed_core
+
+
+========================================
+⚠️  AVERTISSEMENT : migrations catalog
+========================================
+Le dossier catalog/migrations/ ne contient que 0001_initial.py
+mais le __pycache__ contient des .pyc de migrations 0002/0003 supprimées.
+
+Vérifier l'état avant tout migrate :
+  python manage.py showmigrations catalog
+
+Si seul 0001 est appliqué (situation normale) :
+  Supprimer le pycache : find catalog/migrations/__pycache__ -name "*.pyc" -delete
+
+Si 0002/0003 apparaissent comme appliquées mais fichiers manquent :
+  Remettre la base à 0001 : python manage.py migrate catalog 0001

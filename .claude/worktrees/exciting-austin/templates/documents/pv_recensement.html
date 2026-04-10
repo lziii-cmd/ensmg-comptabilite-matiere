@@ -1,0 +1,389 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PV de Recensement - Modèle n°10</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+        
+        @page :first {
+            /* Recto - Page 1 */
+        }
+        
+        @page :nth(2) {
+            /* Verso - Page 2 */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000;
+        }
+        
+        .document {
+            width: 100%;
+            max-width: 210mm;
+        }
+        
+        .page {
+            page-break-after: always;
+            padding-bottom: 20mm;
+        }
+        
+        .page:last-child {
+            page-break-after: avoid;
+        }
+        
+        /* ===== PAGE 1 RECTO ===== */
+        
+        .page1 {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        
+        .col-left {
+            display: table-cell;
+            width: 50%;
+            padding-right: 10px;
+            vertical-align: top;
+            border-right: 2px solid #000;
+        }
+        
+        .col-right {
+            display: table-cell;
+            width: 50%;
+            padding-left: 10px;
+            vertical-align: top;
+        }
+        
+        .section-box {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 12px;
+            min-height: 100px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            font-size: 9pt;
+            margin-bottom: 8px;
+        }
+        
+        .form-line {
+            border-bottom: 1px dotted #000;
+            height: 20px;
+            margin: 5px 0;
+            font-size: 9pt;
+        }
+        
+        .header-right {
+            text-align: right;
+            font-size: 9pt;
+            margin-bottom: 10px;
+        }
+        
+        .title-center {
+            text-align: center;
+            font-weight: bold;
+            font-size: 11pt;
+            margin-bottom: 8px;
+            text-decoration: underline;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 25px;
+            margin-top: 30px;
+            text-align: center;
+            font-size: 9pt;
+        }
+        
+        .stamp-area {
+            border: 1px dashed #000;
+            padding: 30px;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 9pt;
+            min-height: 60px;
+        }
+        
+        .visa-section {
+            display: table;
+            width: 100%;
+            margin-top: 15px;
+            font-size: 8pt;
+        }
+        
+        .visa-cell {
+            display: table-cell;
+            width: 50%;
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            height: 40px;
+            vertical-align: middle;
+        }
+        
+        /* ===== PAGE 2 VERSO ===== */
+        
+        .page2-header {
+            display: table;
+            width: 100%;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #000;
+        }
+        
+        .page2-cell {
+            display: table-cell;
+            width: 50%;
+            text-align: center;
+            padding: 5px;
+            font-weight: bold;
+            font-size: 10pt;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: left;
+            font-size: 9pt;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        td {
+            vertical-align: top;
+        }
+        
+        .numeric {
+            text-align: right;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .empty-row {
+            height: 20px;
+        }
+        
+        .notes {
+            font-size: 8pt;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== PAGE 1 RECTO ===== -->
+    <div class="page page1">
+        <div class="col-left">
+            <div class="section-box">
+                <div class="section-title">RECAPITULATIF DE L'EXISTANT</div>
+                <div style="padding: 5px 0;">
+                    1. Nombre d'unités en attente d'affectation
+                    <div class="form-line"></div>
+                </div>
+                <div style="padding: 5px 0;">
+                    2. Nombre d'unités en service
+                    <div class="form-line"></div>
+                </div>
+                <div style="padding: 5px 0;">
+                    3. Nombre d'unités en sortie provisoire
+                    <div class="form-line"></div>
+                </div>
+                <div style="padding: 5px 0; font-weight: bold;">
+                    Total des unités de l'existant
+                    <div class="form-line"></div>
+                </div>
+            </div>
+            
+            <div class="section-box">
+                <div class="section-title">OBSERVATIONS DU COMPTABLE DES MATIERES</div>
+                <div style="height: 80px;"></div>
+            </div>
+            
+            <div class="section-box">
+                <div class="section-title">AVIS DU SUPERIEUR HIERARCHIQUE</div>
+                <div style="height: 60px;"></div>
+            </div>
+            
+            <div class="section-box">
+                <div class="section-title">CONCLUSION DE LA COMMISSION OU DU VERIFICATEUR</div>
+                <div style="height: 60px;"></div>
+            </div>
+            
+            <div style="margin-top: 15px; font-size: 9pt;">
+                <div>A ————————————— le ————————————</div>
+                <div class="stamp-area">
+                    Timbre et signature
+                </div>
+            </div>
+            
+            <div class="visa-section">
+                <div class="visa-cell">VISA: L'ordonnateur</div>
+                <div class="visa-cell">L'Administrateur des matières</div>
+            </div>
+            <div class="visa-section">
+                <div class="visa-cell">Le comptable des matières</div>
+                <div class="visa-cell">Le Vérificateur</div>
+            </div>
+            
+            <div style="margin-top: 10px; padding: 5px; border: 1px solid #000; font-size: 9pt;">
+                <strong>Autres membres de la commission:</strong><br/>
+                <div style="height: 40px;"></div>
+            </div>
+        </div>
+        
+        <div class="col-right">
+            <div class="header-right">
+                <strong>République du Sénégal</strong><br/>
+                <strong>Modèle n°10</strong>
+            </div>
+            <div class="header-right" style="margin-bottom: 20px;">
+                Art 7a, 10c, 13b, 16, 17, 18
+            </div>
+            
+            <div style="border: 1px solid #000; padding: 8px; margin-bottom: 15px; font-size: 9pt;">
+                <strong>Ministère</strong><br/>
+                <div class="form-line" style="width: 100%;"></div>
+                <strong>Service ou établissement</strong><br/>
+                <div class="form-line" style="width: 100%;"></div>
+                <div class="form-line" style="width: 100%;"></div>
+            </div>
+            
+            <div class="title-center">PROCES VERBAL DE RECENCEMENT</div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong>N°</strong> <span class="form-line" style="display: inline-block; width: 60%;"></span>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong>Date de recensement:</strong> {% if date_recensement %}{{ date_recensement|date:"d/m/Y" }}{% else %}<span class="form-line" style="display: inline-block; width: 150px;"></span>{% endif %}
+            </div>
+            
+            <div class="section-box" style="min-height: 70px;">
+                <div class="section-title">Noms, Prénoms et date de prise de service du comptable sortant</div>
+                <div style="height: 50px;"></div>
+            </div>
+            
+            <div class="section-box" style="min-height: 70px;">
+                <div class="section-title">Noms, Prénoms et date de prise de service du comptable entrant</div>
+                <div style="height: 50px;"></div>
+            </div>
+            
+            <div class="section-box" style="min-height: 70px;">
+                <div class="section-title">Noms et qualité des membres de la commission</div>
+                <div style="height: 50px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ===== PAGE 2 VERSO ===== -->
+    <div class="page page2">
+        <div class="page2-header">
+            <div class="page2-cell">(VERSO) PROCES VERBAL DE RECENSEMENT</div>
+            <div class="page2-cell">Modèle n°10 / Art 7a, 10c, 13b, 16, 17, 18</div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 10%;">Numéro<br/>nomenclature<br/><span style="font-size: 8pt;">(1)</span></th>
+                    <th rowspan="2" style="width: 18%;">DESIGNATION<br/>DES MATIERES</th>
+                    <th colspan="4" style="width: 32%;">INVENTAIRE PHYSIQUE<br/>EFFECTUE PAR LA COMMISSION<br/>DE RECENSEMENT</th>
+                    <th colspan="4" style="width: 40%;">DIFFERENCE CONSTATEE ENTRE INVENTAIRE PHYSIQUE ET ECRITURES</th>
+                </tr>
+                <tr>
+                    <th style="width: 8%;">Matières en<br/>attente<br/>d'affectation</th>
+                    <th style="width: 8%;">Matières<br/>en service</th>
+                    <th style="width: 8%;">Matières<br/>en sortie</th>
+                    <th style="width: 8%;">TOTAL</th>
+                    <th style="width: 6%;">EN PLUS</th>
+                    <th style="width: 6%;">EN MOINS</th>
+                    <th style="width: 14%;">VALEUR DE LA<br/>DIFFERENCE<br/>EN PLUS</th>
+                    <th style="width: 14%;">VALEUR DE LA<br/>DIFFERENCE<br/>EN MOINS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in lignes %}
+                <tr>
+                    <td class="center">{{ ligne.compte_code }}</td>
+                    <td>{{ ligne.designation }}</td>
+                    <td class="numeric">&nbsp;</td>
+                    <td class="numeric">&nbsp;</td>
+                    <td class="numeric">&nbsp;</td>
+                    <td class="numeric" style="font-weight: bold;">{{ ligne.qte_theorique|default:"—" }}</td>
+                    <td class="numeric">&nbsp;</td>
+                    <td class="numeric">&nbsp;</td>
+                    <td class="numeric">&nbsp;</td>
+                    <td class="numeric">&nbsp;</td>
+                </tr>
+                {% empty %}
+                {% for i in "xxxxxxxxxxxxxxxx" %}
+                <tr class="empty-row">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; background-color: #f0f0f0;">
+                    <td colspan="2" class="center">TOTAUX</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">&nbsp;</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="notes">
+            <p><strong>Remarques:</strong></p>
+            <ul style="margin-left: 20px;">
+                <li><strong>(1)</strong> Numéro dans l'ordre de la nomenclature</li>
+                <li>Chaque différence doit être expliquée et justifiée</li>
+                <li>Le présent PV doit être signé par tous les membres de la commission</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

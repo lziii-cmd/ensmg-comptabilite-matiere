@@ -1,0 +1,273 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bon de Mutation - Modèle n°1 bis</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000;
+        }
+        
+        .document {
+            width: 100%;
+            max-width: 297mm;
+        }
+        
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 12px;
+            border-collapse: collapse;
+        }
+        
+        .header-cell {
+            display: table-cell;
+            width: 33.33%;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 9pt;
+        }
+        
+        .header-left {
+            text-align: left;
+            font-weight: normal;
+        }
+        
+        .header-right {
+            text-align: right;
+            font-weight: normal;
+        }
+        
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 8px;
+            text-decoration: underline;
+        }
+        
+        .info-bar {
+            margin-bottom: 12px;
+            padding: 4px;
+            border: 1px solid #000;
+            background-color: #f9f9f9;
+            font-size: 9pt;
+            line-height: 1.5;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: left;
+            font-size: 9pt;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        td {
+            vertical-align: top;
+        }
+        
+        .numeric {
+            text-align: right;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .signature-section {
+            display: table;
+            width: 100%;
+            margin-top: 15px;
+            table-layout: fixed;
+        }
+        
+        .signature-cell {
+            display: table-cell;
+            width: 33.33%;
+            padding: 8px;
+            border: 1px solid #000;
+            vertical-align: top;
+            font-size: 8pt;
+            text-align: center;
+        }
+        
+        .sig-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 8px;
+            font-size: 8pt;
+        }
+        
+        .sig-line {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 8pt;
+        }
+        
+        .notes {
+            font-size: 8pt;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+        
+        .empty-row {
+            height: 22px;
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-cell header-left">
+                <strong>REPUBLIQUE DU SENEGAL</strong><br/>
+                MINISTERE<br/>
+                SERVICE
+            </div>
+            <div class="header-cell">
+                <strong>BON DE MUTATION</strong><br/>
+                <strong>N°{{ transfert.code }}</strong>
+            </div>
+            <div class="header-cell header-right">
+                Modèle n°1 bis<br/>
+                Art 13<br/>
+                Année {{ transfert.date_operation.year }}
+            </div>
+        </div>
+        
+        <!-- INFO BAR -->
+        <div class="info-bar">
+            <strong>Dépôt source:</strong> {{ transfert.depot_source.nom }} 
+            <strong style="margin-left: 20px;">→ Dépôt destinataire:</strong> {{ transfert.depot_destination.nom }}<br/>
+            <strong>Date:</strong> {% if transfert.date_operation %}{{ transfert.date_operation|date:"d/m/Y" }}{% else %}—{% endif %} |
+            <strong style="margin-left: 20px;">Motif:</strong> {{ transfert.get_motif_display }}
+        </div>
+        
+        <!-- MAIN TABLE -->
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 8%;">N°Compte</th>
+                    <th style="width: 20%;">Nature des<br/>matières</th>
+                    <th style="width: 18%;">Spécification<br/>des matières</th>
+                    <th style="width: 10%;">Quantité</th>
+                    <th style="width: 6%;">Unité</th>
+                    <th style="width: 12%;">C.U.<br/>(F CFA)</th>
+                    <th style="width: 12%;">Montant<br/>(F CFA)</th>
+                    <th style="width: 14%;">Observations</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in transfert.lignes.all %}
+                <tr>
+                    <td class="center">{{ ligne.matiere.sous_compte.code }}</td>
+                    <td>{{ ligne.matiere.designation }}</td>
+                    <td>{{ ligne.matiere.code_court }}</td>
+                    <td class="numeric">{{ ligne.quantite }}</td>
+                    <td class="center">{{ ligne.matiere.unite.symbole }}</td>
+                    <td class="numeric">{% if ligne.cout_unitaire %}{{ ligne.cout_unitaire|floatformat:0 }}{% else %}—{% endif %}</td>
+                    <td class="numeric">{% if ligne.total_ligne %}{{ ligne.total_ligne|floatformat:0 }}{% else %}—{% endif %}</td>
+                    <td>&nbsp;</td>
+                </tr>
+                {% empty %}
+                {% for i in "xxxxxxxxxxxx" %}
+                <tr class="empty-row">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+                
+                {% for i in empty_rows %}
+                <tr class="empty-row">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold;">
+                    <td colspan="3" class="center">TOTAUX</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">{{ transfert.total_quantite|default:"" }}</td>
+                    <td style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">{{ transfert.total_valeur|default:""|floatformat:0 }}</td>
+                    <td style="border-top: 2px solid #000;">&nbsp;</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <!-- SIGNATURE SECTIONS -->
+        <div class="signature-section">
+            <div class="signature-cell">
+                <div class="sig-title">MAGASIN SOURCE<br/>(Libéré par)</div>
+                <div style="margin-top: 30px; text-align: center;">
+                    <br/><br/>
+                    Signature & Timbre
+                </div>
+            </div>
+            <div class="signature-cell">
+                <div class="sig-title">LE COMPTABLE<br/>DES MATIERES</div>
+                <div style="margin-top: 30px; text-align: center;">
+                    <br/><br/>
+                    Signature & Timbre
+                </div>
+            </div>
+            <div class="signature-cell">
+                <div class="sig-title">MAGASIN DESTINATAIRE<br/>(Reçu par)</div>
+                <div style="margin-top: 30px; text-align: center;">
+                    <br/><br/>
+                    Signature & Timbre
+                </div>
+            </div>
+        </div>
+        
+        <!-- NOTES -->
+        <div class="notes">
+            <p><strong>Remarques:</strong> Bon à établir en triplata (original + 2 exemplaires). Chaque exemplaire doit être signé par les trois parties.</p>
+        </div>
+    </div>
+</body>
+</html>

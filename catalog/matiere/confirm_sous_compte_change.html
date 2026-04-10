@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div class="content">
+    <h1>{{ title }}</h1>
+    <div class="card" style="padding:16px;max-width:720px;">
+      <p>
+        Vous êtes sur le point de <strong>modifier le sous-compte comptable</strong> de la matière
+        <strong>{{ original.code_court }} — {{ original.designation }}</strong>.
+      </p>
+      <p>
+        Ancien sous-compte : <strong>{{ old_sc.code }} — {{ old_sc.libelle }}</strong><br>
+        Nouveau sous-compte : <strong>ID {{ new_sc_id }}</strong> (sera appliqué après confirmation)
+      </p>
+      <p style="margin-top:8px;">
+        Ce changement impacte l’<em>imputation comptable par défaut</em> de cette matière
+        pour les opérations futures (achats, sorties, inventaires).
+      </p>
+
+      <form method="post" action="{{ save_url }}">
+        {% csrf_token %}
+        <!-- Drapeau de confirmation -->
+        <input type="hidden" name="_confirm_sous_compte" value="1" />
+        <!-- On rejoue le POST initial : Django gère les autres champs -->
+        {% for k,v in request.POST.items %}
+          {% if k != "csrfmiddlewaretoken" and k != "_confirm_sous_compte" %}
+            <input type="hidden" name="{{ k|escape }}" value="{{ v|escape }}" />
+          {% endif %}
+        {% endfor %}
+
+        <div style="margin-top:16px;">
+          <button type="submit" class="button default">Oui, appliquer le nouveau sous-compte</button>
+          <a href="{% url 'admin:catalog_matiere_change' original.pk %}" class="button cancel" style="margin-left:8px;">
+            Annuler
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

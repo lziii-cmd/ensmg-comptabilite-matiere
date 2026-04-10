@@ -1,0 +1,51 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Legs — ENSMG{% endblock %}
+{% block page_title_short %}Legs{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Legs</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Legs</div><div class="ph-sub">Entrées par legs / héritage</div></div>
+    <div class="ph-right"><a href="{% url 'admin:purchasing_externalstockentry_add' %}" class="btn btn-p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Ajouter un legs</a></div>
+  </div>
+
+  <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+    <div class="ch">
+      <form method="get" style="display:flex;align-items:center;gap:8px;flex:1">
+        <div class="sb-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sb-inp" name="q" value="{{ q }}" placeholder="Référence…"></div>
+      </form>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Référence</th><th>Date</th><th>Source</th><th>Dépôt</th><th>Nb lignes</th></tr></thead>
+        <tbody>
+          {% for leg in legs %}
+          <tr class="tr-click" onclick="location.href='{% url 'frontend:legs_detail' leg.pk %}'">
+            <td><span class="mono txt-a">{{ leg.code }}</span></td>
+            <td>{{ leg.received_date|date:"d/m/Y" }}</td>
+            <td>{{ leg.source|default:"—" }}</td>
+            <td>{{ leg.depot|default:"—" }}</td>
+            <td class="mono">{{ leg.lignes.count }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="empty-state"><div class="empty-state-text">Aucun legs enregistré</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj %}
+    <div class="pgr" style="flex-shrink:0">
+      <div class="pgr-info">Affichage <span>{{ page_obj.start_index }}</span>–<span>{{ page_obj.end_index }}</span> sur <span>{{ page_obj.paginator.count }}</span></div>
+      <div class="pgr-btns">
+        {% if page_obj.has_previous %}<a class="pgr-btn" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">‹</a>{% endif %}
+        {% for n in page_obj.paginator.page_range %}<a class="pgr-btn {% if n == page_obj.number %}act{% endif %}" href="?page={{ n }}{% if q %}&q={{ q }}{% endif %}">{{ n }}</a>{% endfor %}
+        {% if page_obj.has_next %}<a class="pgr-btn" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">›</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

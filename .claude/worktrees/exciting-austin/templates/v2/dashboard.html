@@ -1,0 +1,101 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Tableau de bord — ENSMG{% endblock %}
+{% block page_title_short %}Tableau de bord{% endblock %}
+{% block breadcrumb %}<span class="bread-cur">Tableau de bord</span>{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left">
+      <div class="ph-title">Tableau de bord</div>
+      <div class="ph-sub">Vue d'ensemble · {% for ex in exercices_ouverts %}{{ ex.code }}{% empty %}Aucun exercice ouvert{% endfor %}</div>
+    </div>
+  </div>
+
+  <div class="g4 au d1">
+    <div class="kpi"><div class="kpi-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div><div><div class="kpi-v txt-a">{{ nb_fournisseurs }}</div><div class="kpi-l">Fournisseurs</div></div></div>
+    <div class="kpi"><div class="kpi-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg></div><div><div class="kpi-v txt-g">{{ nb_depots }}</div><div class="kpi-l">Dépôts actifs</div></div></div>
+    <div class="kpi"><div class="kpi-ico a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="kpi-v txt-am">{{ nb_exercices }}</div><div class="kpi-l">Exercices comptables</div></div></div>
+    <div class="kpi"><div class="kpi-ico p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div><div class="kpi-v txt-p">{{ nb_lignes_stock }}</div><div class="kpi-l">Lignes de stock</div></div></div>
+  </div>
+
+  <div class="g2 au d2">
+    <div class="card"><div class="ch"><div class="ch-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="ch-title">Matières par catégorie</div><div class="ch-sub">Répartition du catalogue</div></div></div><div class="cb"><div class="cw cw-lg"><canvas id="c-cat-pie"></canvas></div></div></div>
+    <div class="card"><div class="ch"><div class="ch-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><div><div class="ch-title">Activité mensuelle</div><div class="ch-sub">6 derniers mois</div></div></div><div class="cb"><div class="cw cw-lg"><canvas id="c-activity"></canvas></div></div></div>
+  </div>
+
+  <div class="g2 au d3">
+    <div class="card"><div class="ch"><div class="ch-ico a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div><div><div class="ch-title">Mouvements par type</div></div></div><div class="cb"><div class="cw cw-sm"><canvas id="c-mouv-type"></canvas></div></div></div>
+    <div class="card"><div class="ch"><div class="ch-ico p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div><div class="ch-title">Top matières en stock</div></div></div><div class="cb"><div class="cw cw-sm"><canvas id="c-top-mat"></canvas></div></div></div>
+  </div>
+
+  <div class="g3 au d4">
+    <div class="qa-section">
+      <div class="qa-head blue">📋 Achats, Dons &amp; Prêts</div>
+      <div class="qa-row">Achats<div class="qa-row-actions"><a href="{% url 'frontend:achats' %}">Liste</a><a href="{% url 'admin:purchasing_achat_add' %}">+ Ajouter</a></div></div>
+      <div class="qa-row">Dons<div class="qa-row-actions"><a href="{% url 'frontend:dons' %}">Liste</a><a href="{% url 'admin:purchasing_don_add' %}">+ Ajouter</a></div></div>
+      <div class="qa-row">Dotations<div class="qa-row-actions"><a href="{% url 'frontend:dotations' %}">Liste</a></div></div>
+      <div class="qa-row">Legs<div class="qa-row-actions"><a href="{% url 'frontend:legs' %}">Liste</a></div></div>
+      <div class="qa-row">Prêts (sorties)<div class="qa-row-actions"><a href="{% url 'frontend:prets' %}">Liste</a><a href="{% url 'admin:purchasing_pret_add' %}">+ Ajouter</a></div></div>
+      <div class="qa-row">Retours fournisseurs<div class="qa-row-actions"><a href="{% url 'frontend:retours_fournisseurs' %}">Liste</a></div></div>
+    </div>
+    <div class="qa-section">
+      <div class="qa-head green">📦 Inventaire &amp; Stock</div>
+      <div class="qa-row">Stock courant (par dépôt)<div class="qa-row-actions"><a href="{% url 'frontend:stock_courant' %}">Liste</a></div></div>
+      <div class="qa-row">Stock actuel (tous dépôts)<div class="qa-row-actions"><a href="{% url 'frontend:stock_actuel' %}">Liste</a></div></div>
+      <div class="qa-row">Mouvements de stock<div class="qa-row-actions"><a href="{% url 'frontend:mouvements' %}">Liste</a></div></div>
+      <div class="qa-row">Sorties de stock<div class="qa-row-actions"><a href="{% url 'frontend:sorties_stock' %}">Liste</a></div></div>
+      <div class="qa-row">Transferts inter-dépôts<div class="qa-row-actions"><a href="{% url 'frontend:transferts' %}">Liste</a></div></div>
+      <div class="qa-row">Sorties définitives<div class="qa-row-actions"><a href="{% url 'frontend:sorties_definitives' %}">Liste</a></div></div>
+    </div>
+    <div class="qa-section">
+      <div class="qa-head amber">📂 Catalogue des matières</div>
+      <div class="qa-row">Catégories<div class="qa-row-actions"><a href="{% url 'frontend:categories' %}">Liste</a></div></div>
+      <div class="qa-row">Matières<div class="qa-row-actions"><a href="{% url 'frontend:matieres' %}">Liste</a></div></div>
+      <div class="qa-row">Comptes d'imputation<div class="qa-row-actions"><a href="{% url 'frontend:comptes' %}">Liste</a></div></div>
+    </div>
+  </div>
+
+  <div class="g2 au d5">
+    <div class="qa-section">
+      <div class="qa-head purple">⚙ Référentiels</div>
+      <div class="qa-row">Donateurs<div class="qa-row-actions"><a href="{% url 'frontend:donateurs' %}">Liste</a></div></div>
+      <div class="qa-row">Dépôts / Bureaux<div class="qa-row-actions"><a href="{% url 'frontend:depots' %}">Liste</a></div></div>
+      <div class="qa-row">Fournisseurs<div class="qa-row-actions"><a href="{% url 'frontend:fournisseurs' %}">Liste</a></div></div>
+      <div class="qa-row">Services<div class="qa-row-actions"><a href="{% url 'frontend:services' %}">Liste</a></div></div>
+      <div class="qa-row">Unités de mesure<div class="qa-row-actions"><a href="{% url 'frontend:unites' %}">Liste</a></div></div>
+    </div>
+    <div class="qa-section">
+      <div class="qa-head green">📊 Registres &amp; Administration</div>
+      <div class="qa-row">Grand Journal<div class="qa-row-actions"><a href="{% url 'frontend:livre_journal' %}">Voir</a></div></div>
+      <div class="qa-row">Exercices comptables<div class="qa-row-actions"><a href="{% url 'frontend:exercices' %}">Liste</a></div></div>
+      <div class="qa-row">Paramètres<div class="qa-row-actions"><a href="{% url 'frontend:settings' %}">Voir</a></div></div>
+      <div class="qa-row">Interface Admin<div class="qa-row-actions"><a href="/admin/">Ouvrir →</a></div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const cfg={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#192035',borderColor:'rgba(255,255,255,.08)',borderWidth:1,titleColor:'#f0f4ff',bodyColor:'#7e8fa8',padding:10,cornerRadius:8}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#3d4f68',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#3d4f68',font:{size:10}}}}};
+const cfgPie={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{color:'#7e8fa8',font:{size:10},boxWidth:9,padding:10}},tooltip:{backgroundColor:'#192035',borderColor:'rgba(255,255,255,.08)',borderWidth:1,titleColor:'#f0f4ff',bodyColor:'#7e8fa8',padding:10,cornerRadius:8}}};
+const cats = {{ categories|safe }};
+const topMat = {{ top_matieres|safe }};
+const colors=['#52b7ff','#4ade9a','#fbbf24','#a78bfa','#fb923c','#22d3ee'];
+setTimeout(()=>{
+  if(document.getElementById('c-cat-pie')){
+    new Chart(document.getElementById('c-cat-pie'),{type:'doughnut',data:{labels:cats.map(c=>c.libelle||c.code),datasets:[{data:cats.map(c=>c.nb_matieres||1),backgroundColor:colors.map(c=>c+'88'),borderColor:colors,borderWidth:2,hoverOffset:6}]},options:cfgPie});
+  }
+  if(document.getElementById('c-activity')){
+    new Chart(document.getElementById('c-activity'),{type:'line',data:{labels:['Oct','Nov','Déc','Jan','Fév','Mar'],datasets:[{data:[12,18,14,22,16,25],borderColor:'#52b7ff',backgroundColor:'rgba(82,183,255,.08)',fill:true,tension:.4,pointRadius:4,borderWidth:2}]},options:cfg});
+  }
+  if(document.getElementById('c-mouv-type')){
+    new Chart(document.getElementById('c-mouv-type'),{type:'bar',data:{labels:['Entrées','Sorties','Transferts'],datasets:[{data:[85,42,7],backgroundColor:['#4ade9a88','#f8717188','#fbbf2488'],borderColor:['#4ade9a','#f87171','#fbbf24'],borderWidth:1.5,borderRadius:6}]},options:cfg});
+  }
+  if(document.getElementById('c-top-mat') && topMat.length){
+    new Chart(document.getElementById('c-top-mat'),{type:'bar',data:{labels:topMat.map(m=>(m.matiere__designation||m.matiere__code_court||'').substring(0,14)),datasets:[{data:topMat.map(m=>m.total_qty||0),backgroundColor:'#a78bfa66',borderColor:'#a78bfa',borderWidth:1.5,borderRadius:4}]},options:{...cfg,indexAxis:'y'}});
+  }
+},80);
+</script>
+{% endblock %}

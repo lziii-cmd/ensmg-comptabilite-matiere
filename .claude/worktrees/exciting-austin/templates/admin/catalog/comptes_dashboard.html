@@ -1,0 +1,328 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Comptes d'imputation — ENSMG Admin{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* ── Page ───────────────────────────────────────────────── */
+.cmp-page { padding: 28px 28px 60px; }
+
+/* ── Breadcrumb ────────────────────────────────────────── */
+.cmp-bread { font-size: 12px; color: #6b7280; margin-bottom: 20px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.cmp-bread a { color: #374151; font-weight: 500; text-decoration: none; }
+.cmp-bread a:hover { color: #1e3a5f; text-decoration: underline; }
+.cmp-bread .sep { color: #d1d5db; }
+
+/* ── En-tête ───────────────────────────────────────────── */
+.cmp-header { margin-bottom: 24px; }
+.cmp-header h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 0 0 5px; }
+.cmp-header p  { font-size: 13px; color: #6b7280; margin: 0; }
+
+/* ── 3 Cards ────────────────────────────────────────────── */
+.cmp-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+
+.cmp-card {
+  background: #fff; border: 1.5px solid #e5e7eb; border-radius: 12px;
+  padding: 20px 22px; cursor: pointer;
+  transition: border-color .2s, box-shadow .2s; user-select: none;
+}
+.cmp-card:hover { border-color: #1e3a5f; box-shadow: 0 4px 16px rgba(30,58,95,.1); }
+.cmp-card.active { border-color: #1e3a5f; background: #f0f4ff; box-shadow: 0 4px 16px rgba(30,58,95,.12); }
+
+.cmp-card-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; }
+.cmp-card-level { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #9ca3af; margin-bottom: 3px; }
+.cmp-card-title { font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+.cmp-card-count { font-size: 30px; font-weight: 800; color: #1e3a5f; line-height: 1; font-variant-numeric: tabular-nums; }
+.cmp-card-desc  { font-size: 11px; color: #9ca3af; margin-top: 6px; }
+
+/* ── Panneau ────────────────────────────────────────────── */
+.cmp-panel { display: none; }
+.cmp-panel.visible { display: block; animation: cmpFade .18s ease; }
+@keyframes cmpFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.cmp-panel-header {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  background: #fff; border: 1px solid #e5e7eb; border-bottom: none;
+  border-radius: 10px 10px 0 0; padding: 13px 18px;
+}
+.cmp-panel-title { font-size: 14px; font-weight: 700; color: #1a1a2e; display: flex; align-items: center; gap: 8px; }
+.cmp-panel-count { padding: 2px 10px; border-radius: 20px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 600; border: 1px solid #bfdbfe; }
+.cmp-panel-link  { padding: 5px 13px; border-radius: 6px; background: #1e3a5f; color: #fff !important; font-size: 12px; font-weight: 600; text-decoration: none; transition: background .15s; }
+.cmp-panel-link:hover { background: #14294a; }
+
+/* ── Table ──────────────────────────────────────────────── */
+.cmp-table-wrap { background: #fff; border: 1px solid #e5e7eb; overflow-x: auto; }
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 540px; }
+.cmp-table thead { background: #f9fafb; }
+.cmp-table th { padding: 9px 14px; text-align: left; font-size: 10.5px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; border-bottom: 2px solid #e5e7eb; }
+.cmp-table tbody tr { cursor: pointer; transition: background .1s; }
+.cmp-table tbody tr:hover td { background: #f0f4ff; }
+.cmp-table td { padding: 9px 14px; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: middle; }
+.cmp-table tbody tr:last-child td { border-bottom: none; }
+.cmp-table a { color: inherit; text-decoration: none; display: block; }
+.code-cell { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: #1e3a5f; }
+.primary { font-weight: 600; color: #111827; }
+.cmp-badge-actif   { display: inline-flex; align-items: center; gap: 3px; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.cmp-badge-inactif { display: inline-flex; align-items: center; gap: 3px; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+.cmp-empty { padding: 28px 16px; text-align: center; color: #9ca3af; font-size: 13px; }
+
+/* ── Pagination ─────────────────────────────────────────── */
+.cmp-pgr {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  background: #f9fafb; border: 1px solid #e5e7eb; border-top: none;
+  border-radius: 0 0 10px 10px; padding: 10px 16px;
+}
+.cmp-pgr-info { font-size: 12px; color: #6b7280; }
+.cmp-pgr-btns { display: flex; gap: 4px; }
+.cmp-pgr-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 28px; padding: 0 6px;
+  border-radius: 5px; font-size: 12px; font-weight: 600; text-decoration: none;
+  border: 1px solid #e5e7eb; background: #fff; color: #374151; transition: all .13s;
+}
+.cmp-pgr-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
+.cmp-pgr-btn.active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+.cmp-pgr-btn.disabled { opacity: .4; pointer-events: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cmp-page">
+
+  {# ── Breadcrumb ── #}
+  <div class="cmp-bread">
+    <a href="{% url 'admin:index' %}">🏠 Accueil</a>
+    <span class="sep">›</span>
+    <span style="color:#374151;font-weight:600;">Comptes d'imputation</span>
+  </div>
+
+  {# ── En-tête ── #}
+  <div class="cmp-header">
+    <h1>📊 Comptes d'imputation</h1>
+    <p>Plan comptable matières — 3 niveaux hiérarchiques. Cliquez sur un niveau pour afficher la liste.</p>
+  </div>
+
+  {# ── 3 CARDS ── #}
+  <div class="cmp-cards">
+    <div class="cmp-card" id="card-principal" onclick="showPanel('principal')">
+      <div class="cmp-card-icon" style="background:#eff6ff;">🏛</div>
+      <div class="cmp-card-level">Niveau 1</div>
+      <div class="cmp-card-title">Comptes principaux</div>
+      <div class="cmp-card-count">{{ nb_principaux }}</div>
+      <div class="cmp-card-desc">Codes à 2 chiffres — ex : <strong>10</strong>, <strong>20</strong></div>
+    </div>
+    <div class="cmp-card" id="card-divisionnaire" onclick="showPanel('divisionnaire')">
+      <div class="cmp-card-icon" style="background:#f5f3ff;">📂</div>
+      <div class="cmp-card-level">Niveau 2</div>
+      <div class="cmp-card-title">Comptes divisionnaires</div>
+      <div class="cmp-card-count">{{ nb_divisionnaires }}</div>
+      <div class="cmp-card-desc">Codes à 5 chiffres — ex : <strong>10.01</strong></div>
+    </div>
+    <div class="cmp-card" id="card-sous" onclick="showPanel('sous')">
+      <div class="cmp-card-icon" style="background:#f0fdf4;">🔖</div>
+      <div class="cmp-card-level">Niveau 3</div>
+      <div class="cmp-card-title">Sous-comptes</div>
+      <div class="cmp-card-count">{{ nb_sous_comptes }}</div>
+      <div class="cmp-card-desc">Codes à 8 chiffres — ex : <strong>10.01.01</strong></div>
+    </div>
+  </div>
+
+  <div class="cmp-panel" id="panel-principal">
+    <div class="cmp-panel-header">
+      <div class="cmp-panel-title">
+        🏛 Comptes principaux
+        <span class="cmp-panel-count">{{ nb_principaux }}</span>
+      </div>
+      <a href="/admin/catalog/compteprincipal/" class="cmp-panel-link">Gérer →</a>
+    </div>
+    <div class="cmp-table-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr><th>Code</th><th>Libellé</th><th>Groupe</th><th>Statut</th></tr>
+        </thead>
+        <tbody>
+          {% for cp in page_principaux %}
+          <tr onclick="window.location='/admin/catalog/compteprincipal/{{ cp.pk }}/detail/'">
+            <td><span class="code-cell">{{ cp.code }}</span></td>
+            <td class="primary">{{ cp.libelle }}</td>
+            <td>{{ cp.get_groupe_display }}</td>
+            <td>{% if cp.actif %}<span class="cmp-badge-actif">✓ Actif</span>{% else %}<span class="cmp-badge-inactif">Inactif</span>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="cmp-empty">Aucun compte principal configuré</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_principaux.paginator.num_pages > 1 %}
+    <div class="cmp-pgr">
+      <span class="cmp-pgr-info">
+        Page {{ page_principaux.number }} sur {{ page_principaux.paginator.num_pages }}
+        — {{ nb_principaux }} comptes
+      </span>
+      <div class="cmp-pgr-btns">
+        {% if page_principaux.has_previous %}
+        <a class="cmp-pgr-btn" href="?p_page={{ page_principaux.previous_page_number }}#panel-principal">‹</a>
+        {% else %}<span class="cmp-pgr-btn disabled">‹</span>{% endif %}
+        {% for n in page_principaux.paginator.page_range %}
+          {% if n == page_principaux.number %}
+          <span class="cmp-pgr-btn active">{{ n }}</span>
+          {% elif n <= 3 or n >= page_principaux.paginator.num_pages|add:"-2" or n == page_principaux.number|add:"-1" or n == page_principaux.number|add:"1" %}
+          <a class="cmp-pgr-btn" href="?p_page={{ n }}#panel-principal">{{ n }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page_principaux.has_next %}
+        <a class="cmp-pgr-btn" href="?p_page={{ page_principaux.next_page_number }}#panel-principal">›</a>
+        {% else %}<span class="cmp-pgr-btn disabled">›</span>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="cmp-panel" id="panel-divisionnaire">
+    <div class="cmp-panel-header">
+      <div class="cmp-panel-title">
+        📂 Comptes divisionnaires
+        <span class="cmp-panel-count">{{ nb_divisionnaires }}</span>
+      </div>
+      <a href="/admin/catalog/comptedivisionnaire/" class="cmp-panel-link">Gérer →</a>
+    </div>
+    <div class="cmp-table-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr><th>Code</th><th>Libellé</th><th>Compte principal</th><th>Statut</th></tr>
+        </thead>
+        <tbody>
+          {% for cd in page_divisionnaires %}
+          <tr onclick="window.location='/admin/catalog/comptedivisionnaire/{{ cd.pk }}/detail/'">
+            <td><span class="code-cell">{{ cd.code }}</span></td>
+            <td class="primary">{{ cd.libelle }}</td>
+            <td style="color:#6b7280;">{{ cd.compte_principal }}</td>
+            <td>{% if cd.actif %}<span class="cmp-badge-actif">✓ Actif</span>{% else %}<span class="cmp-badge-inactif">Inactif</span>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="cmp-empty">Aucun compte divisionnaire configuré</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_divisionnaires.paginator.num_pages > 1 %}
+    <div class="cmp-pgr">
+      <span class="cmp-pgr-info">
+        Page {{ page_divisionnaires.number }} sur {{ page_divisionnaires.paginator.num_pages }}
+        — {{ nb_divisionnaires }} comptes
+      </span>
+      <div class="cmp-pgr-btns">
+        {% if page_divisionnaires.has_previous %}
+        <a class="cmp-pgr-btn" href="?d_page={{ page_divisionnaires.previous_page_number }}#panel-divisionnaire">‹</a>
+        {% else %}<span class="cmp-pgr-btn disabled">‹</span>{% endif %}
+        {% for n in page_divisionnaires.paginator.page_range %}
+          {% if n == page_divisionnaires.number %}
+          <span class="cmp-pgr-btn active">{{ n }}</span>
+          {% elif n <= 3 or n >= page_divisionnaires.paginator.num_pages|add:"-2" or n == page_divisionnaires.number|add:"-1" or n == page_divisionnaires.number|add:"1" %}
+          <a class="cmp-pgr-btn" href="?d_page={{ n }}#panel-divisionnaire">{{ n }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page_divisionnaires.has_next %}
+        <a class="cmp-pgr-btn" href="?d_page={{ page_divisionnaires.next_page_number }}#panel-divisionnaire">›</a>
+        {% else %}<span class="cmp-pgr-btn disabled">›</span>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="cmp-panel" id="panel-sous">
+    <div class="cmp-panel-header">
+      <div class="cmp-panel-title">
+        🔖 Sous-comptes
+        <span class="cmp-panel-count">{{ nb_sous_comptes }}</span>
+      </div>
+      <a href="/admin/catalog/souscompte/" class="cmp-panel-link">Gérer →</a>
+    </div>
+    <div class="cmp-table-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr><th>Code</th><th>Libellé</th><th>Compte div.</th><th>Compte princ.</th><th>Statut</th></tr>
+        </thead>
+        <tbody>
+          {% for sc in page_sous %}
+          <tr onclick="window.location='/admin/catalog/souscompte/{{ sc.pk }}/detail/'">
+            <td><span class="code-cell">{{ sc.code }}</span></td>
+            <td class="primary">{{ sc.libelle }}</td>
+            <td style="color:#6b7280;">{{ sc.compte_divisionnaire }}</td>
+            <td style="color:#9ca3af;">{{ sc.compte_divisionnaire.compte_principal|default:"—" }}</td>
+            <td>{% if sc.actif %}<span class="cmp-badge-actif">✓ Actif</span>{% else %}<span class="cmp-badge-inactif">Inactif</span>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="cmp-empty">Aucun sous-compte configuré</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_sous.paginator.num_pages > 1 %}
+    <div class="cmp-pgr">
+      <span class="cmp-pgr-info">
+        Page {{ page_sous.number }} sur {{ page_sous.paginator.num_pages }}
+        — {{ nb_sous_comptes }} sous-comptes
+      </span>
+      <div class="cmp-pgr-btns">
+        {% if page_sous.has_previous %}
+        <a class="cmp-pgr-btn" href="?s_page={{ page_sous.previous_page_number }}#panel-sous">‹</a>
+        {% else %}<span class="cmp-pgr-btn disabled">‹</span>{% endif %}
+        {% for n in page_sous.paginator.page_range %}
+          {% if n == page_sous.number %}
+          <span class="cmp-pgr-btn active">{{ n }}</span>
+          {% elif n <= 3 or n >= page_sous.paginator.num_pages|add:"-2" or n == page_sous.number|add:"-1" or n == page_sous.number|add:"1" %}
+          <a class="cmp-pgr-btn" href="?s_page={{ n }}#panel-sous">{{ n }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page_sous.has_next %}
+        <a class="cmp-pgr-btn" href="?s_page={{ page_sous.next_page_number }}#panel-sous">›</a>
+        {% else %}<span class="cmp-pgr-btn disabled">›</span>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+const PANELS = ['principal', 'divisionnaire', 'sous'];
+const OPEN_PANEL = "{{ open_panel }}";  {# transmis par la vue si pagination active #}
+
+function showPanel(type) {
+  const card  = document.getElementById('card-'  + type);
+  const panel = document.getElementById('panel-' + type);
+  const wasActive = card.classList.contains('active');
+
+  PANELS.forEach(t => {
+    document.getElementById('card-'  + t).classList.remove('active');
+    document.getElementById('panel-' + t).classList.remove('visible');
+  });
+
+  if (!wasActive) {
+    card.classList.add('active');
+    panel.classList.add('visible');
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+}
+
+// Ouvrir automatiquement le bon panneau si on vient d'une pagination
+document.addEventListener('DOMContentLoaded', function () {
+  if (OPEN_PANEL && OPEN_PANEL !== 'None') {
+    showPanel(OPEN_PANEL);
+    // Scroll vers le panneau après avoir cliqué via lien de pagination
+    const panel = document.getElementById('panel-' + OPEN_PANEL);
+    if (panel) setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+  // Si un hash est présent dans l'URL (#panel-xxx), l'ouvrir aussi
+  const hash = window.location.hash;
+  if (hash && hash.startsWith('#panel-')) {
+    const t = hash.replace('#panel-', '');
+    if (PANELS.includes(t)) showPanel(t);
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,312 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — École normale supérieure des mines et de la géologie</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Fond géométrique dark navy ── */
+    body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a2640;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Dégradé de fond */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0f1a2e 0%, #1a2640 40%, #213251 70%, #152030 100%);
+      z-index: 0;
+    }
+
+    /* Pattern géométrique (triangles/losanges) */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: -50%;
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 40px,
+          rgba(184,150,46,.04) 40px,
+          rgba(184,150,46,.04) 41px
+        ),
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 40px,
+          rgba(42,79,128,.06) 40px,
+          rgba(42,79,128,.06) 41px
+        );
+      z-index: 0;
+    }
+
+    /* Cercles décoratifs */
+    .bg-circle {
+      position: fixed;
+      border-radius: 50%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .bg-circle-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(184,150,46,.08) 0%, transparent 70%);
+      top: -150px; right: -100px;
+    }
+    .bg-circle-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(30,58,95,.2) 0%, transparent 70%);
+      bottom: -100px; left: -80px;
+    }
+
+    /* ── Carte de connexion ── */
+    .login-wrap {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 460px;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 44px 48px 40px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.2);
+    }
+
+    /* ── Logo ── */
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    .login-badge {
+      width: 50px; height: 50px;
+      background: linear-gradient(135deg, #b8962e, #d4af57);
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 18px;
+      color: #152a47;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(184,150,46,.35);
+    }
+    .login-school {
+      line-height: 1.3;
+    }
+    .login-school-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: #1a2640;
+      letter-spacing: -.3px;
+    }
+    .login-school-sub {
+      font-size: 11px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    /* ── Titre ── */
+    .login-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1a2640;
+      margin-bottom: 6px;
+    }
+    .login-subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 28px;
+    }
+
+    /* ── Erreur ── */
+    .login-error {
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-left: 4px solid #dc2626;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #991b1b;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .login-error::before { content: '⚠'; flex-shrink: 0; }
+
+    /* ── Champs ── */
+    .login-group {
+      margin-bottom: 18px;
+    }
+    .login-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .login-group input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 9px;
+      font-size: 14px;
+      color: #1f2937;
+      background: #f9fafb;
+      font-family: inherit;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      outline: none;
+    }
+    .login-group input:focus {
+      border-color: #1e3a5f;
+      box-shadow: 0 0 0 3px rgba(30,58,95,.12);
+      background: #fff;
+    }
+    .login-group input::placeholder { color: #9ca3af; }
+
+    /* ── Bouton connexion ── */
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2a5090 100%);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: .2px;
+      margin-top: 8px;
+      transition: all .2s ease;
+      box-shadow: 0 4px 14px rgba(30,58,95,.3);
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .login-btn:hover {
+      background: linear-gradient(135deg, #152a47 0%, #1e3a5f 100%);
+      box-shadow: 0 6px 20px rgba(30,58,95,.42);
+      transform: translateY(-1px);
+    }
+    .login-btn:active { transform: translateY(0); }
+
+    /* ── Séparateur ── */
+    .login-sep {
+      border: none;
+      border-top: 1px solid #f3f4f6;
+      margin: 24px 0 16px;
+    }
+
+    /* ── Footer ── */
+    .login-footer {
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    /* ── Déco extérieure ── */
+    .login-outer-label {
+      text-align: center;
+      color: rgba(255,255,255,.35);
+      font-size: 11px;
+      margin-top: 18px;
+      letter-spacing: .5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-circle bg-circle-1"></div>
+  <div class="bg-circle bg-circle-2"></div>
+
+  <div class="login-wrap">
+    <div class="login-card">
+
+      <!-- Logo ENSMG -->
+      <div class="login-logo">
+        <div class="login-badge">EM</div>
+        <div class="login-school">
+          <div class="login-school-name">École normale supérieure des mines et de la géologie</div>
+          <div class="login-school-sub">Comptabilité des matières — Dakar</div>
+        </div>
+      </div>
+
+      <h1 class="login-title">Connexion</h1>
+      <p class="login-subtitle">Entrez vos identifiants pour accéder au système</p>
+
+      <!-- Message d'erreur -->
+      {% if form.errors %}
+      <div class="login-error">
+        Identifiants incorrects. Veuillez vérifier votre nom d'utilisateur et mot de passe.
+      </div>
+      {% endif %}
+
+      <!-- Formulaire -->
+      <form method="POST" action="{% url 'admin:login' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <div class="login-group">
+          <label for="id_username">Nom d'utilisateur</label>
+          <input
+            type="text"
+            id="id_username"
+            name="username"
+            value="{{ form.username.value|default:'' }}"
+            placeholder="Entrez votre identifiant"
+            autofocus
+            autocomplete="username"
+            required
+          >
+        </div>
+
+        <div class="login-group">
+          <label for="id_password">Mot de passe</label>
+          <input
+            type="password"
+            id="id_password"
+            name="password"
+            placeholder="Entrez votre mot de passe"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <button type="submit" class="login-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          Se connecter
+        </button>
+      </form>
+
+      <hr class="login-sep">
+      <div class="login-footer">
+        École normale supérieure des mines et de la géologie &mdash; Système de comptabilité des matières &mdash; {% now "Y" %}
+      </div>
+
+    </div>
+    <div class="login-outer-label">Accès réservé au personnel autorisé</div>
+  </div>
+
+</body>
+</html>

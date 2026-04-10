@@ -1,0 +1,14 @@
+# ── Dépendances de développement uniquement ───────────────────────────────
+# Ne pas installer en production.
+# Usage : pip install -r requirements.txt -r requirements-dev.txt
+
+-r requirements.txt
+
+# Génération de données de test
+Faker==37.5.3
+
+# Débogage interactif
+django-debug-toolbar
+
+# Outils de qualité de code (optionnel)
+flake8

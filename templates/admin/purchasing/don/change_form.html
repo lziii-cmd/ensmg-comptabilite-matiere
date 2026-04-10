@@ -1,0 +1,36 @@
+<!-- templates/admin/purchasing/don/change_form.html -->
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+  {% if not add %}
+    <li>
+      <a href="/documents/don/{{ object_id }}/imprimer/"
+         target="_blank"
+         style="background:#1e6b3a;color:#fff;padding:6px 14px;border-radius:4px;font-weight:600;text-decoration:none;display:inline-block;">
+        🖨️ PV Réception don
+      </a>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}
+
+{% block content_title %}
+  {{ block.super }}
+  {% if closed_context %}
+    <p style="margin:.25rem 0 0; font-size:12px; opacity:.8;">
+      🔒 Cet exercice est <strong>clos</strong> : modification et enregistrement des dons désactivés.
+    </p>
+  {% endif %}
+{% endblock %}
+
+{% block submit_buttons_top %}
+  {% if not closed_context %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+  {% if not closed_context %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}

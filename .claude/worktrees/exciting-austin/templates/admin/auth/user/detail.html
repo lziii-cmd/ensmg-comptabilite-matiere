@@ -1,0 +1,11 @@
+{% extends "admin/detail_view.html" %}
+{% load i18n %}
+
+{% block extra_actions %}
+{# Bouton dédié : Changer le mot de passe #}
+<a class="dv-btn"
+   href="{% url 'admin:auth_user_password_change' object.pk %}"
+   style="background:#fffbeb;color:#92400e;border-color:#fde68a;">
+  🔑 Changer le mot de passe
+</a>
+{% endblock %}

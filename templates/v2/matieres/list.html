@@ -1,0 +1,58 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Matières — ENSMG{% endblock %}
+{% block page_title_short %}Matières{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Matières</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Matières</div><div class="ph-sub">Catalogue complet des matières</div></div>
+    <div class="ph-right"><a href="{% url 'admin:catalog_matiere_add' %}" class="btn btn-p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Ajouter une matière</a></div>
+  </div>
+
+  <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+    <div class="ch">
+      <form method="get" style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap">
+        <div class="sb-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sb-inp" name="q" value="{{ q }}" placeholder="Code, désignation…"></div>
+        <div class="chip-row">
+          <a href="?{% if q %}q={{ q }}{% endif %}" class="chip {% if not type_filter %}on{% endif %}">Tous types</a>
+          <a href="?type=CONSOMMABLE{% if q %}&q={{ q }}{% endif %}" class="chip {% if type_filter == 'CONSOMMABLE' %}on{% endif %}">Consommable</a>
+          <a href="?type=REUTILISABLE{% if q %}&q={{ q }}{% endif %}" class="chip {% if type_filter == 'REUTILISABLE' %}on{% endif %}">Réutilisable</a>
+        </div>
+      </form>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Code</th><th>Désignation</th><th>Type</th><th>Catégorie</th><th>Unité</th><th>Seuil min.</th><th>Actif</th></tr></thead>
+        <tbody>
+          {% for mat in matieres %}
+          <tr class="tr-click" onclick="location.href='{% url 'frontend:matiere_detail' mat.pk %}'">
+            <td><span class="mono txt-a">{{ mat.code_court }}</span></td>
+            <td style="color:var(--t1);font-weight:500">{{ mat.designation }}</td>
+            <td><span class="badge-solid {% if mat.type_matiere == 'CONSOMMABLE' %}amber{% else %}blue{% endif %}">{{ mat.get_type_matiere_display }}</span></td>
+            <td>{{ mat.sous_categorie.categorie.libelle|default:"—" }}</td>
+            <td>{{ mat.unite|default:"—" }}</td>
+            <td class="mono">{{ mat.seuil_min|default:"0" }}</td>
+            <td><span class="{% if mat.actif %}txt-g{% else %}txt-r{% endif %}" style="font-size:13px">{% if mat.actif %}✓{% else %}✕{% endif %}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7"><div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg><div class="empty-state-text">Aucune matière trouvée</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj %}
+    <div class="pgr" style="flex-shrink:0">
+      <div class="pgr-info">Affichage <span>{{ page_obj.start_index }}</span>–<span>{{ page_obj.end_index }}</span> sur <span>{{ page_obj.paginator.count }}</span></div>
+      <div class="pgr-btns">
+        {% if page_obj.has_previous %}<a class="pgr-btn" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">‹</a>{% endif %}
+        {% for n in page_obj.paginator.page_range %}<a class="pgr-btn {% if n == page_obj.number %}act{% endif %}" href="?page={{ n }}{% if q %}&q={{ q }}{% endif %}">{{ n }}</a>{% endfor %}
+        {% if page_obj.has_next %}<a class="pgr-btn" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">›</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

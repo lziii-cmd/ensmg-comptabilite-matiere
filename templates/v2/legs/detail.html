@@ -1,0 +1,73 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}{{ leg.code }} — Legs{% endblock %}
+{% block page_title_short %}{{ leg.code }}{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span>
+<a href="{% url 'frontend:legs' %}">Legs</a><span class="bread-sep">›</span>
+<span class="bread-cur">{{ leg.code }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="detail-hero au">
+    <div class="detail-hero-left">
+      <div class="detail-hero-bread">🏠 <a href="{% url 'frontend:dashboard' %}">Accueil</a> › <a href="{% url 'frontend:legs' %}">Legs</a> › {{ leg.code }}</div>
+      <div class="detail-hero-title">Legs <span class="code-badge">{{ leg.code }}</span></div>
+      <div class="detail-hero-actions">
+        <a href="{% url 'frontend:legs' %}" class="btn btn-o btn-sm">← Liste</a>
+        <a href="{% url 'admin:purchasing_externalstockentry_add' %}" class="btn btn-p btn-sm">+ Ajouter Legs</a>
+        <a href="#" class="btn btn-amber btn-sm" target="_blank">📋 BE</a>
+        <a href="{% url 'admin:purchasing_externalstockentry_change' leg.pk %}" class="btn btn-o btn-sm">✏ Modifier</a>
+        <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce legs ?')">🗑 Supprimer</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section au d1">
+    <div class="info-section-head blue">Informations du legs</div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-lbl">Code</div><div class="info-cell-val mono accent">{{ leg.code }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Source (légataire)</div><div class="info-cell-val">{{ leg.source|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Date de réception</div><div class="info-cell-val">{{ leg.received_date|date:"d/m/Y" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Dépôt</div><div class="info-cell-val">{{ leg.depot|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">N° Acte / Document</div><div class="info-cell-val mono">{{ leg.document_number|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Valeur totale</div><div class="info-cell-val" style="color:var(--green)">{{ leg.total_value|floatformat:0|default:"0" }} F CFA</div></div>
+    </div>
+  </div>
+
+  <div class="info-section au d2">
+    <div class="info-section-head blue">Commentaire</div>
+    <div style="padding:14px 16px;background:var(--surface)">
+      <div style="font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Observations / Commentaire</div>
+      <div style="font-size:13px;color:var(--t1)">{{ leg.comment|default:"Aucun commentaire" }}</div>
+    </div>
+  </div>
+
+  <div class="info-section au d3">
+    <div class="info-section-head green">Biens reçus par legs</div>
+    <table>
+      <thead><tr><th>Désignation</th><th style="text-align:right">Quantité</th><th style="text-align:right">Prix unitaire</th><th style="text-align:right">Total</th><th>Note</th></tr></thead>
+      <tbody>
+        {% for ligne in lignes %}
+        <tr class="tr-click">
+          <td><span class="txt-a">{{ ligne.matiere.code_court }} — {{ ligne.matiere.designation }}</span></td>
+          <td class="mono" style="text-align:right">{{ ligne.quantity }}</td>
+          <td class="mono" style="text-align:right">{{ ligne.unit_price|floatformat:0|default:"0" }} F CFA</td>
+          <td class="mono" style="text-align:right;color:var(--green)">{{ ligne.total_line|floatformat:0|default:"0" }} F CFA</td>
+          <td style="font-size:11px;color:var(--t3)">{{ ligne.note|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty-state"><div class="empty-state-text">Aucune ligne</div></div></td></tr>
+        {% endfor %}
+        {% if lignes %}
+        <tr style="background:var(--surface2);border-top:2px solid var(--border)">
+          <td colspan="3" style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent)">TOTAL VALEUR</td>
+          <td class="mono" style="text-align:right;color:var(--green);font-weight:700;font-size:13px">{{ leg.total_value|floatformat:0|default:"0" }} F CFA</td>
+          <td></td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,417 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ opts.verbose_name|capfirst }} — {{ object }}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* ═══════════════════════════════════════════════════════
+   PAGE DÉTAIL ENSMG — READ-ONLY VIEW
+═══════════════════════════════════════════════════════ */
+
+.dv-page { max-width: 980px; margin: 0 auto; padding-bottom: 40px; }
+
+/* ── En-tête ─────────────────────────────────────────── */
+.dv-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 26px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.dv-header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.dv-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.dv-code {
+  display: inline-block;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 3px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .5px;
+}
+
+/* ── Boutons (couleurs soft, lisibles) ────────────────── */
+.dv-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.dv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.dv-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+
+/* Retour — gris neutre */
+.dv-btn-back {
+  background: #f8f9fa;
+  color: #495057;
+  border-color: #dee2e6;
+}
+.dv-btn-back:hover { background: #e9ecef; color: #212529; }
+
+/* Modifier — vert doux */
+.dv-btn-edit {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+.dv-btn-edit:hover { background: #dcfce7; color: #14532d; }
+
+/* Supprimer — rouge doux */
+.dv-btn-delete {
+  background: #fff5f5;
+  color: #c53030;
+  border-color: #fed7d7;
+}
+.dv-btn-delete:hover { background: #fee2e2; color: #9b2c2c; }
+
+/* Imprimer — bleu doux */
+.dv-btn-print {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.dv-btn-print:hover { background: #dbeafe; color: #1e3a8a; }
+
+/* Valider — vert foncé */
+.dv-btn-validate {
+  background: #166534;
+  color: #fff;
+  border-color: #14532d;
+}
+.dv-btn-validate:hover { background: #14532d; color: #dcfce7; }
+
+/* ── Fil d'Ariane ─────────────────────────────────────── */
+.dv-breadcrumb {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.dv-breadcrumb a { color: #374151; text-decoration: none; font-weight: 500; }
+.dv-breadcrumb a:hover { color: #1e6b3a; text-decoration: underline; }
+.dv-breadcrumb .sep { color: #d1d5db; }
+
+/* ── Sections ─────────────────────────────────────────── */
+.dv-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+
+.dv-section-title {
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  padding: 9px 16px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dv-section-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: #1d4ed8;
+  border-radius: 2px;
+}
+
+/* ── Grille de champs ─────────────────────────────────── */
+.dv-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.dv-field {
+  padding: 13px 18px;
+  border-right: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Champ pleine largeur (ex: table stock par dépôt) */
+.dv-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.dv-field-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 5px;
+}
+
+.dv-field-value {
+  font-size: 14px;
+  color: #111827;
+  word-break: break-word;
+  line-height: 1.4;
+}
+.dv-field-value.empty { color: #d1d5db; font-style: italic; font-size: 13px; }
+.dv-field-value.montant {
+  font-weight: 700;
+  color: #166534;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.dv-field-value.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-ouvert  { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.badge-cloture { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.badge-default { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+
+/* ── Tableau lignes (articles, etc.) ──────────────────── */
+.dv-table-wrap { overflow-x: auto; }
+
+.dv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dv-table thead tr { background: #f9fafb; }
+
+.dv-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  white-space: nowrap;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.dv-table th.right, .dv-table td.right { text-align: right; }
+.dv-table th.center, .dv-table td.center { text-align: center; }
+
+.dv-table tbody tr { border-bottom: 1px solid #f3f4f6; }
+.dv-table tbody tr:hover { background: #f9fafb; }
+.dv-table tbody tr:last-child { border-bottom: none; }
+
+.dv-table td {
+  padding: 9px 14px;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.dv-table .td-primary { font-weight: 600; color: #111827; }
+.dv-table .td-num { font-variant-numeric: tabular-nums; }
+
+.dv-table tfoot tr {
+  background: #eff6ff;
+  border-top: 2px solid #bfdbfe;
+}
+.dv-table tfoot td {
+  font-weight: 700;
+  color: #1d4ed8;
+  padding: 10px 14px;
+  font-size: 13.5px;
+}
+
+/* Badge ligne vide */
+.dv-empty-table {
+  padding: 28px 16px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+}
+.dv-empty-table span { font-size: 28px; display: block; margin-bottom: 8px; }
+
+/* ── Zone observations / commentaire ──────────────────── */
+.dv-obs {
+  background: #fafafa;
+  border-top: 1px solid #f3f4f6;
+  padding: 14px 18px;
+  font-size: 13.5px;
+  color: #4b5563;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.dv-obs-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 6px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dv-page">
+
+  {# ── Fil d'Ariane ── #}
+  <div class="dv-breadcrumb">
+    <a href="{% url 'admin:index' %}">🏠 Accueil</a>
+    <span class="sep">›</span>
+    <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    <span class="sep">›</span>
+    <a href="{% url 'admin:'|add:opts.app_label|add:'_'|add:opts.model_name|add:'_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    <span class="sep">›</span>
+    <span style="color:#374151;font-weight:600;">{{ object }}</span>
+  </div>
+
+  {# ── En-tête avec boutons ── #}
+  <div class="dv-header">
+    <div class="dv-header-left">
+      <h1>{{ opts.verbose_name|capfirst }}</h1>
+      {% if object_code %}<span class="dv-code">{{ object_code }}</span>{% endif %}
+    </div>
+    <div class="dv-actions">
+      <a class="dv-btn dv-btn-back"
+         href="{% url 'admin:'|add:opts.app_label|add:'_'|add:opts.model_name|add:'_changelist' %}">
+        ← Liste
+      </a>
+      {% if can_change %}
+      <a class="dv-btn ensmg-btn-add"
+         href="{% url 'admin:'|add:opts.app_label|add:'_'|add:opts.model_name|add:'_add' %}">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter {{ opts.verbose_name }}
+      </a>
+      {% endif %}
+      {% if print_buttons %}
+        {% for btn in print_buttons %}
+        <a class="dv-btn dv-btn-print" href="{{ btn.url }}" target="_blank">{{ btn.icon }} {{ btn.label }}</a>
+        {% endfor %}
+      {% elif print_url %}
+      <a class="dv-btn dv-btn-print" href="{{ print_url }}" target="_blank">🖨️ Imprimer</a>
+      {% endif %}
+      {% if can_change %}
+      <a class="dv-btn dv-btn-edit"
+         href="{% url 'admin:'|add:opts.app_label|add:'_'|add:opts.model_name|add:'_change' object.pk %}">
+        ✏️ Modifier
+      </a>
+      {% endif %}
+      {% if can_delete %}
+      <a class="dv-btn dv-btn-delete"
+         href="{% url 'admin:'|add:opts.app_label|add:'_'|add:opts.model_name|add:'_delete' object.pk %}"
+         onclick="return confirm('Supprimer cet enregistrement ? Cette action est irréversible.')">
+        🗑️ Supprimer
+      </a>
+      {% endif %}
+      {# ── Actions spécifiques au modèle (surchargeable par chaque template) ── #}
+      {% block extra_actions %}{% endblock %}
+    </div>
+  </div>
+
+  {# ── Contenu principal (peut être surchargé) ── #}
+  {% block detail_content %}
+
+  {# Sections de champs #}
+  {% for section in sections %}
+  <div class="dv-section">
+    {% if section.titre %}
+    <div class="dv-section-title">{{ section.titre }}</div>
+    {% endif %}
+    {% if section.fields %}
+    <div class="dv-fields">
+      {% for field in section.fields %}
+      <div class="dv-field {% if field.css_class %}{{ field.css_class }}{% endif %}">
+        <div class="dv-field-label">{{ field.label }}</div>
+        <div class="dv-field-value {% if not field.value %}empty{% endif %} {% if field.css_class %}{{ field.css_class }}{% endif %}">
+          {{ field.value|default:"—" }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if section.obs %}
+    <div class="dv-obs">
+      <div class="dv-obs-label">Observations / Commentaire</div>
+      {{ section.obs }}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  {# Tableaux inline (articles, lignes, etc.) #}
+  {% for inline in inlines %}
+  <div class="dv-section">
+    <div class="dv-section-title">{{ inline.titre }}</div>
+    <div class="dv-table-wrap">
+      {% if inline.rows %}
+      <table class="dv-table">
+        <thead>
+          <tr>
+            {% for col in inline.colonnes %}
+            <th {% if col.css %}class="{{ col.css }}"{% endif %}>{{ col.label }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in inline.rows %}
+          <tr>
+            {% for cell in row %}
+            <td {% if cell.css %}class="{{ cell.css }}"{% endif %}>{{ cell.value|default:"—" }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+        {% if inline.totaux %}
+        <tfoot>
+          <tr>
+            {% for tot in inline.totaux %}
+            <td {% if tot.css %}class="{{ tot.css }}"{% endif %}>{{ tot.value }}</td>
+            {% endfor %}
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+      {% else %}
+      <div class="dv-empty-table">
+        <span>📋</span>
+        Aucune ligne enregistrée
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% endblock %}
+
+</div>
+{% endblock %}

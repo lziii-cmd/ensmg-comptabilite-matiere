@@ -1,0 +1,37 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Notifications — ENSMG{% endblock %}
+{% block page_title_short %}Notifications{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Notifications</span>
+{% endblock %}
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Notifications</div><div class="ph-sub">Centre de notifications</div></div>
+    <div class="ph-right"><a href="#" class="btn btn-o btn-sm">Tout marquer comme lu</a></div>
+  </div>
+  <div class="card au d1">
+    <div class="cb">
+      {% for notif in notifications %}
+      <div class="notif-item">
+        <div class="ni-ico" style="background:var(--{% if notif.type == 'ACHAT' %}accent{% elif notif.type == 'STOCK' %}green{% else %}amber{% endif %}-d);border:1px solid rgba({% if notif.type == 'ACHAT' %}82,183,255{% elif notif.type == 'STOCK' %}74,222,154{% else %}251,191,36{% endif %},.18)">
+          <svg fill="none" stroke="var(--{% if notif.type == 'ACHAT' %}accent{% elif notif.type == 'STOCK' %}green{% else %}amber{% endif %})" viewBox="0 0 24 24" style="width:13px;height:13px">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="ni-title">{{ notif.titre }}</div>
+          <div class="ni-body">{{ notif.message }}</div>
+          <div class="ni-time">{{ notif.date_creation|timesince }} ago</div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state" style="padding:40px">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <div class="empty-state-text">Aucune notification</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

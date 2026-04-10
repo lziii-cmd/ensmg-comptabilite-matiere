@@ -1,0 +1,89 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Catégories — ENSMG Admin{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+.ref-page { padding: 28px 28px 60px; }
+.ref-bread { font-size: 12px; color: #6b7280; margin-bottom: 20px; display: flex; gap: 6px; align-items: center; }
+.ref-bread a { color: #374151; font-weight: 500; text-decoration: none; }
+.ref-bread a:hover { color: #1e3a5f; text-decoration: underline; }
+.ref-bread .sep { color: #d1d5db; }
+
+.ref-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.ref-header h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin: 0 0 4px; }
+.ref-header p { font-size: 13px; color: #6b7280; margin: 0; }
+.ref-add-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 16px; background: #1e3a5f; color: #fff; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; transition: background .15s; }
+.ref-add-btn:hover { background: #14294a; color: #fff; }
+
+.ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+
+.ref-card {
+  background: #fff; border: 1.5px solid #e5e7eb; border-radius: 12px;
+  padding: 18px 20px; cursor: pointer;
+  transition: border-color .18s, box-shadow .18s, transform .18s;
+  text-decoration: none; display: block;
+}
+.ref-card:hover {
+  border-color: #1e3a5f; box-shadow: 0 4px 18px rgba(30,58,95,.1);
+  transform: translateY(-2px);
+}
+.ref-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.ref-card-ico { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 21px; flex-shrink: 0; background: #f0f4ff; }
+.ref-card-code { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700; color: #1e3a5f; background: #eff6ff; padding: 2px 8px; border-radius: 5px; border: 1px solid #bfdbfe; }
+.ref-card-name { font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+.ref-card-desc { font-size: 11px; color: #9ca3af; line-height: 1.4; margin-bottom: 10px; }
+.ref-card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid #f3f4f6; }
+.ref-sc-count { font-size: 11px; font-weight: 600; color: #6b7280; display: flex; align-items: center; gap: 4px; }
+.ref-sc-count strong { color: #1e3a5f; font-size: 15px; }
+.ref-badge-on  { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.ref-badge-off { padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+.ref-empty { text-align: center; color: #9ca3af; padding: 40px; font-size: 13px; grid-column: 1/-1; background: #f9fafb; border-radius: 12px; border: 1px dashed #e5e7eb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ref-page">
+
+  <div class="ref-bread">
+    <a href="{% url 'admin:index' %}">🏠 Accueil</a>
+    <span class="sep">›</span>
+    <span style="color:#374151;font-weight:600;">Catégories</span>
+  </div>
+
+  <div class="ref-header">
+    <div>
+      <h1>📁 Catégories</h1>
+      <p>{{ nb_categories }} catégorie{% if nb_categories != 1 %}s{% endif %} de matières</p>
+    </div>
+    <a href="{% url 'admin:catalog_categorie_add' %}" class="ref-add-btn">＋ Ajouter une catégorie</a>
+  </div>
+
+  <div class="ref-grid">
+    {% for cat in categories %}
+    <a class="ref-card" href="/admin/catalog/categorie/{{ cat.pk }}/detail/">
+      <div class="ref-card-top">
+        <div class="ref-card-ico">📁</div>
+        <span class="ref-card-code">{{ cat.code }}</span>
+      </div>
+      <div class="ref-card-name">{{ cat.libelle }}</div>
+      {% if cat.description %}
+      <div class="ref-card-desc">{{ cat.description|truncatechars:80 }}</div>
+      {% endif %}
+      <div class="ref-card-footer">
+        <div class="ref-sc-count">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          <strong>{{ cat.sous_categories.count }}</strong> sous-cat.
+        </div>
+        {% if cat.actif %}<span class="ref-badge-on">Actif</span>{% else %}<span class="ref-badge-off">Inactif</span>{% endif %}
+      </div>
+    </a>
+    {% empty %}
+    <div class="ref-empty">Aucune catégorie configurée</div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

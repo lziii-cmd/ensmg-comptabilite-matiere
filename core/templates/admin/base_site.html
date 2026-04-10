@@ -1,0 +1,361 @@
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{# ═══════════════════════════════════════════════════════════
+   ENSMG – Interface Highdmin-style
+   Sidebar fixe à gauche | Header blanc en haut
+   ═══════════════════════════════════════════════════════════ #}
+
+{% block title %}{{ title|default:"Administration" }} | ENSMG{% endblock %}
+
+{# ── CSS ────────────────────────────────────────────────── #}
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/ensmg_custom.css' %}">
+<style>html { color-scheme: light !important; }</style>
+{% endblock %}
+
+{# ── JS (exercice switcher + sidebar toggle) ────────────── #}
+{% block extrahead %}
+{{ block.super }}
+<script src="{% static 'js/exercices_switcher.js' %}"></script>
+{% endblock %}
+
+{# ══════════════════════════════════════════════════════════
+   SIDEBAR  (overrides Django's nav-sidebar block)
+   ══════════════════════════════════════════════════════════ #}
+{% block nav-sidebar %}
+<nav id="nav-sidebar">
+
+  {# ── Logo ─────────────────────────────────────────────── #}
+  <a class="ensmg-sb-logo" href="{% url 'admin:index' %}">
+    <div class="ensmg-sb-badge">EM</div>
+    <div>
+      <div class="ensmg-sb-name">ENSMG</div>
+      <span class="ensmg-sb-sub">Comptabilité matières</span>
+    </div>
+  </a>
+
+  {# ── Navigation ───────────────────────────────────────── #}
+  <div class="ensmg-sb-nav">
+
+    {# Dashboard #}
+    <a href="{% url 'admin:index' %}" class="ensmg-sb-link" id="sb-dashboard">
+      <span class="ensmg-sb-icon">🏠</span>
+      <span class="ensmg-sb-text">Tableau de bord</span>
+    </a>
+
+    {# ── Apps dynamiques ─────────────────────────────────── #}
+    {% for app in available_apps %}
+
+      {# ── CORE : Référentiels ───────────────────────────── #}
+      {% if app.app_label == 'core' %}
+        <div class="ensmg-sb-group">Référentiels</div>
+        {% for m in app.models %}
+          <a href="{{ m.admin_url }}" class="ensmg-sb-link">
+            <span class="ensmg-sb-icon">
+              {% if 'Exercice' in m.name %}📅
+              {% elif 'Fournisseur' in m.name %}🏢
+              {% elif 'pôt' in m.name or 'pot' in m.name or 'Depot' in m.name %}🏬
+              {% elif 'Donataire' in m.name %}🤝
+              {% else %}⚙️{% endif %}
+            </span>
+            <span class="ensmg-sb-text">{{ m.name }}</span>
+          </a>
+        {% endfor %}
+      {% endif %}
+
+      {# ── CATALOG : Catalogue ───────────────────────────── #}
+      {% if app.app_label == 'catalog' %}
+        <div class="ensmg-sb-group">Catalogue</div>
+        {% for m in app.models %}
+          <a href="{{ m.admin_url }}" class="ensmg-sb-link">
+            <span class="ensmg-sb-icon">
+              {% if 'atière' in m.name or 'atiere' in m.name %}📦
+              {% elif 'atégorie' in m.name or 'ategorie' in m.name or 'amille' in m.name %}📁
+              {% elif 'nité' in m.name or 'nite' in m.name or 'esure' in m.name %}📏
+              {% else %}📋{% endif %}
+            </span>
+            <span class="ensmg-sb-text">{{ m.name }}</span>
+          </a>
+        {% endfor %}
+      {% endif %}
+
+      {# ── INVENTORY : Inventaire & Stock ───────────────── #}
+      {% if app.app_label == 'inventory' %}
+        <div class="ensmg-sb-group">Inventaire &amp; Stock</div>
+        {% for m in app.models %}
+          <a href="{{ m.admin_url }}" class="ensmg-sb-link">
+            <span class="ensmg-sb-icon">
+              {% if 'Stock' in m.name %}📊
+              {% elif 'ntrée' in m.name or 'ntree' in m.name %}⬇️
+              {% elif 'ortie' in m.name %}⬆️
+              {% elif 'ransfert' in m.name %}↔️
+              {% else %}📦{% endif %}
+            </span>
+            <span class="ensmg-sb-text">{{ m.name }}</span>
+          </a>
+        {% endfor %}
+      {% endif %}
+
+      {# ── PURCHASING : Achats & Approvisionnements ─────── #}
+      {% if app.app_label == 'purchasing' %}
+        <div class="ensmg-sb-group">Achats &amp; Appros</div>
+        {% for m in app.models %}
+          <a href="{{ m.admin_url }}" class="ensmg-sb-link">
+            <span class="ensmg-sb-icon">
+              {% if 'chat' in m.name and 'etour' not in m.name and 'igne' not in m.name %}🛒
+              {% elif 'on' in m.name and 'igne' not in m.name and 'etour' not in m.name and 'chat' not in m.name %}🎁
+              {% elif 'rêt' in m.name or 'ret' in m.name and 'etour' not in m.name and 'igne' not in m.name %}🤲
+              {% elif 'etour' in m.name %}↩️
+              {% elif 'xterne' in m.name or 'xternal' in m.name %}📥
+              {% else %}📋{% endif %}
+            </span>
+            <span class="ensmg-sb-text">{{ m.name }}</span>
+          </a>
+        {% endfor %}
+      {% endif %}
+
+      {# ── AUTH : Utilisateurs & Droits ─────────────────── #}
+      {% if app.app_label == 'auth' %}
+        <div class="ensmg-sb-group">Administration</div>
+        {% for m in app.models %}
+          <a href="{{ m.admin_url }}" class="ensmg-sb-link">
+            <span class="ensmg-sb-icon">
+              {% if 'tilisateur' in m.name or 'ser' in m.name %}👤
+              {% elif 'roupe' in m.name or 'roup' in m.name %}👥
+              {% else %}🔐{% endif %}
+            </span>
+            <span class="ensmg-sb-text">{{ m.name }}</span>
+          </a>
+        {% endfor %}
+      {% endif %}
+
+    {% endfor %}
+  </div>
+
+  {# ── Utilisateur (pied de sidebar) ───────────────────── #}
+  <div class="ensmg-sb-user">
+    <div class="ensmg-sb-avatar">{{ user.username|slice:":1"|upper }}</div>
+    <div>
+      <div class="ensmg-sb-uname">{{ user.get_full_name|default:user.username }}</div>
+      <div class="ensmg-sb-urole">{% if user.is_superuser %}Super Admin{% else %}Gestionnaire{% endif %}</div>
+    </div>
+  </div>
+
+</nav>
+{% endblock %}
+
+{# ══════════════════════════════════════════════════════════
+   HEADER – Bouton toggle (zone branding)
+   ══════════════════════════════════════════════════════════ #}
+{% block branding %}
+<button class="ensmg-toggle" id="ensmgSidebarToggle" title="Réduire/Agrandir le menu">
+  <span id="ensmgToggleIcon">☰</span>
+</button>
+<div class="ensmg-header-bc">
+  {% if title %}{{ title }}{% else %}Administration ENSMG{% endif %}
+</div>
+{% endblock %}
+
+{# ══════════════════════════════════════════════════════════
+   HEADER – Outils droite (nav-global)
+   ══════════════════════════════════════════════════════════ #}
+{% block nav-global %}
+{# Barre de recherche #}
+<div class="ensmg-search-wrap">
+  <span class="ensmg-search-ico">🔍</span>
+  <input type="search" class="ensmg-search-input" placeholder="Rechercher...">
+</div>
+
+{# Spacer #}
+<div style="flex:1;min-width:8px;"></div>
+
+{# ── Sélecteur d'exercices ──────────────────────────────── #}
+<div class="ensmg-header-actions">
+
+  <div id="xrcToolbar" data-action="{% url 'core:set_exercices_selection' %}"
+       style="position:relative;display:flex;align-items:center;gap:6px;">
+
+    <details id="xrcDetails" style="position:static;">
+      <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;
+                      background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;
+                      padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;
+                      user-select:none;outline:none;">
+        📅&nbsp;Exercices
+        <span style="background:#e5e7eb;border-radius:8px;padding:1px 7px;font-size:11px;color:#6b7280;min-width:18px;text-align:center;">
+          <span id="xrcCount">{% if exercices_selected_ids %}{{ exercices_selected_ids|length }}{% else %}0{% endif %}</span>
+        </span>
+      </summary>
+
+      {# Panneau déroulant #}
+      <div style="position:absolute;top:calc(100% + 8px);right:0;z-index:9999;
+                  background:#fff;border:1px solid #e5e7eb;border-radius:10px;
+                  box-shadow:0 10px 36px rgba(0,0,0,.15);padding:14px;min-width:270px;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6;">
+          <span style="font-weight:700;font-size:13px;color:#1f2937;">Sélection des exercices</span>
+          <div style="display:flex;gap:5px;">
+            <button id="xrcAll" type="button"
+                    style="background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;
+                           padding:3px 9px;border-radius:4px;font-size:11px;cursor:pointer;">Tous</button>
+            <button id="xrcNone" type="button"
+                    style="background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;
+                           padding:3px 9px;border-radius:4px;font-size:11px;cursor:pointer;">Aucun</button>
+          </div>
+        </div>
+
+        <div id="xrcList" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px;max-height:200px;overflow-y:auto;">
+          {% for ex in exercices_all %}
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;
+                          padding:6px 8px;border-radius:6px;border:1px solid #f3f4f6;
+                          font-size:13px;background:#fff;transition:background .1s;"
+                   onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+              <input type="checkbox" value="{{ ex.id }}"
+                     {% if exercices_selected_ids and ex.id|stringformat:"s" in exercices_selected_ids %}checked{% endif %}
+                     style="accent-color:#1e3a5f;width:14px;height:14px;flex-shrink:0;">
+              <span>
+                <strong>{{ ex.code }}</strong>
+                <span style="font-size:11px;margin-left:5px;font-weight:600;
+                             color:{% if ex.statut == 'OUVERT' %}#059669{% else %}#dc2626{% endif %};">
+                  {{ ex.statut }}
+                </span>
+              </span>
+            </label>
+          {% empty %}
+            <div style="color:#9ca3af;font-size:12px;text-align:center;padding:10px;">Aucun exercice disponible.</div>
+          {% endfor %}
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    padding-top:10px;border-top:1px solid #f3f4f6;">
+          {% if exercices_label %}
+            <span style="font-size:11px;color:#6b7280;">
+              Actif&nbsp;: <strong style="color:#1e3a5f;">{{ exercices_label }}</strong>
+            </span>
+          {% else %}
+            <span style="font-size:11px;color:#9ca3af;">Aucun exercice actif</span>
+          {% endif %}
+          <button id="xrcApply" type="button"
+                  style="background:#1e3a5f;color:#fff;border:none;border-radius:6px;
+                         padding:7px 18px;font-size:13px;font-weight:600;cursor:pointer;
+                         margin-left:8px;transition:background .15s;"
+                  onmouseover="this.style.background='#152a47'" onmouseout="this.style.background='#1e3a5f'">
+            Appliquer
+          </button>
+        </div>
+      </div>
+    </details>
+
+    {# Exercice actif badge #}
+    {% if exercices_label %}
+    <span style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a5f;
+                 padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;white-space:nowrap;">
+      {{ exercices_label }}
+    </span>
+    {% endif %}
+  </div>
+
+  {# ── Liens utilisateur ─────────────────────────────────── #}
+  {% if user.is_active and user.is_staff %}
+    {% url 'admin:password_change' as url_pwd %}
+    {% if url_pwd %}
+      <a href="{{ url_pwd }}" class="ensmg-hbtn" title="Changer le mot de passe">🔑</a>
+    {% endif %}
+    <a href="{% url 'admin:logout' %}" class="ensmg-hbtn" title="Déconnexion">
+      Déconnexion
+    </a>
+    <div class="ensmg-header-avatar" title="{{ user.username }}">
+      {{ user.username|slice:":1"|upper }}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{# ── Cacher les user-tools natifs ───────────────────────── #}
+{% block userlinks %}{% endblock %}
+
+{# ── Barre totaux + contenu ─────────────────────────────── #}
+{% block content %}
+{{ block.super }}
+{% if custom_totals %}
+<div class="total-footer">
+  {% for k, v in custom_totals.items %}
+    <span class="xrc-badge"><strong>{{ k }}</strong>&nbsp;: {{ v }}</span>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{# ── Pied de page + Script toggle ───────────────────────── #}
+{% block footer %}
+<div id="footer">
+  ENSMG &mdash; Système de comptabilité des matières &mdash; {% now "Y" %}
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var COLLAPSED_KEY = 'ensmg_sb_collapsed';
+  var body = document.body;
+
+  /* ─ Restaurer l'état sauvegardé ─ */
+  if (localStorage.getItem(COLLAPSED_KEY) === '1') {
+    body.classList.add('sb-collapsed');
+  }
+
+  /* ─ Toggle sidebar ─ */
+  var btn = document.getElementById('ensmgSidebarToggle');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var isMobile = window.innerWidth <= 900;
+      if (isMobile) {
+        body.classList.toggle('sb-open');
+      } else {
+        body.classList.toggle('sb-collapsed');
+        localStorage.setItem(COLLAPSED_KEY, body.classList.contains('sb-collapsed') ? '1' : '0');
+      }
+    });
+  }
+
+  /* ─ Fermer sidebar en cliquant sur l'overlay (mobile) ─ */
+  document.addEventListener('click', function (e) {
+    if (window.innerWidth <= 900 && body.classList.contains('sb-open')) {
+      var sidebar = document.getElementById('nav-sidebar');
+      if (sidebar && !sidebar.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+        body.classList.remove('sb-open');
+      }
+    }
+  });
+
+  /* ─ Marquer le lien actif ─ */
+  document.addEventListener('DOMContentLoaded', function () {
+    var path = window.location.pathname;
+    var links = document.querySelectorAll('.ensmg-sb-link');
+    var dashboard = document.getElementById('sb-dashboard');
+
+    links.forEach(function (link) {
+      if (link === dashboard) return;
+      try {
+        var lPath = new URL(link.href).pathname;
+        if (path.startsWith(lPath) && lPath !== '/') {
+          link.classList.add('active');
+        }
+      } catch(e) {}
+    });
+
+    /* Dashboard actif si on est sur l'index admin */
+    if (dashboard) {
+      try {
+        var dPath = new URL(dashboard.href).pathname;
+        if (path === dPath || path === dPath + '/') {
+          dashboard.classList.add('active');
+        }
+      } catch(e) {}
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ titre_page }} | ENSMG{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Accueil</a>
+  &rsaquo; <a href="/documents/">Documents &amp; Registres</a>
+  &rsaquo; {{ titre_page }}
+</div>
+{% endblock %}
+
+{% block content_title %}<h1>{{ titre_page }}</h1>{% endblock %}
+
+{% block content %}
+<style>
+  #content, #content-main, .content, #main, #content-wrapper, .content-wrapper {
+    max-width: none !important; width: 100% !important;
+  }
+  .fi-toolbar {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: 10px; margin-bottom: 18px;
+  }
+  .fi-select-ex {
+    display: flex; align-items: center; gap: 6px;
+    background: #f9fafb; border: 1px solid #d1d5db;
+    border-radius: 6px; padding: 5px 10px;
+    font-size: 13px; font-weight: 600; color: #374151;
+  }
+  .fi-select-ex select {
+    border: none; background: transparent;
+    font-size: 13px; font-weight: 600; color: #1e3a5f;
+    outline: none; cursor: pointer; min-width: 200px;
+  }
+  .fi-search {
+    display: flex; align-items: center;
+    border: 1px solid #d1d5db; border-radius: 6px;
+    background: #fff; overflow: hidden; height: 34px; flex: 1; max-width: 320px;
+  }
+  .fi-search input {
+    border: none; outline: none; padding: 0 10px;
+    font-size: 13px; width: 100%; height: 100%;
+  }
+  .fi-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .fi-table th {
+    background: #f3f4f6; font-weight: 600; text-align: left;
+    padding: 7px 10px; border-bottom: 2px solid #d1d5db;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #374151;
+  }
+  .fi-table td {
+    padding: 9px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: middle;
+  }
+  /* Ligne cliquable */
+  .fi-table tbody tr {
+    cursor: pointer; transition: background .12s;
+  }
+  .fi-table tbody tr:hover td {
+    background: #eff6ff;
+  }
+  /* Indicateur visuel discret */
+  .fi-table tbody tr td:last-child::after {
+    content: "📄";
+    float: right;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .fi-table tbody tr:hover td:last-child::after { opacity: 1; }
+
+  .badge-compte {
+    display: inline-block; background: #e0e7ff; color: #3730a3;
+    border-radius: 4px; padding: 1px 6px; font-size: 11px;
+    font-family: monospace; font-weight: 700;
+  }
+  .fi-tip {
+    display: flex; align-items: center; gap: 6px;
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px;
+    padding: 8px 14px; font-size: 12px; color: #1d4ed8; margin-bottom: 14px;
+  }
+</style>
+
+<div class="fi-tip">
+  💡 Cliquez sur une ligne pour générer directement le document PDF.
+</div>
+
+<div class="fi-toolbar">
+  <div class="fi-select-ex">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span>Exercice :</span>
+    <select id="exSelect">
+      {% for ex in exercices %}
+      <option value="{{ ex.pk }}" {% if ex.pk == exercice.pk %}selected{% endif %}>
+        {{ ex.annee }} — {{ ex.code }}{% if ex.statut == "OUVERT" %} [EN COURS]{% endif %}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="fi-search">
+    <input type="text" id="searchInput" placeholder="Rechercher par code ou désignation…">
+  </div>
+  <div style="color: #6b7280; font-size: 12px;">
+    <strong id="countDisplay">{{ matieres|length }}</strong> matière{% if matieres|length != 1 %}s{% endif %}
+  </div>
+</div>
+
+<table class="fi-table" id="fichesTable">
+  <thead>
+    <tr>
+      <th>N° Compte</th>
+      <th>Code</th>
+      <th>Désignation</th>
+      <th>Unité</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for m in matieres %}
+    <tr data-search="{{ m.code_court|lower }} {{ m.designation|lower }}"
+        data-matiere-pk="{{ m.pk }}"
+        data-url-base="{{ url_base }}">
+      <td>
+        {% if m.sous_compte %}<span class="badge-compte">{{ m.sous_compte.code }}</span>{% else %}—{% endif %}
+      </td>
+      <td><strong>{{ m.code_court }}</strong></td>
+      <td>{{ m.designation }}</td>
+      <td>{{ m.unite|default:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+(function(){
+  var exSelect    = document.getElementById('exSelect');
+  var searchInput = document.getElementById('searchInput');
+  var rows        = document.querySelectorAll('#fichesTable tbody tr');
+  var countDisplay= document.getElementById('countDisplay');
+
+  function getUrl(row) {
+    var exPk  = exSelect.value;
+    var base  = row.getAttribute('data-url-base');
+    var mPk   = row.getAttribute('data-matiere-pk');
+    return base + mPk + '/exercice/' + exPk + '/';
+  }
+
+  /* Clic sur ligne → ouvrir le document PDF dans un nouvel onglet */
+  rows.forEach(function(row) {
+    row.addEventListener('click', function() {
+      window.open(getUrl(row), '_blank');
+    });
+  });
+
+  function filterRows(){
+    var q = searchInput.value.toLowerCase().trim();
+    var visible = 0;
+    rows.forEach(function(row){
+      var text = row.getAttribute('data-search') || '';
+      var show = !q || text.includes(q);
+      row.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+    countDisplay.textContent = visible;
+  }
+
+  exSelect.addEventListener('change', function() { /* URLs calculées à la volée au clic */ });
+  searchInput.addEventListener('input', filterRows);
+})();
+</script>
+{% endblock %}

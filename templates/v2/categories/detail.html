@@ -1,0 +1,87 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}{{ categorie.libelle }} — Catégorie{% endblock %}
+{% block page_title_short %}{{ categorie.libelle }}{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span>
+<a href="{% url 'frontend:categories' %}">Catégories</a><span class="bread-sep">›</span>
+<span class="bread-cur">{{ categorie.libelle }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <!-- Hero -->
+  <div class="au" style="display:flex;align-items:flex-start;gap:16px">
+    <div style="width:52px;height:52px;border-radius:var(--r);background:linear-gradient(135deg,rgba(82,183,255,.18),rgba(74,222,154,.08));display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">🗂️</div>
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+        <div style="font-size:22px;font-weight:700;color:var(--t1)">{{ categorie.libelle }}</div>
+        <span class="code-badge">{{ categorie.code }}</span>
+        <span class="badge-solid blue">Catégorie</span>
+        {% if nb_matieres_actives %}<span class="badge-solid bg">{{ nb_matieres_actives }} matière{{ nb_matieres_actives|pluralize }} active{{ nb_matieres_actives|pluralize }}</span>{% endif %}
+      </div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:10px">Catégorie de matières — ENSMG</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="{% url 'frontend:categories' %}" class="btn btn-o btn-sm">← Liste</a>
+        <a href="{% url 'admin:catalog_categorie_change' categorie.pk %}" class="btn btn-o btn-sm">✏ Modifier</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="g4 au d1">
+    <div class="kpi">
+      <div class="kpi-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div>
+      <div><div class="kpi-v txt-a">{{ nb_matieres }}</div><div class="kpi-l">Matières totales</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      <div><div class="kpi-v txt-g">{{ nb_matieres_actives }}</div><div class="kpi-l">Actives</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></div>
+      <div><div class="kpi-v txt-am">{{ nb_sous_categories }}</div><div class="kpi-l">Sous-catégories</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico r"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+      <div><div class="kpi-v txt-r">{{ nb_matieres_stockables }}</div><div class="kpi-l">Stockables</div></div>
+    </div>
+  </div>
+
+  <!-- Informations -->
+  <div class="info-section au d2">
+    <div class="info-section-head blue">Identification</div>
+    <div class="info-grid g3">
+      <div class="info-cell"><div class="info-cell-lbl">Code</div><div class="info-cell-val mono accent">{{ categorie.code }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Libellé</div><div class="info-cell-val" style="color:var(--t1);font-weight:500">{{ categorie.libelle }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Actives / Total</div><div class="info-cell-val"><span class="txt-g">{{ nb_matieres_actives }}</span> / <span class="txt-a">{{ nb_matieres }}</span></div></div>
+    </div>
+  </div>
+
+  <!-- Table matières -->
+  <div class="card au d3" style="flex:1;display:flex;flex-direction:column">
+    <div class="ch">
+      <div class="ch-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div>
+      <div><div class="ch-title">Matières de cette catégorie</div></div>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Code</th><th>Désignation</th><th>Type</th><th>Sous-catégorie</th><th>Unité</th><th>Statut</th></tr></thead>
+        <tbody>
+          {% for mat in matieres %}
+          <tr class="tr-click" onclick="location.href='{% url 'frontend:matiere_detail' mat.pk %}'">
+            <td><span class="mono txt-a">{{ mat.code_court }}</span></td>
+            <td style="color:var(--t1);font-weight:500">{{ mat.designation }}</td>
+            <td><span class="badge-solid {% if mat.type_matiere == 'CONSOMMABLE' %}amber{% else %}blue{% endif %}">{{ mat.get_type_matiere_display }}</span></td>
+            <td class="txt-m">{{ mat.sous_categorie|default:"—" }}</td>
+            <td>{{ mat.unite|default:"—" }}</td>
+            <td><span class="badge {% if mat.actif %}bg{% else %}br{% endif %}">{% if mat.actif %}Active{% else %}Inactive{% endif %}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6"><div class="empty-state"><div class="empty-state-text">Aucune matière dans cette catégorie</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}{{ matiere.designation }} — Matière{% endblock %}
+{% block page_title_short %}{{ matiere.code_court }}{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span>
+<a href="{% url 'frontend:matieres' %}">Matières</a><span class="bread-sep">›</span>
+<span class="bread-cur">{{ matiere.code_court }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+
+  <!-- Hero -->
+  <div class="au" style="display:flex;align-items:flex-start;gap:16px">
+    <div style="flex:1">
+      <div style="font-size:11px;color:var(--t3);margin-bottom:6px;display:flex;align-items:center;gap:5px">
+        🏠 <a href="{% url 'frontend:dashboard' %}" style="color:var(--t2);text-decoration:none">Accueil</a> ›
+        <a href="{% url 'frontend:categories' %}" style="color:var(--t2);text-decoration:none">{{ matiere.sous_categorie.categorie.libelle|default:"Catalogue" }}</a> ›
+        <a href="{% url 'frontend:matieres' %}" style="color:var(--t2);text-decoration:none">Matières</a> › {{ matiere.code_court }}
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--accent-d);border:1px solid rgba(82,183,255,.25);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🧪</div>
+        <div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.5px">{{ matiere.designation }}</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+            <span class="badge-solid {% if matiere.type_matiere == 'CONSOMMABLE' %}amber{% else %}blue{% endif %}" style="font-size:9.5px">{{ matiere.get_type_matiere_display }}</span>
+            <span class="badge {% if matiere.actif %}bg{% else %}br{% endif %}" style="font-size:9.5px">{% if matiere.actif %}actif{% else %}inactif{% endif %}</span>
+            {% if stocks %}<span class="badge bb" style="font-size:9.5px">stocké</span>{% endif %}
+            {% if matiere.unite %}<span style="padding:3px 9px;border-radius:20px;font-size:9.5px;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--t3)">{{ matiere.unite }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <a href="{% url 'frontend:matieres' %}" class="btn btn-o btn-sm">← Liste</a>
+        <a href="{% url 'admin:catalog_matiere_change' matiere.pk %}" class="btn btn-o btn-sm">✏ Modifier</a>
+        <a href="#" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cette matière ?')">🗑 Supprimer</a>
+        <a href="{% url 'frontend:mouvements' %}?matiere={{ matiere.pk }}" class="btn btn-ghost btn-sm">📜 Historique</a>
+        <a href="{% url 'admin:purchasing_achat_add' %}" class="btn btn-p btn-sm">+ Nouvelle entrée</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="g4 au d1">
+    <div class="kpi">
+      <div class="kpi-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+      <div><div class="kpi-v txt-a">{{ total_qte|floatformat:0|default:"0" }}</div><div class="kpi-l">Stock total{% if matiere.unite %} · {{ matiere.unite }}{% endif %}</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+      <div><div class="kpi-v txt-g" style="font-size:15px">{{ cump_moyen|floatformat:0|default:"—" }}</div><div class="kpi-l">CUMP moyen · F CFA</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+      <div><div class="kpi-v txt-p" style="font-size:15px">{{ total_valeur|floatformat:0|default:"0" }}</div><div class="kpi-l">Valeur stock · F CFA</div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-ico {% if matiere.seuil_min and total_qte <= matiere.seuil_min %}r{% else %}a{% endif %}">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      </div>
+      <div><div class="kpi-v {% if matiere.seuil_min and total_qte <= matiere.seuil_min %}txt-r{% else %}txt-am{% endif %}">{{ matiere.seuil_min|default:"0" }}</div><div class="kpi-l">Seuil minimum</div></div>
+    </div>
+  </div>
+
+  <!-- Identification + Imputation -->
+  <div class="g2 au d2">
+    <div class="info-section" style="margin-bottom:0">
+      <div class="info-section-head blue">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Identification
+      </div>
+      <div class="info-grid g2">
+        <div class="info-cell"><div class="info-cell-lbl">Code court</div><div class="info-cell-val mono accent">{{ matiere.code_court }}</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Désignation</div><div class="info-cell-val">{{ matiere.designation }}</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Type</div><div class="info-cell-val"><span class="badge-solid {% if matiere.type_matiere == 'CONSOMMABLE' %}amber{% else %}blue{% endif %}">{{ matiere.get_type_matiere_display }}</span></div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Unité</div><div class="info-cell-val">{{ matiere.unite|default:"—" }}</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Seuil minimum</div><div class="info-cell-val mono {% if matiere.seuil_min %}amber{% else %}txt-m{% endif %}">{{ matiere.seuil_min|default:"0" }}</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Statut</div><div class="info-cell-val"><span class="badge {% if matiere.actif %}bg{% else %}br{% endif %}">{% if matiere.actif %}Actif{% else %}Inactif{% endif %}</span></div></div>
+      </div>
+    </div>
+    <div class="info-section" style="margin-bottom:0">
+      <div class="info-section-head amber">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        Imputation comptable
+      </div>
+      {% if matiere.sous_categorie %}
+      <div class="info-grid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="info-cell"><div class="info-cell-lbl">Compte principal</div><div class="info-cell-val txt-m" style="font-size:12px">{{ matiere.sous_categorie.categorie.code|default:"—" }} — {{ matiere.sous_categorie.categorie.libelle|default:"" }}</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Catégorie</div><div class="info-cell-val txt-m" style="font-size:12px">{{ matiere.sous_categorie.code|default:"—" }} — {{ matiere.sous_categorie.libelle|default:"" }}</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Sous-compte</div><div class="info-cell-val txt-m" style="font-size:12px">{% if matiere.sous_compte %}{{ matiere.sous_compte }}{% else %}—{% endif %}</div></div>
+      </div>
+      {% else %}
+      <div class="info-grid g2">
+        <div class="info-cell"><div class="info-cell-lbl">Catégorie</div><div class="info-cell-val txt-m">—</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Sous-catégorie</div><div class="info-cell-val txt-m">—</div></div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Stock par dépôt -->
+  <div class="info-section au d3" style="margin-bottom:0">
+    <div class="info-section-head green">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:13px;height:13px"><path stroke-linecap="round" stroke-linejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
+      Stock par dépôt
+      <span style="margin-left:auto;display:flex;gap:5px">
+        <a href="?exercice=courant" class="chip {% if not all_exercices %}on{% endif %}" style="font-size:10px;padding:2px 8px">Exercice en cours</a>
+        <a href="?all=1" class="chip {% if all_exercices %}on{% endif %}" style="font-size:10px;padding:2px 8px">Tous dépôts</a>
+      </span>
+    </div>
+    <table>
+      <thead><tr><th>Exercice</th><th>Dépôt</th><th style="text-align:right">Stock init. Qté</th><th style="text-align:right">Quantité</th><th style="text-align:right">CUMP (F CFA)</th><th style="text-align:right">Valeur (F CFA)</th></tr></thead>
+      <tbody>
+        {% for sc in stocks %}
+        <tr>
+          <td class="txt-m">{{ sc.exercice.code }}</td>
+          <td style="color:var(--t1)">{{ sc.depot.code }} — {{ sc.depot.libelle }}</td>
+          <td class="mono" style="text-align:right">{{ sc.stock_initial_qte }}</td>
+          <td class="mono" style="text-align:right;color:var(--t1);font-weight:600">{{ sc.quantite }}</td>
+          <td class="mono" style="text-align:right">{{ sc.cump|floatformat:0 }}</td>
+          <td class="mono" style="text-align:right;color:var(--green)">{{ sc.valeur|floatformat:0 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><div class="empty-state-text">Aucun stock enregistré pour cette matière</div></div></td></tr>
+        {% endfor %}
+        {% if stocks %}
+        <tr style="background:var(--surface2);border-top:2px solid var(--border)">
+          <td colspan="3" style="text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t3)">TOTAL</td>
+          <td class="mono" style="text-align:right;color:var(--accent);font-weight:700;font-size:13px">{{ total_qte|floatformat:0 }}</td>
+          <td class="mono" style="text-align:right;color:var(--t3)">—</td>
+          <td class="mono" style="text-align:right;color:var(--green);font-weight:700;font-size:13px">{{ total_valeur|floatformat:0 }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Evolution + Prêts provisoires -->
+  <div class="g2 au d4">
+    <div class="card">
+      <div class="ch">
+        <div class="ch-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+        <div><div class="ch-title">Évolution du stock</div><div class="ch-sub">12 derniers mois</div></div>
+      </div>
+      <div class="cb">
+        <div class="cw cw-md"><canvas id="c-stock-evo"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <div class="ch-ico a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></div>
+        <div><div class="ch-title">Sorties provisoires / Prêts</div><div class="ch-sub">Prêts en cours pour cette matière</div></div>
+      </div>
+      {% if prets_actifs %}
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Prêt</th><th>Service</th><th style="text-align:right">Qté</th><th>Statut</th></tr></thead>
+          <tbody>
+            {% for lp in prets_actifs %}
+            <tr class="tr-click" onclick="location.href='{% url 'frontend:pret_detail' lp.pret.pk %}'">
+              <td><span class="mono txt-a">{{ lp.pret.code }}</span></td>
+              <td>{{ lp.pret.service|default:"—" }}</td>
+              <td class="mono" style="text-align:right">{{ lp.quantite }}</td>
+              <td><span class="badge ba">En cours</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="cb">
+        <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-size:10.5px;color:var(--t3);margin-bottom:4px">Type de groupe · <span class="badge-solid {% if matiere.type_matiere == 'CONSOMMABLE' %}amber{% else %}blue{% endif %}" style="font-size:9px">{{ matiere.get_type_matiere_display }}</span></div>
+          <div style="font-size:11.5px;color:var(--t2)">{% if matiere.type_matiere == 'CONSOMMABLE' %}Les consommables ne sont pas éligibles aux prêts provisoires.{% else %}Aucun prêt actif pour cette matière.{% endif %}</div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const evoData = {{ evolution_data|default:"[]"|safe }};
+const evoLabels = {{ evolution_labels|default:"[]"|safe }};
+const ctx = document.getElementById('c-stock-evo');
+if(ctx && evoData.length) {
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: evoLabels,
+      datasets: [{
+        data: evoData,
+        borderColor: '#4ade9a',
+        backgroundColor: 'rgba(74,222,154,.08)',
+        fill: true,
+        tension: .4,
+        pointRadius: 4,
+        pointBackgroundColor: '#4ade9a',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display: false},
+        tooltip: {backgroundColor:'#192035',borderColor:'rgba(255,255,255,.08)',borderWidth:1,titleColor:'#f0f4ff',bodyColor:'#7e8fa8',padding:10,cornerRadius:8}
+      },
+      scales: {
+        x: {grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#3d4f68',font:{size:10}}},
+        y: {grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#3d4f68',font:{size:10}}}
+      }
+    }
+  });
+} else if(ctx) {
+  ctx.parentElement.innerHTML = '<div class="empty-state" style="height:200px"><div class="empty-state-text">Aucune donnée d\'évolution disponible</div></div>';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Comptes d'imputation — ENSMG{% endblock %}
+{% block page_title_short %}Comptes{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Comptes d'imputation</span>
+{% endblock %}
+{% block content %}
+<style>
+/* ── Cards de type de comptes ───────────────────────────────── */
+.comptes-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.compte-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:20px 24px;cursor:pointer;transition:border-color .2s,background .2s;user-select:none}
+.compte-card:hover,.compte-card.active{border-color:var(--accent);background:var(--surface3)}
+.compte-card .cc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+.compte-card .cc-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t2);margin-bottom:4px}
+.compte-card .cc-title{font-size:16px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.compte-card .cc-count{font-size:28px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1}
+.compte-card .cc-desc{font-size:12px;color:var(--t3);margin-top:6px}
+
+/* ── Panneau de liste ───────────────────────────────────────── */
+.comptes-panel{display:none;animation:fadeIn .18s var(--ease)}
+.comptes-panel.visible{display:flex;flex-direction:column}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── En-tête panneau ────────────────────────────────────────── */
+.panel-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.panel-header .ph-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--accent-d);color:var(--accent);border:1px solid var(--accent-g)}
+.panel-title{font-size:16px;font-weight:700;color:var(--t1)}
+</style>
+
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left">
+      <div class="ph-title">Comptes d'imputation</div>
+      <div class="ph-sub">Plan comptable matières — hiérarchie à 3 niveaux</div>
+    </div>
+  </div>
+
+  <!-- ── 3 CARDS ────────────────────────────────────────────── -->
+  <div class="comptes-cards">
+
+    <!-- Comptes principaux -->
+    <div class="compte-card" id="card-principal" onclick="showPanel('principal')">
+      <div class="cc-icon" style="background:rgba(82,183,255,.12)">🏛</div>
+      <div class="cc-label">Niveau 1</div>
+      <div class="cc-title">Comptes principaux</div>
+      <div class="cc-count">{{ nb_principaux }}</div>
+      <div class="cc-desc">Codes à 2 chiffres (10, 20…)</div>
+    </div>
+
+    <!-- Comptes divisionnaires -->
+    <div class="compte-card" id="card-divisionnaire" onclick="showPanel('divisionnaire')">
+      <div class="cc-icon" style="background:rgba(167,139,250,.12)">📂</div>
+      <div class="cc-label">Niveau 2</div>
+      <div class="cc-title">Comptes divisionnaires</div>
+      <div class="cc-count">{{ nb_divisionnaires }}</div>
+      <div class="cc-desc">Codes à 5 chiffres (10.01…)</div>
+    </div>
+
+    <!-- Sous-comptes -->
+    <div class="compte-card" id="card-sous" onclick="showPanel('sous')">
+      <div class="cc-icon" style="background:rgba(74,222,154,.12)">🔖</div>
+      <div class="cc-label">Niveau 3</div>
+      <div class="cc-title">Sous-comptes</div>
+      <div class="cc-count">{{ nb_sous_comptes }}</div>
+      <div class="cc-desc">Codes à 8 chiffres (10.01.01…)</div>
+    </div>
+
+  </div>
+
+  <!-- ── PANNEAU : Comptes principaux ───────────────────────── -->
+  <div class="comptes-panel card au d1" id="panel-principal">
+    <div class="panel-header">
+      <div class="panel-title">Comptes principaux</div>
+      <span class="ph-badge">{{ nb_principaux }} compte{% if nb_principaux > 1 %}s{% endif %}</span>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Libellé</th>
+            <th>Groupe</th>
+            <th>Actif</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cp in comptes_principaux %}
+          <tr>
+            <td><span class="mono txt-a" style="font-size:13px;font-weight:700">{{ cp.code }}</span></td>
+            <td style="color:var(--t1);font-weight:500">{{ cp.libelle }}</td>
+            <td><span class="badge" style="background:rgba(82,183,255,.1);color:var(--accent)">{{ cp.get_groupe_display }}</span></td>
+            <td>{% if cp.actif %}<span class="badge" style="background:rgba(74,222,154,.1);color:var(--green)">✓ Actif</span>{% else %}<span class="badge">Inactif</span>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="empty-state"><div class="empty-state-text">Aucun compte principal</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── PANNEAU : Comptes divisionnaires ───────────────────── -->
+  <div class="comptes-panel card au d1" id="panel-divisionnaire">
+    <div class="panel-header">
+      <div class="panel-title">Comptes divisionnaires</div>
+      <span class="ph-badge">{{ nb_divisionnaires }} compte{% if nb_divisionnaires > 1 %}s{% endif %}</span>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Libellé</th>
+            <th>Compte principal</th>
+            <th>Actif</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cd in comptes_divisionnaires %}
+          <tr>
+            <td><span class="mono txt-a" style="font-size:13px;font-weight:700">{{ cd.code }}</span></td>
+            <td style="color:var(--t1);font-weight:500">{{ cd.libelle }}</td>
+            <td class="txt-m">{{ cd.compte_principal }}</td>
+            <td>{% if cd.actif %}<span class="badge" style="background:rgba(74,222,154,.1);color:var(--green)">✓ Actif</span>{% else %}<span class="badge">Inactif</span>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="empty-state"><div class="empty-state-text">Aucun compte divisionnaire</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── PANNEAU : Sous-comptes ─────────────────────────────── -->
+  <div class="comptes-panel card au d1" id="panel-sous">
+    <div class="panel-header">
+      <div class="panel-title">Sous-comptes</div>
+      <span class="ph-badge">{{ nb_sous_comptes }} compte{% if nb_sous_comptes > 1 %}s{% endif %}</span>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Libellé</th>
+            <th>Compte div.</th>
+            <th>Compte princ.</th>
+            <th>Actif</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sc in sous_comptes %}
+          <tr>
+            <td><span class="mono txt-a" style="font-size:13px;font-weight:700">{{ sc.code }}</span></td>
+            <td style="color:var(--t1);font-weight:500">{{ sc.libelle }}</td>
+            <td class="txt-m">{{ sc.compte_divisionnaire }}</td>
+            <td class="txt-m">{{ sc.compte_divisionnaire.compte_principal|default:"—" }}</td>
+            <td>{% if sc.actif %}<span class="badge" style="background:rgba(74,222,154,.1);color:var(--green)">✓ Actif</span>{% else %}<span class="badge">Inactif</span>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="empty-state"><div class="empty-state-text">Aucun sous-compte</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PANELS = ['principal', 'divisionnaire', 'sous'];
+
+function showPanel(type) {
+  // toggle : si déjà actif, fermer
+  const card = document.getElementById('card-' + type);
+  const panel = document.getElementById('panel-' + type);
+  const wasActive = card.classList.contains('active');
+
+  // Tout fermer
+  PANELS.forEach(t => {
+    document.getElementById('card-' + t).classList.remove('active');
+    document.getElementById('panel-' + t).classList.remove('visible');
+  });
+
+  // Ouvrir si pas déjà actif
+  if (!wasActive) {
+    card.classList.add('active');
+    panel.classList.add('visible');
+    // Scroll doux vers le panneau
+    setTimeout(() => panel.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+  }
+}
+</script>
+{% endblock %}

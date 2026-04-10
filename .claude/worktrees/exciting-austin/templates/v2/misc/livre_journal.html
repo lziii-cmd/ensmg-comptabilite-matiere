@@ -1,0 +1,46 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Grand Journal des Matières — ENSMG{% endblock %}
+{% block page_title_short %}Livre Journal{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span><span class="bread-cur">Grand Journal</span>
+{% endblock %}
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Grand Journal des Matières</div><div class="ph-sub">Registre comptable complet</div></div>
+  </div>
+  <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Date</th><th>Référence</th><th>Type</th><th>Matière</th><th>Dépôt</th><th style="text-align:right">Débit (Qté)</th><th style="text-align:right">Crédit (Qté)</th><th style="text-align:right">Valeur</th></tr></thead>
+        <tbody>
+          {% for entry in journal %}
+          <tr>
+            <td class="mono">{{ entry.date_mouvement|date:"d/m/Y" }}</td>
+            <td><span class="mono txt-a" style="font-size:10.5px">{{ entry.reference_piece|default:"—" }}</span></td>
+            <td><span class="badge {% if entry.type_mouvement == 'ENTREE' %}bg{% else %}br{% endif %}">{{ entry.get_type_mouvement_display|default:entry.type_mouvement }}</span></td>
+            <td style="color:var(--t1)">{{ entry.matiere.code_court }} — {{ entry.matiere.designation }}</td>
+            <td>{{ entry.depot.code|default:"—" }}</td>
+            <td class="mono" style="text-align:right;color:var(--green)">{% if entry.type_mouvement == 'ENTREE' %}{{ entry.quantite }}{% else %}—{% endif %}</td>
+            <td class="mono" style="text-align:right;color:var(--red)">{% if entry.type_mouvement != 'ENTREE' %}{{ entry.quantite }}{% else %}—{% endif %}</td>
+            <td class="mono" style="text-align:right">{{ entry.valeur|floatformat:0|default:"—" }} F CFA</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8"><div class="empty-state"><div class="empty-state-text">Aucun mouvement dans le journal</div></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj %}
+    <div class="pgr" style="flex-shrink:0">
+      <div class="pgr-info">Affichage <span>{{ page_obj.start_index }}</span>–<span>{{ page_obj.end_index }}</span> sur <span>{{ page_obj.paginator.count }}</span></div>
+      <div class="pgr-btns">
+        {% if page_obj.has_previous %}<a class="pgr-btn" href="?page={{ page_obj.previous_page_number }}">‹</a>{% endif %}
+        {% for n in page_obj.paginator.page_range %}<a class="pgr-btn {% if n == page_obj.number %}act{% endif %}" href="?page={{ n }}">{{ n }}</a>{% endfor %}
+        {% if page_obj.has_next %}<a class="pgr-btn" href="?page={{ page_obj.next_page_number }}">›</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

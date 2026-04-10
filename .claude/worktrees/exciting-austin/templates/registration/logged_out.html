@@ -1,0 +1,223 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Déconnecté — École normale supérieure des mines et de la géologie</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a2640;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0f1a2e 0%, #1a2640 40%, #213251 70%, #152030 100%);
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: -50%;
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(184,150,46,.04) 40px, rgba(184,150,46,.04) 41px),
+        repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(42,79,128,.06) 40px, rgba(42,79,128,.06) 41px);
+      z-index: 0;
+    }
+
+    .bg-circle { position: fixed; border-radius: 50%; z-index: 0; pointer-events: none; }
+    .bc1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(184,150,46,.08) 0%, transparent 70%); top: -150px; right: -100px; }
+    .bc2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(30,58,95,.2) 0%, transparent 70%); bottom: -100px; left: -80px; }
+
+    .logout-wrap {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+    }
+
+    .logout-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 44px 48px 36px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.2);
+      text-align: center;
+    }
+
+    /* Icône succès */
+    .logout-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 22px;
+      box-shadow: 0 4px 16px rgba(5,150,105,.2);
+    }
+    .logout-icon svg { color: #059669; }
+
+    /* Logo + titre */
+    .logout-badge-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .logout-badge {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, #b8962e, #d4af57);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 14px;
+      color: #152a47;
+      flex-shrink: 0;
+    }
+    .logout-school-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1a2640;
+    }
+
+    .logout-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1a2640;
+      margin-bottom: 8px;
+    }
+    .logout-subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* Info box */
+    .logout-info {
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-left: 4px solid #059669;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 28px;
+      font-size: 13px;
+      color: #065f46;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Bouton reconnexion */
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2a5090 100%);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+      transition: all .2s ease;
+      box-shadow: 0 4px 14px rgba(30,58,95,.3);
+      margin-bottom: 16px;
+    }
+    .logout-btn:hover {
+      background: linear-gradient(135deg, #152a47 0%, #1e3a5f 100%);
+      box-shadow: 0 6px 20px rgba(30,58,95,.42);
+      transform: translateY(-1px);
+      color: #fff;
+      text-decoration: none;
+    }
+
+    hr.sep { border: none; border-top: 1px solid #f3f4f6; margin: 20px 0; }
+
+    .logout-footer {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .logout-outer {
+      text-align: center;
+      color: rgba(255,255,255,.35);
+      font-size: 11px;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-circle bc1"></div>
+  <div class="bg-circle bc2"></div>
+
+  <div class="logout-wrap">
+    <div class="logout-card">
+
+      <!-- Logo -->
+      <div class="logout-badge-row">
+        <div class="logout-badge">EM</div>
+        <div class="logout-school-name">ENSMG — École normale supérieure des mines et de la géologie</div>
+      </div>
+
+      <!-- Icône succès -->
+      <div class="logout-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </div>
+
+      <h1 class="logout-title">Vous êtes déconnecté</h1>
+      <p class="logout-subtitle">Votre session a été fermée avec succès.<br>À bientôt sur le système de l'École normale supérieure des mines et de la géologie.</p>
+
+      <!-- Info box -->
+      <div class="logout-info">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" flex-shrink="0">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Session fermée — vos données sont sécurisées.
+      </div>
+
+      <!-- Bouton reconnexion -->
+      <a href="{% url 'admin:login' %}" class="logout-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        Se reconnecter
+      </a>
+
+      <hr class="sep">
+      <div class="logout-footer">École normale supérieure des mines et de la géologie &mdash; Système de comptabilité des matières &mdash; {% now "Y" %}</div>
+
+    </div>
+    <div class="logout-outer">Accès réservé au personnel autorisé</div>
+  </div>
+
+</body>
+</html>

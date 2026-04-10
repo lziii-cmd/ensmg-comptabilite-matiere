@@ -1,0 +1,109 @@
+{% extends "documents/_base.html" %}
+
+{% block titre_page %}Bon d'Entrée — {{ achat.code }}{% endblock %}
+{% block numero_doc %}{{ achat.code }}{% endblock %}
+{% block titre_doc %}Bon d'Entrée de Matières{% endblock %}
+
+{% block sous_titre %}
+<p class="small italic center">
+  (Achat de matières — montant inférieur à 600 000 F CFA)
+</p>
+{% endblock %}
+
+{% block contenu %}
+{# ── Références ── #}
+<div class="infos-bloc">
+  <div>
+    <span class="label">Fournisseur :</span>
+    {{ achat.fournisseur.raison_sociale }}
+    {% if achat.fournisseur.ninea %}<span class="small">(NINEA : {{ achat.fournisseur.ninea }})</span>{% endif %}
+  </div>
+  <div>
+    <span class="label">Date d'achat :</span> {{ achat.date_achat|date:"d/m/Y" }}
+  </div>
+</div>
+<div class="infos-bloc">
+  <div>
+    <span class="label">N° Facture :</span>
+    {{ achat.numero_facture|default:"—" }}
+  </div>
+  <div>
+    <span class="label">Dépôt :</span>
+    {{ achat.depot.nom|default:"—" }}
+  </div>
+</div>
+
+{# ── Tableau des lignes ── #}
+<table>
+  <thead>
+    <tr>
+      <th style="width:5%">N°</th>
+      <th style="width:12%">Code</th>
+      <th>Désignation de la matière</th>
+      <th style="width:10%">Unité</th>
+      <th style="width:8%">Qté</th>
+      <th style="width:14%">Prix unitaire</th>
+      <th style="width:15%">Montant HT</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ligne in achat.lignes.all %}
+    <tr>
+      <td class="center">{{ forloop.counter }}</td>
+      <td class="center">{{ ligne.matiere.code_court }}</td>
+      <td>{{ ligne.matiere.designation }}</td>
+      <td class="center">{{ ligne.matiere.unite.abreviation|default:"—" }}</td>
+      <td class="num">{{ ligne.quantite|floatformat:"-3" }}</td>
+      <td class="num">{{ ligne.prix_unitaire|floatformat:"0" }}</td>
+      <td class="num">{{ ligne.total_ligne_ht|floatformat:"0" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="center italic">Aucune ligne</td></tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    {% if achat.tva_active %}
+    <tr class="ligne-total">
+      <td colspan="6" class="right">Total HT :</td>
+      <td class="num">{{ achat.total_ht|floatformat:"0" }} F</td>
+    </tr>
+    <tr class="ligne-total">
+      <td colspan="6" class="right">TVA (18 %) :</td>
+      <td class="num">{{ achat.total_tva|floatformat:"0" }} F</td>
+    </tr>
+    <tr class="ligne-total">
+      <td colspan="6" class="right bold">TOTAL TTC :</td>
+      <td class="num bold">{{ achat.total_ttc|floatformat:"0" }} F CFA</td>
+    </tr>
+    {% else %}
+    <tr class="ligne-total">
+      <td colspan="6" class="right bold">MONTANT TOTAL :</td>
+      <td class="num bold">{{ achat.total_ht|floatformat:"0" }} F CFA</td>
+    </tr>
+    {% endif %}
+  </tfoot>
+</table>
+
+{% if achat.commentaire %}
+<div class="observations">
+  <label>Observations :</label>
+  <div class="contenu">{{ achat.commentaire }}</div>
+</div>
+{% endif %}
+
+{# ── Signatures ── #}
+<div class="signatures">
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Fournisseur</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Comptable des Matières</div>
+    <div class="ligne-sig">Nom &amp; Signature</div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Le Directeur</div>
+    <div class="ligne-sig">Visa &amp; Signature</div>
+  </div>
+</div>
+{% endblock %}

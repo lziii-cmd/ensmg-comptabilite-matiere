@@ -1,0 +1,52 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}{{ retour.code }} — Retour prêt{% endblock %}
+{% block page_title_short %}{{ retour.code }}{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a><span class="bread-sep">›</span>
+<a href="{% url 'frontend:prets' %}">Prêts</a><span class="bread-sep">›</span>
+{% if retour.pret %}<a href="{% url 'frontend:pret_detail' retour.pret.pk %}">{{ retour.pret.code }}</a><span class="bread-sep">›</span>{% endif %}
+<span class="bread-cur">{{ retour.code }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="detail-hero au">
+    <div class="detail-hero-left">
+      <div class="detail-hero-bread">🏠 Retour de prêt</div>
+      <div class="detail-hero-title">Retour <span class="code-badge">{{ retour.code }}</span></div>
+      <div class="detail-hero-actions">
+        <a href="{% url 'frontend:prets' %}" class="btn btn-o btn-sm">← Prêts</a>
+        {% if retour.pret %}<a href="{% url 'frontend:pret_detail' retour.pret.pk %}" class="btn btn-o btn-sm">Prêt {{ retour.pret.code }}</a>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="info-section au d1">
+    <div class="info-section-head blue">Informations du retour</div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-lbl">Référence</div><div class="info-cell-val mono accent">{{ retour.code }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Date de retour</div><div class="info-cell-val">{{ retour.date_retour|date:"d/m/Y" }}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Prêt associé</div><div class="info-cell-val">{% if retour.pret %}{{ retour.pret.code }}{% else %}—{% endif %}</div></div>
+      <div class="info-cell"><div class="info-cell-lbl">Dépôt</div><div class="info-cell-val">{{ retour.depot|default:"—" }}</div></div>
+    </div>
+  </div>
+
+  <div class="info-section au d2">
+    <div class="info-section-head green">Matières retournées</div>
+    <table>
+      <thead><tr><th>Matière</th><th style="text-align:right">Quantité retournée</th><th>État</th></tr></thead>
+      <tbody>
+        {% for ligne in lignes %}
+        <tr>
+          <td><span class="txt-a">{{ ligne.matiere.code_court }} — {{ ligne.matiere.designation }}</span></td>
+          <td class="mono" style="text-align:right">{{ ligne.quantite }}</td>
+          <td style="font-size:11px;color:var(--t3)">{{ ligne.observation|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3"><div class="empty-state"><div class="empty-state-text">Aucune ligne</div></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

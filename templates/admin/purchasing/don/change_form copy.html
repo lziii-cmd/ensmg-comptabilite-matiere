@@ -1,0 +1,23 @@
+<!-- templates/admin/catalog/categorie/change_form.html -->
+{% extends "admin/change_form.html" %}
+
+{% block content_title %}
+  {{ block.super }}
+  {% if closed_context %}
+    <p style="margin:.25rem 0 0; font-size:12px; opacity:.8;">
+      🔒 Les dons sont en lecture seule car l’exercice sélectionné est <strong>clos</strong>.
+    </p>
+  {% endif %}
+{% endblock %}
+
+{% block submit_buttons_top %}
+  {% if not closed_context %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+  {% if not closed_context %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}

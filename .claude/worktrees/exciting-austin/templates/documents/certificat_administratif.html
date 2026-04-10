@@ -1,0 +1,361 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Certificat Administratif — {{ operation.code }}</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 10mm 12mm;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      color: #000;
+    }
+
+    .document { width: 100%; }
+
+    /* ── En-tête ── */
+    .header {
+      display: table;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .header-cell {
+      display: table-cell;
+      width: 33.33%;
+      padding: 4px 6px;
+      vertical-align: middle;
+      font-size: 9.5pt;
+    }
+    .header-left  { text-align: left; }
+    .header-center { text-align: center; }
+    .header-right { text-align: right; }
+
+    /* ── Titre principal ── */
+    .main-title {
+      text-align: center;
+      font-size: 13pt;
+      font-weight: bold;
+      text-decoration: underline;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 8px 0 2px 0;
+    }
+    .ref-article {
+      text-align: center;
+      font-size: 9pt;
+      font-style: italic;
+      margin-bottom: 8px;
+    }
+
+    /* ── Références ── */
+    .ref-bar {
+      border: 1px solid #000;
+      padding: 5px 10px;
+      font-size: 9.5pt;
+      margin-bottom: 8px;
+      line-height: 1.8;
+    }
+    .ref-bar span { margin-right: 24px; }
+
+    /* ── Cadre légal ── */
+    .cadre-legal {
+      border: 2px solid #000;
+      padding: 8px 12px;
+      font-size: 9.5pt;
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+    .cadre-legal p { margin-bottom: 5px; }
+    .motif-ligne {
+      margin-left: 20px;
+      font-weight: bold;
+      font-style: italic;
+    }
+
+    /* ── Tableau deux colonnes ── */
+    .section-titre {
+      text-align: center;
+      font-weight: bold;
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 10px 0 4px 0;
+    }
+    .grille-comparaison {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+      margin-bottom: 10px;
+    }
+    .grille-comparaison th, .grille-comparaison td {
+      border: 1px solid #000;
+      padding: 4px 6px;
+      vertical-align: middle;
+    }
+    .col-title {
+      background: #1e3a5f;
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+      font-size: 9.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 5px;
+    }
+    .col-sep {
+      width: 8px;
+      border: none !important;
+      background: transparent;
+    }
+    .sub-th {
+      background: #d9d9d9;
+      font-weight: bold;
+      text-align: center;
+      font-size: 8.5pt;
+    }
+    .td-num { text-align: right; }
+    .td-center { text-align: center; }
+    .td-bold { font-weight: bold; }
+    .ligne-total {
+      background: #f0f0f0;
+      font-weight: bold;
+    }
+    .divider-col {
+      border-left: 3px solid #1e3a5f !important;
+      border-right: 3px solid #1e3a5f !important;
+    }
+
+    /* ── Observations ── */
+    .obs-block {
+      border: 1px solid #000;
+      min-height: 22px;
+      padding: 4px 8px;
+      font-size: 9pt;
+      margin-bottom: 8px;
+    }
+    .obs-label {
+      font-weight: bold;
+      font-size: 9pt;
+      margin-bottom: 2px;
+    }
+
+    /* ── Signatures ── */
+    .signatures {
+      display: table;
+      width: 100%;
+      margin-top: 12px;
+    }
+    .sig-cell {
+      display: table-cell;
+      width: 33.33%;
+      padding: 6px 8px;
+      border: 1px solid #000;
+      vertical-align: top;
+      text-align: center;
+      font-size: 8.5pt;
+    }
+    .sig-titre {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 8.5pt;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 3px;
+      margin-bottom: 3px;
+    }
+    .sig-sous {
+      font-style: italic;
+      font-size: 8pt;
+      color: #444;
+      margin-bottom: 28px;
+    }
+    .sig-ligne {
+      border-top: 1px solid #000;
+      padding-top: 2px;
+      font-size: 8pt;
+      color: #444;
+    }
+
+    /* ── Pied de page ── */
+    .pied {
+      margin-top: 10px;
+      font-size: 9pt;
+      text-align: right;
+      font-style: italic;
+    }
+    .notes {
+      font-size: 8pt;
+      margin-top: 8px;
+      color: #444;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+<div class="document">
+
+  <!-- ── En-tête institutionnel ── -->
+  <div class="header">
+    <div class="header-cell header-left" style="font-size:9pt;">
+      <strong>REPUBLIQUE DU SENEGAL</strong><br>
+      Un Peuple – Un But – Une Foi<br>
+      Ministère de l'Éducation<br>
+      <strong style="text-transform:uppercase;font-size:8.5pt;">
+        École Normale Supérieure<br>des Mines et de la Géologie
+      </strong><br>
+      Comptabilité des Matières
+    </div>
+    <div class="header-cell header-center">
+      <!-- vide intentionnel (titre centré ci-dessous) -->
+    </div>
+    <div class="header-cell header-right" style="font-size:9pt;">
+      <strong>N° {{ operation.code }}</strong><br>
+      Dakar, le {{ date_doc|date:"d F Y" }}<br>
+      Exercice {{ exercice_label }}<br>
+      Dépôt : {{ depot_label }}
+    </div>
+  </div>
+
+  <hr style="border-top:2px solid #000;margin-bottom:6px;">
+
+  <!-- ── Titre ── -->
+  <div class="main-title">Certificat Administratif Portant Autorisation</div>
+  <div class="ref-article">
+    Instruction Générale sur la Comptabilité des Matières — Art. 17b &amp; 18c — Modèle n°9
+  </div>
+
+  <hr style="border-top:1px solid #000;margin-bottom:8px;">
+
+  <!-- ── Cadre légal ── -->
+  <div class="cadre-legal">
+    <p>
+      Le soussigné, <strong>ordonnateur des matières</strong> de l'<em>École Normale Supérieure
+      des Mines et de la Géologie (ENSMG)</em>, après vérification des existants et examen des
+      pièces justificatives, conformément aux dispositions du Décret N° 81-844 du 20 août 1981
+      portant Règlement de la Comptabilité des Matières,
+    </p>
+    <p>
+      <strong>CERTIFIE ET AUTORISE</strong> la régularisation des matières ci-après désignées
+      dans les livres de la comptabilité des matières, pour le motif suivant :
+    </p>
+    <p class="motif-ligne">{{ motif|default:"— À préciser —" }}</p>
+    <p>
+      Ces matières seront régulièrement imputées et dégagées de l'exercice
+      <strong>{{ exercice_label }}</strong>, conformément au tableau ci-dessous.
+    </p>
+  </div>
+
+  <!-- ── Tableau comparatif Position ancienne / Position nouvelle ── -->
+  <div class="section-titre">Tableau comparatif des positions</div>
+
+  <table class="grille-comparaison">
+    <thead>
+      <tr>
+        <!-- Colonne numéro -->
+        <th rowspan="2" class="sub-th" style="width:4%;">N°</th>
+        <!-- Position ancienne (4 colonnes) -->
+        <th colspan="4" class="col-title" style="width:44%;">
+          Position ancienne des matières<br>
+          <span style="font-size:8pt;font-weight:normal;font-style:italic;">(Selon écritures comptables)</span>
+        </th>
+        <!-- Séparateur visuel -->
+        <td rowspan="2" class="col-sep"></td>
+        <!-- Position nouvelle (4 colonnes) -->
+        <th colspan="4" class="col-title" style="width:44%;">
+          Position nouvelle des matières<br>
+          <span style="font-size:8pt;font-weight:normal;font-style:italic;">(Après régularisation autorisée)</span>
+        </th>
+      </tr>
+      <tr>
+        <!-- Sous-en-têtes position ancienne -->
+        <th class="sub-th" style="width:9%;">N° Nomenclature</th>
+        <th class="sub-th" style="width:22%;">Désignation</th>
+        <th class="sub-th" style="width:7%;">Quantité</th>
+        <th class="sub-th" style="width:10%;">Montant (F)</th>
+        <!-- Sous-en-têtes position nouvelle -->
+        <th class="sub-th" style="width:9%;">N° Nomenclature</th>
+        <th class="sub-th" style="width:22%;">Désignation</th>
+        <th class="sub-th" style="width:7%;">Quantité</th>
+        <th class="sub-th" style="width:10%;">Montant (F)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in lignes %}
+      <tr>
+        <td class="td-center">{{ forloop.counter }}</td>
+        <!-- Position ancienne -->
+        <td class="td-center">{{ item.compte_code }}</td>
+        <td>{{ item.designation }}</td>
+        <td class="td-num td-bold">{{ item.quantite|floatformat:"-2" }}</td>
+        <td class="td-num">{{ item.cout_total|floatformat:"0" }}</td>
+        <!-- Séparateur -->
+        <td class="col-sep"></td>
+        <!-- Position nouvelle -->
+        <td class="td-center">{{ item.compte_code }}</td>
+        <td>{{ item.designation }}</td>
+        <td class="td-num td-bold">0</td>
+        <td class="td-num">0</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="10" class="td-center" style="font-style:italic;padding:8px;">
+          Aucune matière référencée.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="ligne-total">
+        <td colspan="3" class="td-center">TOTAL</td>
+        <td class="td-num"></td>
+        <td class="td-num">{{ total_valeur|floatformat:"0" }} F</td>
+        <td class="col-sep"></td>
+        <td colspan="3" class="td-center">TOTAL</td>
+        <td class="td-num">0 F</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- ── Observations ── -->
+  {% if observations %}
+  <div class="obs-label">Observations :</div>
+  <div class="obs-block">{{ observations }}</div>
+  {% endif %}
+
+  <!-- ── Signatures ── -->
+  <div class="signatures">
+    <div class="sig-cell">
+      <div class="sig-titre">Le Comptable des Matières</div>
+      <div class="sig-sous">Atteste la position ancienne<br>inscrite aux écritures</div>
+      <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+    </div>
+    <div class="sig-cell">
+      <div class="sig-titre">Le Chef de Service / Bureau</div>
+      <div class="sig-sous">Certifie la position nouvelle<br>et les motifs de régularisation</div>
+      <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+    </div>
+    <div class="sig-cell">
+      <div class="sig-titre">L'Ordonnateur des Matières</div>
+      <div class="sig-sous">Autorise la régularisation<br>et appose le cachet officiel</div>
+      <div class="sig-ligne">Nom, Qualité, Cachet &amp; Signature</div>
+    </div>
+  </div>
+
+  <!-- ── Notes de bas de page ── -->
+  <div class="notes">
+    <strong>Art. 17b</strong> : Le comptable des matières peut opérer des rectifications en cas d'erreurs d'écritures, sur certificat administratif de l'ordonnateur des matières.<br>
+    <strong>Art. 18c</strong> : Les excédents ou déficits constatés lors des recensements sont régularisés par certificat administratif portant autorisation de l'ordonnateur des matières.
+  </div>
+
+  <div class="pied">Fait à Dakar, le {{ date_doc|date:"d F Y" }}</div>
+
+</div>
+</body>
+</html>

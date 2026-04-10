@@ -1,0 +1,25 @@
+{% extends "admin/detail_view.html" %}
+{#
+  Template détail spécifique aux Dotations.
+  Ajoute un bouton "✅ Valider" quand la dotation est en brouillon.
+#}
+
+{% block extra_actions %}
+  {% if valider_url %}
+    {% if valider_has_lines %}
+    {# Brouillon avec lignes → bouton Valider actif #}
+    <a class="dv-btn dv-btn-validate"
+       href="{{ valider_url }}"
+       onclick="return confirm('Valider cette dotation ?\n\nCette action génère les mouvements de stock et les fiches d\'affectation. Elle est irréversible.')">
+      ✅ Valider
+    </a>
+    {% else %}
+    {# Brouillon sans lignes → bouton désactivé avec tooltip #}
+    <span class="dv-btn"
+          title="Ajoutez au moins un article avant de valider."
+          style="background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb;cursor:not-allowed;">
+      ✅ Valider
+    </span>
+    {% endif %}
+  {% endif %}
+{% endblock %}

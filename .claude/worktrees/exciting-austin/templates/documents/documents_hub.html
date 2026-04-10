@@ -1,0 +1,275 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Documents & Registres | ENSMG{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Accueil</a>
+  &rsaquo; Documents &amp; Registres
+</div>
+{% endblock %}
+
+{% block content_title %}<h1>Documents &amp; Registres CDM</h1>{% endblock %}
+
+{% block content %}
+<style>
+  #content, #content-main, .content, #main, #content-wrapper, .content-wrapper {
+    max-width: none !important; width: 100% !important;
+  }
+  .hub-intro {
+    background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 8px;
+    padding: 12px 18px; margin-bottom: 24px; font-size: 13px; color: #3730a3;
+  }
+  .hub-exercice-badge {
+    display: inline-block; background: #1e3a5f; color: #fff;
+    border-radius: 4px; padding: 2px 10px; font-size: 12px; font-weight: 700;
+    margin-left: 8px;
+  }
+  .hub-section { margin-bottom: 28px; }
+  .hub-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: #6b7280; border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 6px; margin-bottom: 12px;
+  }
+  .hub-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+  .hub-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px;
+    text-decoration: none; color: #111827; transition: all .15s;
+  }
+  .hub-card:hover {
+    border-color: #1e3a5f; box-shadow: 0 2px 8px rgba(30,58,95,.12);
+    text-decoration: none; color: #1e3a5f;
+  }
+  .hub-card-icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 18px; background: #f3f4f6;
+  }
+  .hub-card-body {}
+  .hub-card-title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .hub-card-desc { font-size: 11px; color: #6b7280; }
+  .hub-card-badge {
+    display: inline-block; background: #fee2e2; color: #991b1b;
+    border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 600;
+    margin-left: 4px; vertical-align: middle;
+  }
+  .hub-card-badge.green { background: #dcfce7; color: #166534; }
+  .hub-card-badge.blue { background: #dbeafe; color: #1e40af; }
+  .hub-card.disabled { opacity: .5; pointer-events: none; }
+</style>
+
+<div class="hub-intro">
+  📋 Comptabilité des Matières — Décret N° 81-844 du 20 août 1981
+  {% if exercice %}
+  &nbsp; Exercice en cours :
+  <span class="hub-exercice-badge">{{ exercice.code }} ({{ exercice.annee }})</span>
+  {% endif %}
+</div>
+
+{# ── ENTRÉES ── #}
+<div class="hub-section">
+  <div class="hub-section-title">📥 Documents d'Entrée</div>
+  <div class="hub-grid">
+    <a href="/admin/purchasing/achat/" class="hub-card">
+      <div class="hub-card-icon">📦</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Bons d'entrée — Achats</div>
+        <div class="hub-card-desc">Bon d'entrée Modèle 1 + PV de réception (achats)</div>
+      </div>
+    </a>
+    <a href="/admin/purchasing/don/" class="hub-card">
+      <div class="hub-card-icon">🎁</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Bons d'entrée — Dons</div>
+        <div class="hub-card-desc">Bon d'entrée Modèle 1 + PV de réception (dons)</div>
+      </div>
+    </a>
+    <a href="/admin/purchasing/externalstockentry/" class="hub-card">
+      <div class="hub-card-icon">🏛️</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Bons d'entrée — Dotations</div>
+        <div class="hub-card-desc">Bon d'entrée Modèle 1 + PV de réception (dotations)</div>
+      </div>
+    </a>
+    <a href="/admin/inventory/operationtransfert/" class="hub-card">
+      <div class="hub-card-icon">🔄</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Bons d'entrée — Transferts</div>
+        <div class="hub-card-desc">Bon d'entrée Modèle 1 (réception suite transfert)</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{# ── SORTIES & PRÊTS ── #}
+<div class="hub-section">
+  <div class="hub-section-title">📤 Documents de Sortie & Prêts</div>
+  <div class="hub-grid">
+    <a href="/admin/inventory/operationsortie/" class="hub-card">
+      <div class="hub-card-icon">📋</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Bons de sortie</div>
+        <div class="hub-card-desc">Bon de sortie pour consommations et sorties diverses</div>
+      </div>
+    </a>
+    <a href="/admin/purchasing/pret/" class="hub-card">
+      <div class="hub-card-icon">🔑</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Bons de prêt</div>
+        <div class="hub-card-desc">Bons de prêt temporaire de matières</div>
+      </div>
+    </a>
+    <a href="/admin/inventory/operationtransfert/" class="hub-card">
+      <div class="hub-card-icon">🚚</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Bons de mutation</div>
+        <div class="hub-card-desc">Bons de transfert inter-dépôts</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{# ── RÉFORMES & SORTIES DÉFINITIVES ── #}
+<div class="hub-section">
+  <div class="hub-section-title">🔨 Réformes &amp; Sorties Définitives</div>
+  <div class="hub-grid">
+    <a href="/documents/reformes/" class="hub-card">
+      <div class="hub-card-icon">🗑️</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">
+          Réformes &amp; Destructions
+          {% if nb_reformes %}<span class="hub-card-badge">{{ nb_reformes }}</span>{% endif %}
+        </div>
+        <div class="hub-card-desc">PV de réforme + PV de vente/destruction</div>
+      </div>
+    </a>
+    <a href="/documents/certificats-admin/" class="hub-card">
+      <div class="hub-card-icon">📜</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">
+          Certificats administratifs
+          {% if nb_certificats %}<span class="hub-card-badge blue">{{ nb_certificats }}</span>{% endif %}
+        </div>
+        <div class="hub-card-desc">Certificats pour sorties justifiées administrativement</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{# ── INVENTAIRES ── #}
+<div class="hub-section">
+  <div class="hub-section-title">🔍 Inventaires &amp; Fiches</div>
+  <div class="hub-grid">
+    <a href="/documents/fiches-stock/" class="hub-card">
+      <div class="hub-card-icon">📊</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Fiches de stock
+          <span class="hub-card-badge green">{{ matieres|length }}</span>
+        </div>
+        <div class="hub-card-desc">Fiche par matière — mouvements et soldes</div>
+      </div>
+    </a>
+    <a href="/documents/fiches-inventaire/" class="hub-card">
+      <div class="hub-card-icon">📝</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Fiches d'inventaire
+          <span class="hub-card-badge green">{{ matieres|length }}</span>
+        </div>
+        <div class="hub-card-desc">Fiche inventaire par matière</div>
+      </div>
+    </a>
+    <a href="/documents/pv-recensement-index/" class="hub-card">
+      <div class="hub-card-icon">🗂️</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">PV de recensement</div>
+        <div class="hub-card-desc">Procès-verbal de recensement général</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{# ── REGISTRES COMPTABLES ── #}
+<div class="hub-section">
+  <div class="hub-section-title">📚 Registres Comptables</div>
+  <div class="hub-grid">
+    <a href="/documents/livre-journal/" class="hub-card" target="_blank">
+      <div class="hub-card-icon">📖</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Livre journal</div>
+        <div class="hub-card-desc">CDM Modèle N°3 — enregistrements chronologiques</div>
+      </div>
+    </a>
+    <a href="/documents/grand-journal/" class="hub-card">
+      <div class="hub-card-icon">📔</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Grand Journal des Matières</div>
+        <div class="hub-card-desc">Mouvements par matière — CDM Modèle N°7</div>
+      </div>
+    </a>
+    <a href="/documents/grand-livre-comptes/" class="hub-card">
+      <div class="hub-card-icon">🗃️</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Grand Livre des Comptes</div>
+        <div class="hub-card-desc">Par compte — CDM Modèle N°8</div>
+      </div>
+    </a>
+    <a href="/documents/grand-livre-journaux/" class="hub-card">
+      <div class="hub-card-icon">📑</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Grand Livre des Journaux</div>
+        <div class="hub-card-desc">Par type de journal</div>
+      </div>
+    </a>
+    <a href="/documents/balance-generale/" class="hub-card" target="_blank">
+      <div class="hub-card-icon">⚖️</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Balance générale</div>
+        <div class="hub-card-desc">Situation de tous les comptes</div>
+      </div>
+    </a>
+    <a href="/documents/releve-recapitulatif/" class="hub-card" target="_blank">
+      <div class="hub-card-icon">📈</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Relevé récapitulatif</div>
+        <div class="hub-card-desc">Synthèse des entrées et sorties</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{# ── COMPTES DE FIN D'EXERCICE ── #}
+<div class="hub-section">
+  <div class="hub-section-title">🏁 Comptes de Fin d'Exercice</div>
+  <div class="hub-grid">
+    <a href="/documents/comptes-gestion/" class="hub-card">
+      <div class="hub-card-icon">🏪</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Comptes de gestion
+          <span class="hub-card-badge blue">{{ depots|length }}</span>
+        </div>
+        <div class="hub-card-desc">Par dépôt — Art. 24-25</div>
+      </div>
+    </a>
+    <a href="/documents/compte-principal/" class="hub-card" target="_blank">
+      <div class="hub-card-icon">🏢</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Compte principal</div>
+        <div class="hub-card-desc">Tous dépôts consolidés — Art. 26</div>
+      </div>
+    </a>
+    <a href="/documents/compte-central/" class="hub-card" target="_blank">
+      <div class="hub-card-icon">🏛️</div>
+      <div class="hub-card-body">
+        <div class="hub-card-title">Compte central</div>
+        <div class="hub-card-desc">Synthèse ministère + comparatif — Art. 27</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{% endblock %}

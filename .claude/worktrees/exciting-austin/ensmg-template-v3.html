@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENSMG — Comptabilité des Matières</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ════════════════════════════════════════
+   RESET & TOKENS
+════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c14; --surface:#0e1320; --surface2:#131829; --surface3:#1a2240;
+  --border:rgba(255,255,255,.065); --border-h:rgba(255,255,255,.13); --border-focus:rgba(82,183,255,.55);
+  --t1:#f0f4ff; --t2:#7e8fa8; --t3:#3d4f68;
+  --accent:#52b7ff; --accent-d:rgba(82,183,255,.11); --accent-g:rgba(82,183,255,.22);
+  --green:#4ade9a;  --green-d:rgba(74,222,154,.11);
+  --red:#f87171;    --red-d:rgba(248,113,113,.11);
+  --amber:#fbbf24;  --amber-d:rgba(251,191,36,.11);
+  --purple:#a78bfa; --purple-d:rgba(167,139,250,.11);
+  --cyan:#22d3ee;   --cyan-d:rgba(34,211,238,.11);
+  --orange:#fb923c; --orange-d:rgba(251,146,60,.11);
+  --r:16px; --rs:10px; --rx:6px;
+  --font:'Plus Jakarta Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex}
+
+/* Ambient glow */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 65% 45% at 75% -5%,rgba(82,183,255,.07) 0%,transparent 60%),
+             radial-gradient(ellipse 45% 35% at 5% 95%,rgba(74,222,154,.05) 0%,transparent 55%)}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E")}
+
+/* ════════════════════════════════════════
+   APP SHELL
+════════════════════════════════════════ */
+.app{display:flex;width:100%;height:100vh;position:relative;z-index:1}
+
+/* ── Sidebar ── */
+.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:3px}.sidebar::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+
+.brand{padding:16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.brand-ico{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--green));
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#050810;
+  flex-shrink:0;box-shadow:0 4px 14px rgba(82,183,255,.28)}
+.brand-name{font-size:12.5px;font-weight:700;color:var(--t1)}
+.brand-sub{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-top:1px}
+
+.nav{padding:6px 0;flex:1}
+.nav-sec{padding:12px 14px 3px;font-size:8.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--t3)}
+.ni{display:flex;align-items:center;gap:8px;margin:1px 6px;padding:5px 9px;border-radius:var(--rx);
+  font-size:11.5px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .14s;border:1px solid transparent;user-select:none}
+.ni:hover{background:var(--surface3);color:var(--t1)}
+.ni.on{background:var(--accent-d);color:var(--accent);border-color:rgba(82,183,255,.18)}
+.ni svg{width:13px;height:13px;flex-shrink:0;stroke-width:1.8}
+.ni-badge{margin-left:auto;background:var(--accent-d);color:var(--accent);font-size:8.5px;font-weight:700;
+  padding:1px 5px;border-radius:10px;font-family:var(--mono)}
+.ni-badge.red{background:var(--red-d);color:var(--red)}
+
+.sidebar-foot{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-shrink:0}
+.ua{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#050810;flex-shrink:0}
+.ua-name{font-size:11px;font-weight:600;color:var(--t1)}
+.ua-role{font-size:9px;color:var(--t3);margin-top:1px}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+.topbar{height:48px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);background:rgba(8,12,20,.8);backdrop-filter:blur(16px);flex-shrink:0}
+.bread{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--t3)}
+.bread a{color:var(--t2);text-decoration:none;transition:color .14s}.bread a:hover{color:var(--accent)}
+.bread-sep{color:var(--t3)}.bread-cur{color:var(--t1);font-weight:600}
+.topbar-r{display:flex;align-items:center;gap:8px}
+.tp-pill{padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+  font-size:10px;font-family:var(--mono);color:var(--accent);font-weight:500}
+.tp-icon{width:28px;height:28px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all .14s;font-size:13px}
+.tp-icon:hover{border-color:var(--border-h)}
+.ndot{width:6px;height:6px;border-radius:50%;background:var(--red);position:absolute;top:-2px;right:-2px;
+  border:2px solid var(--bg);animation:nd 2s infinite}
+@keyframes nd{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.4)}50%{box-shadow:0 0 0 4px rgba(248,113,113,0)}}
+.tp-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#050810;cursor:pointer}
+
+/* ── Pages ── */
+.page{flex:1;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column}
+.page.on{display:flex}
+.page::-webkit-scrollbar{width:3px}.page::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+.pi{padding:22px 24px;display:flex;flex-direction:column;gap:16px;flex:1}
+
+/* ── Animations ── */
+@keyframes fup{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.au{animation:fup .36s var(--ease) both}
+.d1{animation-delay:.05s}.d2{animation-delay:.09s}.d3{animation-delay:.13s}
+.d4{animation-delay:.17s}.d5{animation-delay:.21s}.d6{animation-delay:.25s}
+
+/* ════════════════════════════════════════
+   SHARED COMPONENTS
+════════════════════════════════════════ */
+
+/* Page header */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+.ph-left .ph-title{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.ph-left .ph-sub{font-size:12px;color:var(--t2);margin-top:3px}
+.ph-right{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--rs);
+  font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border:none;
+  transition:all .18s var(--ease);white-space:nowrap;text-decoration:none}
+.btn svg{width:12px;height:12px;flex-shrink:0}
+.btn-p{background:var(--accent);color:#050810;box-shadow:0 2px 14px rgba(82,183,255,.28)}
+.btn-p:hover{background:#74c8ff;box-shadow:0 4px 22px rgba(82,183,255,.4);transform:translateY(-1px)}
+.btn-g{background:var(--green);color:#050810;box-shadow:0 2px 10px rgba(74,222,154,.25)}
+.btn-g:hover{background:#6ee7b7;transform:translateY(-1px)}
+.btn-o{background:transparent;color:var(--t2);border:1px solid var(--border)}
+.btn-o:hover{background:var(--surface3);border-color:var(--border-h);color:var(--t1)}
+.btn-ghost{background:transparent;color:var(--t3);border:1px solid transparent;padding:7px 10px}
+.btn-ghost:hover{color:var(--t2);background:var(--surface2)}
+.btn-danger{background:var(--red-d);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.btn-danger:hover{background:rgba(248,113,113,.2);transform:translateY(-1px)}
+.btn-save{background:var(--green-d);color:var(--green);border:1px solid rgba(74,222,154,.25)}
+.btn-save:hover{background:rgba(74,222,154,.2);transform:translateY(-1px)}
+.btn-amber{background:var(--amber-d);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
+.btn-amber:hover{background:rgba(251,191,36,.2);transform:translateY(-1px)}
+.btn-sm{padding:5px 11px;font-size:11px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.ch{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:11px}
+.ch-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ch-ico svg{width:15px;height:15px}
+.ch-ico.b{background:var(--accent-d);border:1px solid rgba(82,183,255,.18)} .ch-ico.b svg{stroke:var(--accent)}
+.ch-ico.g{background:var(--green-d);border:1px solid rgba(74,222,154,.18)}  .ch-ico.g svg{stroke:var(--green)}
+.ch-ico.a{background:var(--amber-d);border:1px solid rgba(251,191,36,.18)}  .ch-ico.a svg{stroke:var(--amber)}
+.ch-ico.r{background:var(--red-d);border:1px solid rgba(248,113,113,.18)}   .ch-ico.r svg{stroke:var(--red)}
+.ch-ico.p{background:var(--purple-d);border:1px solid rgba(167,139,250,.18)}.ch-ico.p svg{stroke:var(--purple)}
+.ch-ico.c{background:var(--cyan-d);border:1px solid rgba(34,211,238,.18)}   .ch-ico.c svg{stroke:var(--cyan)}
+.ch-ico.o{background:var(--orange-d);border:1px solid rgba(251,146,60,.18)} .ch-ico.o svg{stroke:var(--orange)}
+.ch-title{font-size:13px;font-weight:700;color:var(--t1)}
+.ch-sub{font-size:10.5px;color:var(--t2);margin-top:1.5px}
+.ch-right{margin-left:auto;display:flex;align-items:center;gap:7px}
+.cb{padding:16px 18px}
+.cf{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:8px;background:rgba(8,12,20,.25)}
+
+/* ── Info sections (like Django detail pages) ── */
+.info-section{border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-bottom:4px}
+.info-section-head{padding:10px 16px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px}
+.info-section-head.blue{background:rgba(82,183,255,.08);color:var(--accent);border-bottom:2px solid var(--accent)}
+.info-section-head.green{background:rgba(74,222,154,.08);color:var(--green);border-bottom:2px solid var(--green)}
+.info-section-head.amber{background:rgba(251,191,36,.08);color:var(--amber);border-bottom:2px solid var(--amber)}
+.info-section-head.red{background:rgba(248,113,113,.08);color:var(--red);border-bottom:2px solid var(--red)}
+.info-section-head::before{content:'';width:3px;height:14px;border-radius:2px;flex-shrink:0}
+.info-section-head.blue::before{background:var(--accent)}
+.info-section-head.green::before{background:var(--green)}
+.info-section-head.amber::before{background:var(--amber)}
+.info-section-head.red::before{background:var(--red)}
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)}
+.info-grid.g3{grid-template-columns:repeat(3,1fr)}
+.info-grid.g2{grid-template-columns:repeat(2,1fr)}
+.info-cell{background:var(--surface);padding:14px 16px}
+.info-cell-lbl{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.info-cell-val{font-size:13px;font-weight:600;color:var(--t1)}
+.info-cell-val.mono{font-family:var(--mono);font-size:12px}
+.info-cell-val.accent{color:var(--accent)}.info-cell-val.green{color:var(--green)}.info-cell-val.amber{color:var(--amber)}.info-cell-val.red{color:var(--red)}
+
+/* Grids */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.g2r3{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.s2{grid-column:span 2}.s3{grid-column:span 3}.s4{grid-column:span 4}
+
+/* KPI cards */
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px;
+  display:flex;align-items:center;gap:12px;transition:border-color .18s;cursor:default}
+.kpi:hover{border-color:var(--border-h)}
+.kpi-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-ico svg{width:17px;height:17px}
+.kpi-ico.b{background:var(--accent-d);border:1px solid rgba(82,183,255,.18)} .kpi-ico.b svg{stroke:var(--accent)}
+.kpi-ico.g{background:var(--green-d);border:1px solid rgba(74,222,154,.18)}  .kpi-ico.g svg{stroke:var(--green)}
+.kpi-ico.a{background:var(--amber-d);border:1px solid rgba(251,191,36,.18)}  .kpi-ico.a svg{stroke:var(--amber)}
+.kpi-ico.r{background:var(--red-d);border:1px solid rgba(248,113,113,.18)}   .kpi-ico.r svg{stroke:var(--red)}
+.kpi-ico.p{background:var(--purple-d);border:1px solid rgba(167,139,250,.18)}.kpi-ico.p svg{stroke:var(--purple)}
+.kpi-ico.o{background:var(--orange-d);border:1px solid rgba(251,146,60,.18)} .kpi-ico.o svg{stroke:var(--orange)}
+.kpi-v{font-size:20px;font-weight:800;letter-spacing:-.5px;font-family:var(--mono)}
+.kpi-l{font-size:10.5px;color:var(--t2);margin-top:2px}
+.kpi-d{font-size:10px;font-weight:600;margin-top:2px;display:flex;align-items:center;gap:3px}
+.kpi-d.up{color:var(--green)}.kpi-d.dn{color:var(--red)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.bg{background:var(--green-d);color:var(--green);border:1px solid rgba(74,222,154,.22)}
+.br{background:var(--red-d);color:var(--red);border:1px solid rgba(248,113,113,.22)}
+.ba{background:var(--amber-d);color:var(--amber);border:1px solid rgba(251,191,36,.22)}
+.bb{background:var(--accent-d);color:var(--accent);border:1px solid rgba(82,183,255,.22)}
+.bp{background:var(--purple-d);color:var(--purple);border:1px solid rgba(167,139,250,.22)}
+.bo{background:var(--orange-d);color:var(--orange);border:1px solid rgba(251,146,60,.22)}
+.badge-solid{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;border:none}
+.badge-solid::before{display:none}
+.badge-solid.green{background:var(--green);color:#050810}
+.badge-solid.amber{background:var(--amber);color:#050810}
+.badge-solid.blue{background:var(--accent);color:#050810}
+.badge-solid.red{background:var(--red);color:#050810}
+
+/* Code badge (like DON-DONATEUR-2026-00014) */
+.code-badge{display:inline-flex;padding:4px 12px;background:var(--accent-d);border:1px solid rgba(82,183,255,.25);
+  border-radius:6px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.3px}
+
+/* Table */
+.tbl-scroll{overflow:auto;flex:1}
+.tbl-scroll::-webkit-scrollbar{width:3px;height:3px}
+.tbl-scroll::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{position:sticky;top:0;z-index:2}
+thead tr{background:var(--surface2);border-bottom:1px solid var(--border)}
+th{padding:8px 13px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--t3);white-space:nowrap;cursor:pointer;user-select:none;transition:color .14s}
+th:hover{color:var(--t2)}
+td{padding:8px 13px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--t2);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.tr-click{cursor:pointer;transition:background .12s}
+.tr-click:hover td{background:rgba(255,255,255,.022);color:var(--t1)}
+
+/* Mono / text helpers */
+.mono{font-family:var(--mono);font-size:11px}
+.txt-a{color:var(--accent)}.txt-g{color:var(--green)}.txt-r{color:var(--red)}
+.txt-am{color:var(--amber)}.txt-p{color:var(--purple)}.txt-m{color:var(--t3)}.txt-o{color:var(--orange)}
+.fw6{font-weight:600}.fw7{font-weight:700}.fw8{font-weight:800}
+
+/* Form */
+.field{display:flex;flex-direction:column;gap:5px}
+.flbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--t3);
+  display:flex;align-items:center;gap:5px}
+.req-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.fi{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);
+  padding:9px 12px;font-family:var(--font);font-size:12.5px;font-weight:500;color:var(--t1);
+  outline:none;transition:all .18s;appearance:none}
+.fi::placeholder{color:var(--t3);font-weight:400}
+.fi:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(82,183,255,.09);background:var(--surface3)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fs2{grid-column:span 2}
+textarea.fi{resize:none;line-height:1.6;min-height:80px}
+select.fi{cursor:pointer;padding-right:30px}
+.iw{position:relative}
+.iw .ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:13px;height:13px;stroke:var(--t3);pointer-events:none;transition:stroke .18s;z-index:1}
+.iw:focus-within .ico{stroke:var(--accent)}
+.fi-bare{padding-left:12px}
+.iw .fi{padding-left:34px}
+.fhint{font-size:10px;color:var(--t3);font-family:var(--mono);display:flex;align-items:center;gap:4px;margin-top:2px}
+.fhint svg{width:11px;height:11px;stroke:var(--t3);flex-shrink:0}
+
+/* Searchbar */
+.sb-wrap{position:relative;flex:1;max-width:320px}
+.sb-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:13px;height:13px;stroke:var(--t3);pointer-events:none}
+.sb-inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);
+  padding:7px 12px 7px 33px;font-family:var(--font);font-size:12px;color:var(--t1);outline:none;transition:all .18s}
+.sb-inp::placeholder{color:var(--t3)}
+.sb-inp:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(82,183,255,.09)}
+
+/* Filter chips */
+.chip-row{display:flex;gap:5px;flex-wrap:wrap}
+.chip{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;color:var(--t2);
+  background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all .14s;white-space:nowrap}
+.chip:hover{border-color:var(--border-h);color:var(--t1)}
+.chip.on{background:var(--accent-d);border-color:rgba(82,183,255,.3);color:var(--accent)}
+
+/* Select */
+.fsel{appearance:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rx);
+  padding:6px 26px 6px 11px;font-family:var(--font);font-size:11.5px;color:var(--t2);outline:none;cursor:pointer;transition:all .14s}
+.fsel:focus{border-color:var(--border-focus);color:var(--t1)}
+
+/* Pagination */
+.pgr{padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pgr-info{font-size:10.5px;color:var(--t3);font-family:var(--mono)}.pgr-info span{color:var(--t2)}
+.pgr-btns{display:flex;gap:3px}
+.pgr-btn{width:26px;height:26px;border-radius:var(--rx);background:var(--surface2);border:1px solid var(--border);color:var(--t2);
+  font-size:11px;cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;font-family:var(--mono)}
+.pgr-btn:hover{border-color:var(--border-h);color:var(--t1)}
+.pgr-btn.act{background:var(--accent-d);border-color:rgba(82,183,255,.3);color:var(--accent);font-weight:700}
+
+/* Activity feed */
+.feed{display:flex;flex-direction:column}
+.feed-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.feed-item:last-child{border-bottom:none}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.ft{font-size:12px;font-weight:500;color:var(--t1)}
+.fd{font-size:11px;color:var(--t2);margin-top:2px}
+.ftm{font-size:9.5px;color:var(--t3);margin-top:2px;font-family:var(--mono)}
+
+/* Chart wrap */
+.cw{position:relative}.cw-md{height:200px}.cw-lg{height:250px}.cw-sm{height:150px}
+
+/* Category cards */
+.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:18px;
+  cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.cat-card:hover{border-color:var(--border-h);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.cat-card-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cat-card-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.cat-card-name{font-size:14px;font-weight:700}
+.cat-card-count{font-size:10px;color:var(--t3);margin-top:2px}
+.cat-card-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:10px}
+.cat-card-fill{height:100%;border-radius:2px;transition:width .6s var(--ease)}
+
+/* Detail hero */
+.detail-hero{display:flex;align-items:flex-start;gap:16px;margin-bottom:6px}
+.detail-hero-left{flex:1}
+.detail-hero-title{font-size:18px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.detail-hero-bread{font-size:11px;color:var(--t3);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.detail-hero-bread a{color:var(--t2);text-decoration:none}.detail-hero-bread a:hover{color:var(--accent)}
+.detail-hero-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+
+/* Toggle */
+.tog{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);
+  border:1px solid var(--border);border-radius:var(--rs);padding:11px 14px;cursor:pointer;transition:border-color .18s}
+.tog:hover{border-color:var(--border-h)}
+.tog.on{border-color:rgba(82,183,255,.25);background:rgba(82,183,255,.05)}
+.tog-lbl{font-size:12.5px;font-weight:600;color:var(--t1)}
+.tog-sub{font-size:10.5px;color:var(--t2);margin-top:1.5px}
+.tsw{width:38px;height:20px;border-radius:10px;background:var(--surface3);border:1px solid var(--border);
+  position:relative;flex-shrink:0;transition:all .28s}
+.tog.on .tsw{background:var(--accent);border-color:var(--accent)}
+.tth{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;
+  transition:transform .28s var(--ease);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.tog.on .tth{transform:translateX(18px)}
+
+/* Stepper */
+.stp{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;flex-shrink:0}
+.st{flex:1;display:flex;align-items:center;gap:9px;padding:11px 14px;cursor:pointer;position:relative;transition:background .18s}
+.st:not(:last-child)::after{content:'';position:absolute;right:0;top:18%;bottom:18%;width:1px;background:var(--border)}
+.st.act{background:var(--surface3)}
+.st::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .28s}
+.st.act::before{background:linear-gradient(90deg,var(--accent),transparent);opacity:1}
+.st.done::before{background:var(--green);opacity:1}
+.sb{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;transition:all .3s var(--ease)}
+.st.act .sb{background:var(--accent);color:#050810;box-shadow:0 0 0 4px var(--accent-d)}
+.st.done .sb{background:var(--green);color:#050810}
+.st.idle .sb{background:var(--surface3);color:var(--t3);border:1px solid var(--border)}
+.st-eye{font-size:9px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--t3)}
+.st.act .st-eye{color:var(--accent)}.st.done .st-eye{color:var(--green)}
+.st-nm{font-size:12px;font-weight:600;margin-top:1px}
+.st.idle .st-nm{color:var(--t3)}.st.act .st-nm{color:var(--t1)}.st.done .st-nm{color:var(--green)}
+.stp-prog{height:3px;background:var(--surface2);border:1px solid var(--border);border-top:none;overflow:hidden;flex-shrink:0}
+.stp-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:0 2px 2px 0;transition:width .55s var(--ease)}
+
+/* Checkbox */
+.cb-box{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--border);background:transparent;
+  cursor:pointer;appearance:none;transition:all .15s;display:inline-block;position:relative}
+.cb-box:checked{background:var(--accent);border-color:var(--accent)}
+.cb-box:checked::after{content:'✓';position:absolute;top:-1px;left:2px;font-size:10px;font-weight:700;color:#050810}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--t3)}
+.empty-state svg{width:40px;height:40px;stroke:var(--t3);margin-bottom:10px;opacity:.5}
+.empty-state-text{font-size:12.5px;font-weight:500}
+
+/* Calendar */
+.mini-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-hd{text-align:center;font-size:9px;font-weight:700;color:var(--t3);padding:3px 0;text-transform:uppercase}
+.cal-d{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:10.5px;
+  font-weight:500;color:var(--t2);cursor:pointer;transition:all .12s;position:relative}
+.cal-d:hover{background:var(--surface3);color:var(--t1)}
+.cal-d.today{background:var(--accent-d);color:var(--accent);font-weight:700}
+.cal-d.evt::after{content:'';width:3px;height:3px;border-radius:50%;background:var(--green);
+  position:absolute;bottom:2px;left:50%;transform:translateX(-50%)}
+
+/* Settings */
+.settings-grid{display:grid;grid-template-columns:1fr 2.5fr;gap:18px;align-items:start}
+.settings-nav{display:flex;flex-direction:column;gap:2px}
+.sn-item{padding:8px 11px;border-radius:var(--rx);font-size:12px;font-weight:500;color:var(--t2);
+  cursor:pointer;transition:all .14s;border:1px solid transparent}
+.sn-item:hover{background:var(--surface3);color:var(--t1)}
+.sn-item.on{background:var(--accent-d);color:var(--accent);border-color:rgba(82,183,255,.18)}
+
+/* Progress bars */
+.prog-list{display:flex;flex-direction:column;gap:11px}
+.prog-lbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.prog-name{font-size:11.5px;font-weight:500;color:var(--t1)}
+.prog-val{font-size:11px;font-family:var(--mono);color:var(--t2)}
+.prog-bar{height:4px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .6s var(--ease)}
+
+/* Upload zone */
+.upzone{border:1.5px dashed var(--border-h);border-radius:var(--rs);background:var(--surface2);
+  padding:24px 18px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all .18s}
+.upzone:hover{border-color:var(--accent);background:var(--accent-d)}
+
+/* Bulk bar */
+.bulk{position:fixed;bottom:20px;left:calc(220px + 50%);transform:translateX(-50%) translateY(80px);
+  background:var(--surface2);border:1px solid var(--border-h);border-radius:var(--r);padding:10px 16px;
+  display:flex;align-items:center;gap:10px;box-shadow:0 16px 48px rgba(0,0,0,.5);
+  transition:transform .3s var(--ease);z-index:100;white-space:nowrap}
+.bulk.on{transform:translateX(-50%) translateY(0)}
+
+/* Notif items */
+.notif-item{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);align-items:flex-start;cursor:pointer}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:rgba(255,255,255,.015)}
+.ni-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ni-ico svg{width:13px;height:13px}
+.ni-title{font-size:12px;font-weight:600;color:var(--t1)}
+.ni-body{font-size:11px;color:var(--t2);margin-top:2px;line-height:1.45}
+.ni-time{font-size:9.5px;color:var(--t3);margin-top:2px;font-family:var(--mono)}
+
+/* Quick access cards (dashboard) */
+.qa-section{border-radius:var(--rs);overflow:hidden;border:1px solid var(--border)}
+.qa-head{padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.qa-head.blue{background:rgba(82,183,255,.12);color:var(--accent)}
+.qa-head.green{background:rgba(74,222,154,.12);color:var(--green)}
+.qa-head.amber{background:rgba(251,191,36,.12);color:var(--amber)}
+.qa-head.purple{background:rgba(167,139,250,.12);color:var(--purple)}
+.qa-row{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border);
+  font-size:12px;color:var(--t1);transition:background .12s;cursor:pointer}
+.qa-row:last-child{border-bottom:none}
+.qa-row:hover{background:rgba(255,255,255,.02)}
+.qa-row-actions{display:flex;gap:6px}
+.qa-row-actions a{font-size:10.5px;color:var(--accent);text-decoration:none;font-weight:500;padding:2px 6px;
+  border-radius:4px;transition:all .12s}
+.qa-row-actions a:hover{background:var(--accent-d)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ══════════════════════════════════
+       SIDEBAR
+  ══════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-ico">EM</div>
+      <div><div class="brand-name">ENSMG</div><div class="brand-sub">Mines & Géologie</div></div>
+    </div>
+    <nav class="nav">
+      <div class="ni on" data-p="dashboard">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tableau de bord
+      </div>
+
+      <div class="nav-sec">Exercices & Planification</div>
+      <div class="ni" data-p="exercices"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Exercices comptables</div>
+
+      <div class="nav-sec">Catalogue des matières</div>
+      <div class="ni" data-p="categories"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Catégories</div>
+      <div class="ni" data-p="matieres"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>Matières</div>
+      <div class="ni" data-p="comptes-imputation"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Comptes d'imputation</div>
+
+      <div class="nav-sec">Entrées</div>
+      <div class="ni" data-p="achats"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>Achat<span class="ni-badge">53</span></div>
+      <div class="ni" data-p="don"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>Don</div>
+      <div class="ni" data-p="legs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Legs</div>
+      <div class="ni" data-p="dotation"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>Dotation</div>
+
+      <div class="nav-sec">Prêts & Retours</div>
+      <div class="ni" data-p="prets"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>Prêts accordés</div>
+      <div class="ni" data-p="retours-fournisseurs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Retours fournisseurs</div>
+      <div class="ni" data-p="entrees-externes"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>Entrées externes</div>
+
+      <div class="nav-sec">Gestion des stocks</div>
+      <div class="ni" data-p="stock-courant"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Stock courant</div>
+      <div class="ni" data-p="stock-actuel"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Stock actuel (tous dépôts)</div>
+      <div class="ni" data-p="mouvements"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>Mouvements de stock</div>
+      <div class="ni" data-p="sorties-stock"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sorties de stock</div>
+      <div class="ni" data-p="transferts"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>Transferts inter-dépôts</div>
+
+      <div class="nav-sec">Sorties définitives</div>
+      <div class="ni" data-p="sortie-definitive"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Sortie Définitive</div>
+      <div class="ni" data-p="reforme"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Réforme</div>
+
+      <div class="nav-sec">Référentiels & Tiers</div>
+      <div class="ni" data-p="fournisseurs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>Fournisseurs</div>
+      <div class="ni" data-p="donateurs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Donateurs</div>
+      <div class="ni" data-p="depots"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>Dépôts / Sites</div>
+      <div class="ni" data-p="services"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Services</div>
+      <div class="ni" data-p="unites"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>Unités de mesure</div>
+
+      <div class="nav-sec">Registres comptables</div>
+      <div class="ni" data-p="livre-journal"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>Grand Journal</div>
+
+      <div class="nav-sec">Système</div>
+      <div class="ni" data-p="notifs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>Notifications<span class="ni-badge red">3</span></div>
+      <div class="ni" data-p="profil"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Mon profil</div>
+      <div class="ni" data-p="settings"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>Paramètres</div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="ua">A</div>
+      <div><div class="ua-name">admin</div><div class="ua-role">Super Admin</div></div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════ -->
+  <div class="main">
+    <header class="topbar">
+      <div class="bread" id="bread"><span class="bread-cur">Tableau de bord</span></div>
+      <div class="topbar-r">
+        <span class="tp-pill">2026–2026</span>
+        <div class="tp-icon"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <div class="tp-icon"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg><span class="ndot"></span></div>
+        <div class="tp-avatar">A</div>
+      </div>
+    </header>
+
+    <!-- ══ PAGE DASHBOARD ══ -->
+    <div class="page on" id="p-dashboard">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Tableau de bord</div><div class="ph-sub">Vue d'ensemble · Exercice 2026</div></div></div>
+
+      <div class="g4 au d1">
+        <div class="kpi"><div class="kpi-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg></div><div><div class="kpi-v txt-a">7</div><div class="kpi-l">Fournisseurs</div><div class="kpi-d up">Voir →</div></div></div>
+        <div class="kpi"><div class="kpi-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg></div><div><div class="kpi-v txt-g">5</div><div class="kpi-l">Dépôts actifs</div><div class="kpi-d up">Voir →</div></div></div>
+        <div class="kpi"><div class="kpi-ico a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="kpi-v txt-am">4</div><div class="kpi-l">Exercices comptables</div></div></div>
+        <div class="kpi"><div class="kpi-ico p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div><div class="kpi-v txt-p">862</div><div class="kpi-l">Lignes de stock</div></div></div>
+      </div>
+
+      <div class="g2 au d2">
+        <div class="card"><div class="ch"><div class="ch-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="ch-title">Matières par catégorie</div><div class="ch-sub">Répartition du catalogue</div></div></div><div class="cb"><div class="cw cw-lg"><canvas id="c-cat-pie"></canvas></div></div></div>
+        <div class="card"><div class="ch"><div class="ch-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><div><div class="ch-title">Activité mensuelle</div><div class="ch-sub">6 derniers mois</div></div></div><div class="cb"><div class="cw cw-lg"><canvas id="c-activity"></canvas></div></div></div>
+      </div>
+
+      <div class="g2 au d3">
+        <div class="card"><div class="ch"><div class="ch-ico a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div><div><div class="ch-title">Mouvements par type</div></div></div><div class="cb"><div class="cw cw-sm"><canvas id="c-mouv-type"></canvas></div></div></div>
+        <div class="card"><div class="ch"><div class="ch-ico p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div><div class="ch-title">Top 8 matières en stock</div></div></div><div class="cb"><div class="cw cw-sm"><canvas id="c-top-mat"></canvas></div></div></div>
+      </div>
+
+      <!-- Quick access sections like Django dashboard -->
+      <div class="g3 au d4">
+        <div class="qa-section">
+          <div class="qa-head blue">📋 Achats, Dons & Prêts</div>
+          <div class="qa-row" onclick="goPage('achats')">Achats<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('don')">Dons<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('dotation')">Dotations<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('legs')">Legs<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('prets')">Prêts (sorties)<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row">Retours fournisseurs<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+        </div>
+        <div class="qa-section">
+          <div class="qa-head green">📦 Inventaire & Stock</div>
+          <div class="qa-row" onclick="goPage('stock-courant')">Stock courant (par dépôt)<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row" onclick="goPage('stock-actuel')">Stock actuel (tous dépôts)<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row" onclick="goPage('mouvements')">Mouvements de stock<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('sorties-stock')">Sorties de stock<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row" onclick="goPage('transferts')">Transferts inter-dépôts<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row">Entrées de stock<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row">Fiches d'affectation<div class="qa-row-actions"><a>Liste</a></div></div>
+        </div>
+        <div class="qa-section">
+          <div class="qa-head amber">📂 Catalogue des matières</div>
+          <div class="qa-row" onclick="goPage('categories')">Catégories<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row">Comptes divisionnaires<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row">Comptes principaux<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('matieres')">Matières<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row">Sous-catégories<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('comptes-imputation')">Sous-comptes<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+        </div>
+      </div>
+
+      <div class="g2 au d5">
+        <div class="qa-section">
+          <div class="qa-head purple">⚙ Référentiels</div>
+          <div class="qa-row" onclick="goPage('donateurs')">Donateurs<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('depots')">Dépôts / Bureaux<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('fournisseurs')">Fournisseurs<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('services')">Services<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+          <div class="qa-row" onclick="goPage('unites')">Unités de mesure<div class="qa-row-actions"><a>Liste</a><a>+ Ajouter</a></div></div>
+        </div>
+        <div class="qa-section">
+          <div class="qa-head green">📊 Registres comptables</div>
+          <div class="qa-row" onclick="goPage('livre-journal')">Livre journal<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row">Grand Journal des Matières<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row">Grand Livre des Comptes<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row">Balance générale<div class="qa-row-actions"><a>Liste</a></div></div>
+          <div class="qa-row">Relevé récapitulatif<div class="qa-row-actions"><a>Liste</a></div></div>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE ACHATS (liste) ══ -->
+    <div class="page" id="p-achats">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Achats</div><div class="ph-sub">Liste et gestion des achats fournisseurs</div></div>
+        <div class="ph-right">
+          <button class="btn btn-o"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Exporter</button>
+          <button class="btn btn-p" onclick="goPage('form-achat')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Ajouter</button>
+        </div></div>
+      <div class="g4 au d1">
+        <div class="kpi"><div class="kpi-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div><div class="kpi-v txt-a">53</div><div class="kpi-l">Total achats</div></div></div>
+        <div class="kpi"><div class="kpi-ico g"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><div class="kpi-v txt-g">31</div><div class="kpi-l">TVA active</div></div></div>
+        <div class="kpi"><div class="kpi-ico a"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="kpi-v txt-am">12.4M</div><div class="kpi-l">Total HT</div></div></div>
+        <div class="kpi"><div class="kpi-ico r"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div><div><div class="kpi-v txt-r">7</div><div class="kpi-l">Ce mois</div></div></div>
+      </div>
+      <div class="card au d2" style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div class="ch" style="flex-shrink:0">
+          <div class="sb-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sb-inp" placeholder="Rechercher…" oninput="filterAchats(this.value)"></div>
+          <div class="chip-row" style="margin-left:8px">
+            <span class="chip on">Toutes dates</span>
+            <span class="chip">TVA active</span>
+            <span class="chip">Mar 2026</span>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th style="width:36px"><input type="checkbox" class="cb-box"></th><th>Référence</th><th>Code achat</th><th>Fournisseur</th><th>Date achat</th><th>TVA</th><th style="text-align:right">Total HT</th><th style="text-align:right">Total TTC</th><th></th></tr></thead>
+          <tbody id="tbl-achats"></tbody>
+        </table></div>
+        <div class="pgr" style="flex-shrink:0">
+          <div class="pgr-info">Affichage <span id="pgFrom">1</span>–<span id="pgTo">20</span> sur <span id="pgTotal">53</span></div>
+          <div class="pgr-btns">
+            <button class="pgr-btn" id="pgPrev" onclick="goAchatPage(-1)">‹</button>
+            <button class="pgr-btn act" id="pg1" onclick="setAchatPage(1)">1</button>
+            <button class="pgr-btn" id="pg2" onclick="setAchatPage(2)">2</button>
+            <button class="pgr-btn" id="pg3" onclick="setAchatPage(3)">3</button>
+            <button class="pgr-btn" id="pgNext" onclick="goAchatPage(1)">›</button>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE DON DETAIL ══ -->
+    <div class="page" id="p-don">
+    <div class="pi">
+      <div class="detail-hero au">
+        <div class="detail-hero-left">
+          <div class="detail-hero-bread">🏠 <a href="#" onclick="goPage('dashboard');return false">Accueil</a> › <a href="#">Achats</a> › <a href="#">Dons</a> › DON-DONATEUR-2026-00014</div>
+          <div class="detail-hero-title">Don <span class="code-badge">DON-DONATEUR-2026-00014</span></div>
+          <div class="detail-hero-actions">
+            <button class="btn btn-o btn-sm" onclick="goPage('dashboard')">← Liste</button>
+            <button class="btn btn-p btn-sm">+ Ajouter Don</button>
+            <button class="btn btn-save btn-sm">📄 PVR</button>
+            <button class="btn btn-amber btn-sm">📋 BE</button>
+            <button class="btn btn-o btn-sm">✏ Modifier</button>
+            <button class="btn btn-danger btn-sm">🗑 Supprimer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section au d1">
+        <div class="info-section-head blue">Informations générales</div>
+        <div class="info-grid">
+          <div class="info-cell"><div class="info-cell-lbl">Code</div><div class="info-cell-val mono">DON-DONATEUR-2026-00014</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Donateur</div><div class="info-cell-val">Union Africaine</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Date du don</div><div class="info-cell-val">30/12/2026</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Dépôt</div><div class="info-cell-val">BUR001 — Bureau Direction [BUREAU]</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">N° Pièce</div><div class="info-cell-val txt-m">—</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Valeur totale</div><div class="info-cell-val green">0 F CFA</div></div>
+        </div>
+      </div>
+
+      <div class="info-section au d2">
+        <div class="info-section-head blue">Commentaire</div>
+        <div style="padding:14px 16px;background:var(--surface)">
+          <div style="font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Observations / Commentaire</div>
+          <div style="font-size:13px;color:var(--t1)">Don de Union Africaine - 14</div>
+        </div>
+      </div>
+
+      <div class="info-section au d3">
+        <div class="info-section-head green">Articles reçus en don</div>
+        <table>
+          <thead><tr><th>Désignation</th><th style="text-align:right">Quantité</th><th style="text-align:right">Valeur unit.</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>
+            <tr class="tr-click"><td><span class="txt-a">THERM01 — Thermomètre -10 à 110°C</span></td><td class="mono" style="text-align:right">36.000</td><td class="mono" style="text-align:right">5 000 F CFA</td><td class="mono" style="text-align:right">180 000 F CFA</td></tr>
+            <tr class="tr-click"><td><span class="txt-a">ORDI01 — Ordinateur Portable Dell</span></td><td class="mono" style="text-align:right">10.000</td><td class="mono" style="text-align:right">850 000 F CFA</td><td class="mono" style="text-align:right">8 500 000 F CFA</td></tr>
+            <tr><td colspan="3" style="text-align:right;font-weight:700;color:var(--accent)">TOTAL VALEUR</td><td class="mono" style="text-align:right;color:var(--green);font-weight:700">0 F CFA</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE LEGS DETAIL ══ -->
+    <div class="page" id="p-legs">
+    <div class="pi">
+      <div class="detail-hero au">
+        <div class="detail-hero-left">
+          <div class="detail-hero-bread">🏠 <a href="#" onclick="goPage('dashboard');return false">Accueil</a> › <a href="#">Achats</a> › <a href="#">Legs</a> › EXT-LEGS-SECK-2026-00003</div>
+          <div class="detail-hero-title">Legs <span class="code-badge">EXT-LEGS-SECK-2026-00003</span></div>
+          <div class="detail-hero-actions">
+            <button class="btn btn-o btn-sm">← Liste</button>
+            <button class="btn btn-p btn-sm">+ Ajouter Legs</button>
+            <button class="btn btn-amber btn-sm">📋 BE</button>
+            <button class="btn btn-o btn-sm">✏ Modifier</button>
+            <button class="btn btn-danger btn-sm">🗑 Supprimer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section au d1">
+        <div class="info-section-head blue">Informations du legs</div>
+        <div class="info-grid">
+          <div class="info-cell"><div class="info-cell-lbl">Code</div><div class="info-cell-val mono">EXT-LEGS-SECK-2026-00003</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Source (légataire)</div><div class="info-cell-val">Legs — LEGS-SECK</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Date de réception</div><div class="info-cell-val">12/06/2026</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Dépôt</div><div class="info-cell-val">DEP002 — Dépôt Chimie [DEPOT]</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">N° Acte / Document</div><div class="info-cell-val mono">EXT-0007-2026</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Valeur totale</div><div class="info-cell-val green">0 F CFA</div></div>
+        </div>
+      </div>
+
+      <div class="info-section au d2">
+        <div class="info-section-head blue">Commentaire</div>
+        <div style="padding:14px 16px;background:var(--surface)">
+          <div style="font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Observations / Commentaire</div>
+          <div style="font-size:13px;color:var(--t1)">Entrée externe de Legacy from Dr. Seck</div>
+        </div>
+      </div>
+
+      <div class="info-section au d3">
+        <div class="info-section-head green">Biens reçus par legs</div>
+        <table>
+          <thead><tr><th>Désignation</th><th style="text-align:right">Quantité</th><th style="text-align:right">Prix unitaire</th><th style="text-align:right">Total</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr class="tr-click"><td><span class="txt-a">HCL001 — Acide Chlorhydrique 37%</span></td><td class="mono" style="text-align:right">45.000</td><td class="mono" style="text-align:right">8 500 F CFA</td><td class="mono" style="text-align:right">382 500 F CFA</td><td style="font-size:11px;color:var(--green)">Entrée reçue en bon état</td></tr>
+            <tr class="tr-click"><td><span class="txt-a">MINC01 — Cristaux de Calcite</span></td><td class="mono" style="text-align:right">57.000</td><td class="mono" style="text-align:right">35 000 F CFA</td><td class="mono" style="text-align:right">1 995 000 F CFA</td><td style="font-size:11px;color:var(--green)">Entrée reçue en bon état</td></tr>
+            <tr><td colspan="3" style="text-align:right;font-weight:700;color:var(--accent)">TOTAL VALEUR</td><td class="mono" style="text-align:right;color:var(--green);font-weight:700">0 F CFA</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE PRETS (liste) ══ -->
+    <div class="page" id="p-prets">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Prêts accordés</div><div class="ph-sub">Gestion des prêts de matières aux services</div></div>
+        <div class="ph-right"><button class="btn btn-p">+ Ajouter Prêt (sortie)</button></div></div>
+      <div class="card au d1" style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div class="ch">
+          <div class="chip-row">
+            <span class="chip on">date prêt : Toutes les dates</span>
+            <span class="chip">service : Tout</span>
+            <span class="chip">depot : Tout</span>
+            <span class="chip">est clos : Tout</span>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>Référence</th><th>Code du prêt</th><th>Service</th><th>Date prêt</th><th>Dépôt</th><th>Est clos</th></tr></thead>
+          <tbody id="tbl-prets"></tbody>
+        </table></div>
+        <div class="pgr"><div class="pgr-info">Affichage <span>1</span>–<span>20</span> sur <span>25</span></div>
+          <div class="pgr-btns"><button class="pgr-btn">‹</button><button class="pgr-btn act">1</button><button class="pgr-btn">2</button><button class="pgr-btn">›</button></div></div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE PRET DETAIL ══ -->
+    <div class="page" id="p-pret-detail">
+    <div class="pi">
+      <div class="detail-hero au">
+        <div class="detail-hero-left">
+          <div class="detail-hero-bread">🏠 <a href="#" onclick="goPage('dashboard');return false">Accueil</a> › <a href="#" onclick="goPage('prets');return false">Prêts (sorties)</a> › PRET-DIR-2026-00002</div>
+          <div class="detail-hero-title">Prêt (sortie) <span class="code-badge">PRET-DIR-2026-00002</span></div>
+          <div class="detail-hero-actions">
+            <button class="btn btn-o btn-sm" onclick="goPage('prets')">← Liste</button>
+            <button class="btn btn-p btn-sm">+ Ajouter Prêt (sortie)</button>
+            <button class="btn btn-amber btn-sm">📋 Bon de prêt</button>
+            <button class="btn btn-o btn-sm">✏ Modifier</button>
+            <button class="btn btn-danger btn-sm">🗑 Supprimer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section au d1">
+        <div class="info-section-head blue">Informations du prêt</div>
+        <div class="info-grid">
+          <div class="info-cell"><div class="info-cell-lbl">Code</div><div class="info-cell-val mono">PRET-DIR-2026-00002</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Service</div><div class="info-cell-val">DIR — Direction</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Dépôt</div><div class="info-cell-val">BUR003 — Bureau Recherche [BUREAU]</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Date du prêt</div><div class="info-cell-val">07/08/2026</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Statut</div><div class="info-cell-val"><span class="badge bg">Clôturé</span></div></div>
+        </div>
+      </div>
+
+      <div class="info-section au d2">
+        <div class="info-section-head blue">Commentaire</div>
+        <div style="padding:14px 16px;background:var(--surface)">
+          <div style="font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Observations / Commentaire</div>
+          <div style="font-size:13px;color:var(--t1)">Prêt au service Direction</div>
+        </div>
+      </div>
+
+      <div class="info-section au d3">
+        <div class="info-section-head green">Matières prêtées</div>
+        <table>
+          <thead><tr><th>Désignation</th><th style="text-align:right">Quantité</th><th>Observation</th></tr></thead>
+          <tbody>
+            <tr class="tr-click"><td><span class="txt-a">BURR01 — Burette 25ml</span></td><td class="mono" style="text-align:right">17.000</td><td style="font-size:11px">Prêt enregistré</td></tr>
+            <tr class="tr-click"><td><span class="txt-a">KMNO01 — Permanganate de Potassium</span></td><td class="mono" style="text-align:right">5.000</td><td style="font-size:11px">Prêt enregistré</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-section au d4">
+        <div class="info-section-head amber">Retours / Factures</div>
+        <table>
+          <thead><tr><th>Code retour</th><th>Date retour</th><th style="text-align:right">Qté totale</th><th>N° Pièce</th><th>Commentaire</th></tr></thead>
+          <tbody>
+            <tr class="tr-click" onclick="goPage('retour-pret-detail')"><td><span class="txt-a">RET-DIR-2026-00001</span></td><td class="mono">09/09/2026</td><td class="mono" style="text-align:right">0.000</td><td class="txt-m">—</td><td style="font-size:11px">Retour du prêt</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE RETOUR PRET DETAIL ══ -->
+    <div class="page" id="p-retour-pret-detail">
+    <div class="pi">
+      <div class="detail-hero au">
+        <div class="detail-hero-left">
+          <div class="detail-hero-bread">🏠 <a href="#" onclick="goPage('dashboard');return false">Accueil</a> › <a href="#">Retours de prêt (entrées)</a> › RET-DIR-2026-00001</div>
+          <div class="detail-hero-title">Retour de prêt (entrée) <span class="code-badge">RET-DIR-2026-00001</span></div>
+          <div class="detail-hero-actions">
+            <button class="btn btn-o btn-sm">← Liste</button>
+            <button class="btn btn-p btn-sm">+ Ajouter Retour</button>
+            <button class="btn btn-amber btn-sm">📋 Bon de retour de prêt</button>
+            <button class="btn btn-o btn-sm">✏ Modifier</button>
+            <button class="btn btn-danger btn-sm">🗑 Supprimer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section au d1">
+        <div class="info-section-head blue">Informations du retour</div>
+        <div class="info-grid">
+          <div class="info-cell"><div class="info-cell-lbl">Code</div><div class="info-cell-val mono">RET-DIR-2026-00001</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Prêt d'origine</div><div class="info-cell-val mono">PRET-DIR-2026-00002</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Date du retour</div><div class="info-cell-val">09/09/2026</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">N° Pièce</div><div class="info-cell-val txt-m">—</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Qté totale</div><div class="info-cell-val">0.000</div></div>
+        </div>
+      </div>
+
+      <div class="info-section au d2">
+        <div class="info-section-head blue">Commentaire</div>
+        <div style="padding:14px 16px;background:var(--surface)">
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Observations</div>
+          <div style="font-size:13px;color:var(--t1)">Retour du prêt</div>
+        </div>
+      </div>
+
+      <div class="info-section au d3">
+        <div class="info-section-head green">Matières retournées</div>
+        <div class="empty-state">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <div class="empty-state-text">Aucune ligne enregistrée</div>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE CATEGORIES ══ -->
+    <div class="page" id="p-categories">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Catégories</div><div class="ph-sub">Classification des matières</div></div><div class="ph-right"><button class="btn btn-p">+ Ajouter</button></div></div>
+      <div class="g3 au d1" id="cat-grid"></div>
+    </div></div>
+
+    <!-- ══ PAGE DETAIL CATEGORIE ══ -->
+    <div class="page" id="p-detail-categorie">
+    <div class="pi">
+      <div class="detail-hero au">
+        <div class="detail-hero-left">
+          <div class="detail-hero-bread">🏠 <a href="#" onclick="goPage('dashboard');return false">Accueil</a> › <a href="#" onclick="goPage('categories');return false">Catégories</a> › <span id="det-cat-code"></span></div>
+          <div class="detail-hero-title" id="det-cat-title">Catégorie</div>
+          <div class="detail-hero-actions">
+            <button class="btn btn-o btn-sm" onclick="goPage('categories')">← Liste</button>
+            <button class="btn btn-o btn-sm">✏ Modifier</button>
+            <button class="btn btn-danger btn-sm">🗑 Supprimer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section au d1">
+        <div class="info-section-head blue">Informations de la catégorie</div>
+        <div class="info-grid g3">
+          <div class="info-cell"><div class="info-cell-lbl">Code</div><div class="info-cell-val mono" id="det-cat-code-val">PC</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Libellé</div><div class="info-cell-val" id="det-cat-name-val">Produits Chimiques</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Nombre de matières</div><div class="info-cell-val accent" id="det-cat-count-val">24</div></div>
+        </div>
+      </div>
+
+      <div class="card au d2" style="flex:1;display:flex;flex-direction:column">
+        <div class="ch"><div class="ch-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div>
+          <div><div class="ch-title">Matières de cette catégorie</div></div></div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>Code</th><th>Désignation</th><th>Type</th><th>Sous-catégorie</th><th>Unité</th><th>Actif</th></tr></thead>
+          <tbody id="tbl-cat-matieres"></tbody>
+        </table></div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE MATIERES ══ -->
+    <div class="page" id="p-matieres">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Matières</div><div class="ph-sub">Catalogue des matières — Tous types</div></div>
+        <div class="ph-right"><button class="btn btn-p" onclick="goPage('form-matiere')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Ajouter une matière</button></div></div>
+      <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+        <div class="ch">
+          <div class="sb-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sb-inp" placeholder="Code, désignation…"></div>
+          <div class="chip-row" style="margin-left:8px">
+            <span class="chip on">Tous types</span>
+            <span class="chip">Consommable</span>
+            <span class="chip">Réutilisable</span>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>Code</th><th>Désignation</th><th>Type</th><th>Catégorie</th><th>Unité</th><th>Seuil min.</th><th>Actif</th></tr></thead>
+          <tbody id="tbl-matieres"></tbody>
+        </table></div>
+        <div class="pgr"><div class="pgr-info">Affichage <span>1</span>–<span>20</span> sur <span>84</span></div>
+          <div class="pgr-btns"><button class="pgr-btn">‹</button><button class="pgr-btn act">1</button><button class="pgr-btn">2</button><button class="pgr-btn">3</button><button class="pgr-btn">4</button><button class="pgr-btn">›</button></div></div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE FORM MATIERE (WIZARD) ★ ══ -->
+    <div class="page" id="p-form-matiere">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Ajout de Matière</div><div class="ph-sub">Renseignez les informations pour enregistrer une nouvelle matière au catalogue</div></div>
+        <div class="ph-right"><span class="badge ba">● Brouillon</span></div></div>
+      <div class="au d1">
+        <div class="stp" id="m-stp">
+          <div class="st act"><div class="sb">1</div><div><div class="st-eye">Étape 1</div><div class="st-nm">Identification</div></div></div>
+          <div class="st idle"><div class="sb">2</div><div><div class="st-eye">Étape 2</div><div class="st-nm">Classification & Imputation</div></div></div>
+          <div class="st idle"><div class="sb">3</div><div><div class="st-eye">Étape 3</div><div class="st-nm">Stock & Récapitulatif</div></div></div>
+        </div>
+        <div class="stp-prog"><div class="stp-fill" id="m-stp-fill" style="width:33.33%"></div></div>
+      </div>
+      <div class="card au d2" style="flex:1;display:flex;flex-direction:column">
+        <div class="ch"><div class="ch-ico b" id="m-ico"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div>
+          <div><div class="ch-title" id="m-title">Identification</div><div class="ch-sub" id="m-sub">Code, désignation, type et statut de la matière</div></div></div>
+        <div class="cb" id="m-body" style="flex:1;display:flex;flex-direction:column"></div>
+        <div class="cf">
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-save"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>Enregistrer</button>
+            <button class="btn btn-o">Enregistrer & nouveau</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="mono txt-m" id="m-step-lbl">Étape 1 / 3</span>
+            <button class="btn btn-ghost" id="m-prev" onclick="matStep(-1)">‹ Précédent</button>
+            <button class="btn btn-p" id="m-next" onclick="matStep(1)">Suivant ›</button>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE MOUVEMENTS ══ -->
+    <div class="page" id="p-mouvements">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Mouvements de stock</div><div class="ph-sub">Entrées, sorties et transferts</div></div>
+        <div class="ph-right"><button class="btn btn-p">+ Ajouter mouvement de stock</button></div></div>
+      <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+        <div class="ch">
+          <div class="chip-row">
+            <span class="chip on">type : Tout</span>
+            <span class="chip">exercice : Tout</span>
+            <span class="chip">matiere : Tout</span>
+            <span class="chip">depot : Tout</span>
+            <span class="chip">source depot : Tout</span>
+            <span class="chip">destination depot : Tout</span>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>Référence</th><th>Date</th><th>Type</th><th>Is stock initial</th><th>Exercice</th><th>Matière</th><th>Dépôt</th><th>Source dépôt</th></tr></thead>
+          <tbody id="tbl-mouv"></tbody>
+        </table></div>
+        <div class="pgr"><div class="pgr-info">Affichage <span>1</span>–<span>20</span> sur <span>134</span></div><div class="pgr-btns"><button class="pgr-btn">‹</button><button class="pgr-btn act">1</button><button class="pgr-btn">2</button><button class="pgr-btn">3</button><button class="pgr-btn">›</button></div></div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE MOUVEMENT DETAIL ══ -->
+    <div class="page" id="p-mouvement-detail">
+    <div class="pi">
+      <div class="detail-hero au">
+        <div class="detail-hero-left">
+          <div class="detail-hero-bread">🏠 <a href="#" onclick="goPage('dashboard');return false">Accueil</a> › <a href="#" onclick="goPage('mouvements');return false">Mouvements de stock</a> › [ENTREE] ORDI01</div>
+          <div class="detail-hero-title">Mouvement de stock</div>
+          <div class="detail-hero-actions">
+            <button class="btn btn-o btn-sm" onclick="goPage('mouvements')">← Liste</button>
+            <button class="btn btn-p btn-sm">+ Ajouter Mouvement</button>
+            <button class="btn btn-o btn-sm">✏ Modifier</button>
+            <button class="btn btn-danger btn-sm">🗑 Supprimer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section au d1">
+        <div class="info-section-head blue">Informations du mouvement</div>
+        <div class="info-grid">
+          <div class="info-cell"><div class="info-cell-lbl">Référence</div><div class="info-cell-val mono">DON-DONATEUR-2026-00014</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Type</div><div class="info-cell-val">Entrée</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Date</div><div class="info-cell-val">30/12/2026</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Exercice</div><div class="info-cell-val">EX-2026 (OUVERT)</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Matière</div><div class="info-cell-val">ORDI01 — Ordinateur Portable Dell</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Dépôt</div><div class="info-cell-val">BUR001 — Bureau Direction [BUREAU]</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Dépôt source</div><div class="info-cell-val txt-m">—</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Dépôt dest.</div><div class="info-cell-val txt-m">—</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Quantité</div><div class="info-cell-val">10</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Coût unitaire</div><div class="info-cell-val accent">850 000 F CFA</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Coût total</div><div class="info-cell-val green">8 500 000 F CFA</div></div>
+          <div class="info-cell"><div class="info-cell-lbl">Stock initial</div><div class="info-cell-val"><span class="txt-r">✕</span> Non</div></div>
+        </div>
+      </div>
+
+      <div class="info-section au d2">
+        <div class="info-section-head blue">Commentaire</div>
+        <div style="padding:14px 16px;background:var(--surface)">
+          <div style="font-size:12px;color:var(--t3);font-style:italic">Aucun commentaire</div>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE STOCK COURANT ══ -->
+    <div class="page" id="p-stock-courant">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Stock courant (par dépôt)</div><div class="ph-sub">État des stocks par matière et par dépôt</div></div>
+        <div class="ph-right"><button class="btn btn-p">+ Ajouter état de stock</button></div></div>
+      <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+        <div class="ch">
+          <div class="chip-row">
+            <span class="chip on">exercice : Tout</span>
+            <span class="chip">matiere : Tout</span>
+            <span class="chip">depot : Tout</span>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>Référence</th><th>Exercice</th><th>Matière</th><th>Dépôt</th><th style="text-align:right">Stock init. Qté</th><th style="text-align:right">Quantité</th><th style="text-align:right">CUMP</th><th style="text-align:right">Valeur</th></tr></thead>
+          <tbody id="tbl-stock-courant"></tbody>
+        </table></div>
+        <div class="pgr"><div class="pgr-info">Affichage <span>1</span>–<span>20</span> sur <span>150</span></div><div class="pgr-btns"><button class="pgr-btn">‹</button><button class="pgr-btn act">1</button><button class="pgr-btn">2</button><button class="pgr-btn">3</button><button class="pgr-btn">›</button></div></div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE STOCK ACTUEL ══ -->
+    <div class="page" id="p-stock-actuel">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Stock actuel (tous dépôts)</div><div class="ph-sub">Vue consolidée des stocks par matière</div></div></div>
+      <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+        <div class="ch">
+          <div class="chip-row">
+            <span class="chip on">exercice : Tout</span>
+            <span class="chip">Type de matière : Tout</span>
+            <span class="chip">Catégorie : Tout</span>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>Référence</th><th>Code</th><th>Désignation</th><th>Type</th><th>Exercice</th><th style="text-align:right">Qté totale</th><th style="text-align:right">Valeur totale</th><th>Seuil min</th><th>Statut</th></tr></thead>
+          <tbody id="tbl-stock-actuel"></tbody>
+        </table></div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE FOURNISSEURS ══ -->
+    <div class="page" id="p-fournisseurs">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Fournisseurs</div><div class="ph-sub">Référentiel des fournisseurs</div></div>
+        <div class="ph-right"><button class="btn btn-p">+ Ajouter un fournisseur</button></div></div>
+      <div class="card au d1" style="flex:1;display:flex;flex-direction:column">
+        <div class="ch">
+          <div class="sb-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="sb-inp" placeholder="Nom, NINEA…"></div>
+        </div>
+        <div class="tbl-scroll"><table>
+          <thead><tr><th>Code</th><th>Raison sociale</th><th>NINEA</th><th>Téléphone</th><th>Ville</th><th>Nb achats</th><th>Actif</th><th></th></tr></thead>
+          <tbody id="tbl-fournisseurs"></tbody>
+        </table></div>
+      </div>
+    </div></div>
+
+    <!-- ══ Placeholder pages ══ -->
+    <div class="page" id="p-dotation"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Dotations</div><div class="ph-sub">Registre des dotations reçues</div></div><div class="ph-right"><button class="btn btn-p">+ Enregistrer une dotation</button></div></div><div class="card au d1"><div class="empty-state" style="padding:60px"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg><div class="empty-state-text">Page Dotations — Structure identique aux Dons</div></div></div></div></div>
+
+    <div class="page" id="p-stock-courant"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Stock courant</div></div></div></div></div>
+
+    <div class="page" id="p-exercices"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Exercices comptables</div><div class="ph-sub">Gestion des exercices financiers</div></div><div class="ph-right"><button class="btn btn-p">+ Nouvel exercice</button></div></div></div></div>
+    <div class="page" id="p-comptes-imputation"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Comptes d'imputation</div><div class="ph-sub">Sous-comptes comptables</div></div></div></div></div>
+    <div class="page" id="p-retours-fournisseurs"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Retours fournisseurs</div></div></div></div></div>
+    <div class="page" id="p-entrees-externes"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Entrées externes</div></div></div></div></div>
+    <div class="page" id="p-sorties-stock"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Sorties de stock</div></div></div></div></div>
+    <div class="page" id="p-transferts"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Transferts inter-dépôts</div></div></div></div></div>
+    <div class="page" id="p-sortie-definitive"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Sorties définitives (2e groupe)</div></div></div></div></div>
+    <div class="page" id="p-reforme"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Réforme</div></div></div></div></div>
+    <div class="page" id="p-donateurs"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Donateurs</div></div><div class="ph-right"><button class="btn btn-p">+ Ajouter</button></div></div></div></div>
+    <div class="page" id="p-depots"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Dépôts / Sites</div></div><div class="ph-right"><button class="btn btn-p">+ Ajouter</button></div></div></div></div>
+    <div class="page" id="p-services"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Services</div></div><div class="ph-right"><button class="btn btn-p">+ Ajouter</button></div></div></div></div>
+    <div class="page" id="p-unites"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Unités de mesure</div></div><div class="ph-right"><button class="btn btn-p">+ Ajouter</button></div></div></div></div>
+    <div class="page" id="p-livre-journal"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Grand Journal des Matières</div></div></div></div></div>
+
+    <!-- ══ PAGE NOTIFICATIONS ══ -->
+    <div class="page" id="p-notifs"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Notifications</div><div class="ph-sub">Centre de notifications</div></div></div>
+      <div class="card au d1"><div class="cb">
+        <div class="notif-item"><div class="ni-ico" style="background:var(--accent-d);border:1px solid rgba(82,183,255,.18)"><svg fill="none" stroke="var(--accent)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4"/></svg></div><div><div class="ni-title">Nouvel achat enregistré</div><div class="ni-body">ACH-LAO-2026-00053 — Lao Equipments — 5 200 000 F CFA</div><div class="ni-time">Il y a 2 min</div></div></div>
+        <div class="notif-item"><div class="ni-ico" style="background:var(--green-d);border:1px solid rgba(74,222,154,.18)"><svg fill="none" stroke="var(--green)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div><div class="ni-title">Stock mis à jour — Dépôt Géologie</div><div class="ni-body">Acétone : +202 unités</div><div class="ni-time">Il y a 14 min</div></div></div>
+        <div class="notif-item"><div class="ni-ico" style="background:var(--amber-d);border:1px solid rgba(251,191,36,.18)"><svg fill="none" stroke="var(--amber)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div><div><div class="ni-title">Seuil minimum atteint</div><div class="ni-body">Éthanol 96% — Stock : 3 unités (seuil : 5)</div><div class="ni-time">Il y a 1h</div></div></div>
+      </div></div>
+    </div></div>
+
+    <!-- ══ PAGE PROFIL ══ -->
+    <div class="page" id="p-profil"><div class="pi"><div class="ph au"><div class="ph-left"><div class="ph-title">Mon profil</div></div></div></div></div>
+
+    <!-- ══ PAGE SETTINGS ══ -->
+    <div class="page" id="p-settings">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Paramètres</div><div class="ph-sub">Configuration du système ENSMG</div></div></div>
+      <div class="settings-grid au d1">
+        <div class="card" style="padding:10px">
+          <div class="settings-nav">
+            <div class="sn-item on">Général</div>
+            <div class="sn-item">Notifications</div>
+            <div class="sn-item">Sécurité</div>
+            <div class="sn-item">Exercice comptable</div>
+            <div class="sn-item">Dépôts</div>
+            <div class="sn-item">Apparence</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ch-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div><div><div class="ch-title">Paramètres généraux</div></div></div>
+          <div class="cb">
+            <div class="fgrid" style="gap:12px">
+              <div class="field"><div class="flbl">Nom de l'institution</div><input class="fi" value="École normale supérieure des mines et de la géologie"></div>
+              <div class="field"><div class="flbl">Abréviation</div><input class="fi" value="ENSMG"></div>
+              <div class="field"><div class="flbl">Devise</div><input class="fi" value="F CFA (XOF)"></div>
+              <div class="field"><div class="flbl">Pays</div><input class="fi" value="Sénégal"></div>
+            </div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+              <div class="tog" onclick="this.classList.toggle('on')"><div><div class="tog-lbl">TVA globale active</div><div class="tog-sub">Appliquer la TVA par défaut</div></div><div class="tsw"><div class="tth"></div></div></div>
+              <div class="tog on" onclick="this.classList.toggle('on')"><div><div class="tog-lbl">Notifications email</div><div class="tog-sub">Recevoir les alertes par email</div></div><div class="tsw"><div class="tth"></div></div></div>
+            </div>
+          </div>
+          <div class="cf"><div></div><button class="btn btn-p">Sauvegarder</button></div>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- ══ PAGE FORM ACHAT ══ -->
+    <div class="page" id="p-form-achat">
+    <div class="pi">
+      <div class="ph au"><div class="ph-left"><div class="ph-title">Nouvel achat</div><div class="ph-sub">Renseignez les informations pour enregistrer un achat</div></div>
+        <div class="ph-right"><span class="badge ba">● Brouillon</span></div></div>
+      <div class="au d1">
+        <div class="stp">
+          <div class="st act"><div class="sb">1</div><div><div class="st-eye">Étape 1</div><div class="st-nm">Informations</div></div></div>
+          <div class="st idle"><div class="sb">2</div><div><div class="st-eye">Étape 2</div><div class="st-nm">Facture fournisseur</div></div></div>
+          <div class="st idle"><div class="sb">3</div><div><div class="st-eye">Étape 3</div><div class="st-nm">Lignes d'achat</div></div></div>
+        </div>
+        <div class="stp-prog"><div class="stp-fill" style="width:33.33%"></div></div>
+      </div>
+      <div class="card au d2" style="flex:1;display:flex;flex-direction:column">
+        <div class="ch"><div class="ch-ico b"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
+          <div><div class="ch-title">Informations générales</div><div class="ch-sub">Identifiez le fournisseur et les paramètres</div></div></div>
+        <div class="cb" style="flex:1">
+          <div class="fgrid" style="gap:14px">
+            <div class="field"><div class="flbl"><span class="req-dot"></span> Fournisseur</div><select class="fi"><option>— Sélectionner —</option><option>Lao Equipments</option><option>Sénégal Industriel</option></select></div>
+            <div class="field"><div class="flbl"><span class="req-dot"></span> Dépôt de réception</div><select class="fi"><option>— Sélectionner —</option><option>DEP001 — Dépôt Principal</option><option>DEP002 — Dépôt Chimie</option></select></div>
+            <div class="field"><div class="flbl"><span class="req-dot"></span> Date d'achat</div><input class="fi" type="date"></div>
+            <div class="field"><div class="flbl">N° Pièce</div><input class="fi" placeholder="Référence facture…"></div>
+            <div class="field fs2"><div class="flbl">Observations</div><textarea class="fi" placeholder="Commentaire…"></textarea></div>
+          </div>
+        </div>
+        <div class="cf">
+          <button class="btn btn-save">Enregistrer</button>
+          <div style="display:flex;gap:8px">
+            <span class="mono txt-m">Étape 1 / 3</span>
+            <button class="btn btn-p">Suivant ›</button>
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<!-- Bulk bar -->
+<div class="bulk" id="bulk">
+  <span style="font-size:12px;color:var(--t2)"><strong style="color:var(--accent);font-family:var(--mono)" id="bulk-cnt">0</strong> sélectionné(s)</span>
+  <div style="width:1px;height:18px;background:var(--border)"></div>
+  <button class="btn btn-o btn-sm">Exporter</button>
+  <button class="btn btn-danger btn-sm">Supprimer</button>
+</div>
+
+<script>
+/* ══════════ NAVIGATION ══════════ */
+const PAGES = {
+  dashboard:'Tableau de bord',
+  achats:['Achats','Liste des achats'],
+  'form-achat':['Achats','Nouvel achat'],
+  matieres:['Catalogue','Matières'],
+  'form-matiere':['Catalogue','Ajouter Matière'],
+  categories:['Catalogue','Catégories'],
+  'detail-categorie':['Catégories','Détail'],
+  'stock-courant':['Inventaire','Stock courant (par dépôt)'],
+  'stock-actuel':['Inventaire','Stock actuel (tous dépôts)'],
+  mouvements:['Inventaire','Mouvements de stock'],
+  'mouvement-detail':['Mouvements','Détail'],
+  don:['Entrées','Don — Détail'],
+  legs:['Entrées','Legs — Détail'],
+  dotation:['Entrées','Dotations'],
+  prets:['Prêts & Retours','Prêts accordés'],
+  'pret-detail':['Prêts','Détail — PRET-DIR-2026-00002'],
+  'retour-pret-detail':['Retours','Détail — RET-DIR-2026-00001'],
+  fournisseurs:['Référentiels','Fournisseurs'],
+  donateurs:['Référentiels','Donateurs'],
+  depots:['Référentiels','Dépôts / Sites'],
+  services:['Référentiels','Services'],
+  unites:['Référentiels','Unités de mesure'],
+  'livre-journal':'Grand Journal des Matières',
+  notifs:'Notifications',
+  profil:'Mon profil',
+  settings:'Paramètres',
+  exercices:'Exercices comptables',
+  'comptes-imputation':['Catalogue','Comptes d\'imputation'],
+  'retours-fournisseurs':['Prêts & Retours','Retours fournisseurs'],
+  'entrees-externes':['Prêts & Retours','Entrées externes'],
+  'sorties-stock':['Stocks','Sorties de stock'],
+  transferts:['Stocks','Transferts inter-dépôts'],
+  'sortie-definitive':'Sorties définitives',
+  reforme:'Réforme',
+};
+
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  const pg=document.getElementById('p-'+id);
+  if(pg)pg.classList.add('on');
+  const ni=document.querySelector(`.ni[data-p="${id}"]`);
+  if(ni)ni.classList.add('on');
+  const bc=document.getElementById('bread');
+  const info=PAGES[id]||id;
+  if(Array.isArray(info)){
+    bc.innerHTML=`<a href="#" onclick="goPage('dashboard');return false">Accueil</a><span class="bread-sep">›</span><a href="#" onclick="return false">${info[0]}</a><span class="bread-sep">›</span><span class="bread-cur">${info[1]}</span>`;
+  } else {
+    bc.innerHTML=`<span class="bread-cur">${info}</span>`;
+  }
+  if(id==='categories')renderCatGrid();
+  if(id==='achats')renderAchatsTbl();
+  if(id==='matieres')renderMatieresTbl();
+  if(id==='mouvements')renderMouvsTbl();
+  if(id==='prets')renderPretsTbl();
+  if(id==='fournisseurs')renderFournisseursTbl();
+  if(id==='stock-courant')renderStockCourantTbl();
+  if(id==='stock-actuel')renderStockActuelTbl();
+  if(id==='dashboard')setTimeout(initDashCharts,80);
+  if(id==='form-matiere'){mStep=1;renderMatStep();}
+}
+document.querySelectorAll('.ni[data-p]').forEach(n=>{n.addEventListener('click',()=>goPage(n.dataset.p))});
+
+/* ══════════ DATA ══════════ */
+const FOURNISSEURS=['Lao Equipments','Sénégal Industriel','West Africa Trading',"L'homme Plus",'Lab Supplies Int.','Agro-Import Sénégal','Chime Plus'];
+const F_COLORS=['#52b7ff','#4ade9a','#fbbf24','#a78bfa','#fb923c','#34d399','#f472b6'];
+const MOIS=['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+const DEPOTS=['BUR001 — Bureau Direction','BUR002 — Bureau Logistique','BUR003 — Bureau Recherche','DEP001 — Dépôt Principal','DEP002 — Dépôt Chimie','DEP003 — Dépôt Géologie','DEP004 — Dépôt Informatique'];
+const SERVICES=['ADM — Administration','DIR — Direction','ENS — Enseignement','REC — Recherche','LOG — Logistique'];
+const CATS=[['PC','Produits Chimiques',24,'#52b7ff'],['BL','Bureau & Logistique',18,'#4ade9a'],['GEO','Géologie',12,'#fbbf24'],['INFO','Informatique',9,'#a78bfa'],['BIO','Biologie',8,'#f87171'],['MAT','Matériaux',13,'#22d3ee']];
+
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function fmtNum(n){return n.toLocaleString('fr-FR')}
+
+const ACHATS=Array.from({length:53},(_,i)=>{
+  const fi=i%7;const tva=Math.random()>.3;
+  const ht=rnd(2000000,80000000);const tvaM=tva?rnd(200000,8000000):0;
+  const d=`${String(rnd(1,28)).padStart(2,'0')}/${String(rnd(1,12)).padStart(2,'0')}/2026`;
+  return{id:i+1,ref:`ACH-${FOURNISSEURS[fi].substring(0,3).toUpperCase()}-2026-${String(i+1).padStart(5,'0')}`,
+    code:`CODE-${String(i+1).padStart(5,'0')}`,fournisseur:FOURNISSEURS[fi],fColor:F_COLORS[fi],
+    date:d,tva,ht,tvaM,ttc:ht+tvaM};
+});
+
+const MATIERE_NAMES=['Acétone','Éthanol 96%','Chloroforme','Acide Chlorhydrique 37%','Sulfate de Sodium','Papier A4 80gr','Stylos BIC','Gants latex','Lunettes protection','Microscope','GPS Garmin','Ordinateur Portable Dell','Clé USB 64Go','Marteau géologue','Boussole','Balance analytique','Centrifugeuse','Bécher 500ml','Éprouvette 100ml','Pipette'];
+const MATIERE_TYPES=['Consommable','Consommable','Consommable','Consommable','Consommable','Consommable','Consommable','Consommable','Réutilisable','Réutilisable','Réutilisable','Réutilisable','Consommable','Réutilisable','Réutilisable','Réutilisable','Réutilisable','Réutilisable','Réutilisable','Consommable'];
+const MATIERE_CODES=['ACE001','ETH001','CHL001','HCL001','SUL001','PAP001','STY001','GAN001','LUN001','MIC001','GPS001','ORDI01','USB001','MAR001','BOU001','BAL001','CEN001','BEC001','EPR001','PIP001'];
+const MATIERES=MATIERE_NAMES.map((name,i)=>({
+  code:MATIERE_CODES[i],name,type:MATIERE_TYPES[i],cat:CATS[i%6][1],unit:['L','L','L','L','Kg','Rame','Pièce','Boîte','Pièce','Pièce','Pièce','Pièce','Pièce','Pièce','Pièce','Pièce','Pièce','Pièce','Pièce','Pièce'][i],
+  seuil:rnd(0,20),actif:Math.random()>.1,stock:rnd(10,1800)
+}));
+
+/* ══════════ RENDER TABLES ══════════ */
+let achatPage=1,achatData=[...ACHATS];const PER=20;
+function renderAchatsTbl(){
+  const tbody=document.getElementById('tbl-achats');if(!tbody)return;
+  const start=(achatPage-1)*PER;const slice=achatData.slice(start,start+PER);
+  tbody.innerHTML=slice.map(a=>`<tr class="tr-click"><td><input type="checkbox" class="cb-box" onclick="event.stopPropagation()"></td>
+    <td><span class="mono txt-a" style="font-size:10.5px">${a.ref}</span></td>
+    <td><span class="mono txt-m" style="font-size:10.5px">${a.code}</span></td>
+    <td><span style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:${a.fColor};flex-shrink:0"></span><span style="color:var(--t1)">${a.fournisseur}</span></span></td>
+    <td><span class="mono">${a.date}</span></td>
+    <td style="text-align:center"><span class="${a.tva?'txt-g':'txt-r'}" style="font-size:13px">${a.tva?'✓':'✕'}</span></td>
+    <td class="mono" style="text-align:right;color:var(--t1)">${fmtNum(a.ht)}</td>
+    <td class="mono" style="text-align:right;color:var(--t1)">${fmtNum(a.ttc)}</td>
+    <td><button class="btn btn-ghost" style="padding:3px 7px;font-size:11px">···</button></td></tr>`).join('');
+  document.getElementById('pgFrom').textContent=start+1;
+  document.getElementById('pgTo').textContent=Math.min(start+PER,achatData.length);
+  document.getElementById('pgTotal').textContent=achatData.length;
+}
+function filterAchats(q){const l=q.toLowerCase();achatData=ACHATS.filter(a=>a.ref.toLowerCase().includes(l)||a.fournisseur.toLowerCase().includes(l));achatPage=1;renderAchatsTbl()}
+function setAchatPage(p){achatPage=p;renderAchatsTbl()}
+function goAchatPage(d){achatPage=Math.max(1,Math.min(achatPage+d,Math.ceil(achatData.length/PER)));renderAchatsTbl()}
+
+function renderMatieresTbl(){
+  const tbody=document.getElementById('tbl-matieres');if(!tbody)return;
+  tbody.innerHTML=MATIERES.map(m=>`<tr class="tr-click">
+    <td><span class="mono txt-a">${m.code}</span></td>
+    <td style="color:var(--t1);font-weight:500">${m.name}</td>
+    <td><span class="badge-solid ${m.type==='Consommable'?'amber':'blue'}">${m.type}</span></td>
+    <td>${m.cat}</td><td>${m.unit}</td><td class="mono">${m.seuil}</td>
+    <td><span class="${m.actif?'txt-g':'txt-r'}" style="font-size:13px">${m.actif?'✓':'✕'}</span></td></tr>`).join('');
+}
+
+function renderMouvsTbl(){
+  const tbody=document.getElementById('tbl-mouv');if(!tbody)return;
+  const types=['Entrée','Sortie'];const exs=['EX-2026 (OUVERT)','EX-2025 (CLOS)'];
+  tbody.innerHTML=Array.from({length:20},(_,i)=>{
+    const t=types[i%2];const mi=rnd(0,MATIERES.length-1);
+    return`<tr class="tr-click" onclick="goPage('mouvement-detail')">
+      <td><span class="mono txt-a" style="font-size:10.5px">[${t.toUpperCase()}] ${MATIERES[mi].code} — ${MATIERES[mi].name.substring(0,20)}…</span></td>
+      <td class="mono">${rnd(1,30)} décembre 2026</td>
+      <td><span class="badge ${t==='Entrée'?'bg':'br'}">${t}</span></td>
+      <td><span class="${rnd(0,1)?'txt-r':'txt-g'}" style="font-size:13px">${rnd(0,1)?'✕':'✓'}</span></td>
+      <td>${exs[rnd(0,1)]}</td>
+      <td style="color:var(--t1)">${MATIERES[mi].code} — ${MATIERES[mi].name}</td>
+      <td style="font-size:11px">${DEPOTS[rnd(0,6)]}</td>
+      <td class="txt-m">—</td></tr>`;}).join('');
+}
+
+function renderPretsTbl(){
+  const tbody=document.getElementById('tbl-prets');if(!tbody)return;
+  tbody.innerHTML=Array.from({length:20},(_,i)=>{
+    const srv=SERVICES[rnd(0,4)];const dep=DEPOTS[rnd(0,6)];const clos=rnd(0,1);
+    const code=`PRET-${srv.split(' ')[0]}-2026-${String(i+1).padStart(5,'0')}`;
+    return`<tr class="tr-click" onclick="goPage('pret-detail')">
+      <td><span class="mono txt-a" style="font-size:10.5px">${code}</span></td>
+      <td class="mono txt-m" style="font-size:10.5px">${code}</td>
+      <td style="color:var(--t1)">${srv}</td>
+      <td class="mono">${rnd(1,28)} ${['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre'][rnd(0,10)]} 2026</td>
+      <td style="font-size:11px">${dep}</td>
+      <td><span class="${clos?'txt-g':'txt-r'}" style="font-size:13px">${clos?'✓':'✕'}</span></td></tr>`;}).join('');
+}
+
+function renderFournisseursTbl(){
+  const tbody=document.getElementById('tbl-fournisseurs');if(!tbody)return;
+  tbody.innerHTML=FOURNISSEURS.map((f,i)=>`<tr class="tr-click">
+    <td class="mono txt-a">FOUR-${String(i+1).padStart(3,'0')}</td>
+    <td style="color:var(--t1);font-weight:500">${f}</td>
+    <td class="mono txt-m">${rnd(10000,99999)}${rnd(100,999)}</td>
+    <td class="mono">+221 ${rnd(70,78)} ${rnd(100,999)} ${rnd(10,99)} ${rnd(10,99)}</td>
+    <td>Dakar</td><td class="mono" style="text-align:center">${rnd(3,15)}</td>
+    <td><span class="txt-g" style="font-size:13px">✓</span></td>
+    <td><button class="btn btn-ghost" style="padding:3px 7px;font-size:11px">···</button></td></tr>`).join('');
+}
+
+function renderStockCourantTbl(){
+  const tbody=document.getElementById('tbl-stock-courant');if(!tbody)return;
+  tbody.innerHTML=MATIERES.slice(0,20).map((m,i)=>{
+    const dep=DEPOTS[rnd(0,6)];const qty=rnd(0,500);const cump=rnd(3000,50000);
+    return`<tr class="tr-click">
+      <td><span class="mono txt-a" style="font-size:10.5px">${m.code} — ${m.name.substring(0,15)}… @ ${dep.split(' ')[0]}…</span></td>
+      <td>EX-2026 (OUVERT)</td>
+      <td style="color:var(--t1)">${m.code} — ${m.name}</td>
+      <td style="font-size:11px">${dep}</td>
+      <td class="mono" style="text-align:right">${rnd(0,100)}.000</td>
+      <td class="mono" style="text-align:right;color:var(--t1)">${qty}.000</td>
+      <td class="mono" style="text-align:right">${fmtNum(cump)}</td>
+      <td class="mono" style="text-align:right;color:var(--green)">${fmtNum(qty*cump)}</td></tr>`;}).join('');
+}
+
+function renderStockActuelTbl(){
+  const tbody=document.getElementById('tbl-stock-actuel');if(!tbody)return;
+  tbody.innerHTML=MATIERES.slice(0,15).map(m=>{
+    const qty=m.stock;const val=qty*rnd(5000,20000);
+    return`<tr class="tr-click">
+      <td><span class="mono txt-a" style="font-size:10.5px">${m.code} — ${m.name.substring(0,20)}…</span></td>
+      <td class="mono">${m.code}</td>
+      <td style="color:var(--t1)">${m.name}</td>
+      <td><span class="badge-solid ${m.type==='Consommable'?'amber':'blue'}">${m.type}</span></td>
+      <td>EX-2026 (OUVERT)</td>
+      <td class="mono" style="text-align:right;color:var(--t1)">${qty}</td>
+      <td class="mono" style="text-align:right;color:var(--green)">${fmtNum(val)} FCFA</td>
+      <td class="mono">0</td>
+      <td><span class="badge bg">OK</span></td></tr>`;}).join('');
+}
+
+/* ══════════ CATEGORIES GRID ══════════ */
+function renderCatGrid(){
+  const grid=document.getElementById('cat-grid');if(!grid)return;
+  grid.innerHTML=CATS.map(c=>`<div class="cat-card" onclick="showCatDetail('${c[0]}','${c[1]}',${c[2]},'${c[3]}')">
+    <div class="cat-card-top">
+      <div class="cat-card-ico" style="background:${c[3]}22;border:1px solid ${c[3]}44;color:${c[3]}">📁</div>
+      <div><div class="cat-card-name" style="color:${c[3]}">${c[1]}</div><div class="cat-card-count">${c[2]} matières</div></div>
+    </div>
+    <div class="prog-list">
+      <div><div class="prog-lbl"><span class="prog-name">Couverture catalogue</span><span class="prog-val">${Math.round(c[2]/84*100)}%</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${c[2]/84*100}%;background:${c[3]}"></div></div></div>
+    </div>
+  </div>`).join('');
+}
+
+function showCatDetail(code,name,count,color){
+  document.getElementById('det-cat-code').textContent=code;
+  document.getElementById('det-cat-title').innerHTML=`Catégorie — <span style="color:${color}">${name}</span>`;
+  document.getElementById('det-cat-code-val').textContent=code;
+  document.getElementById('det-cat-name-val').textContent=name;
+  document.getElementById('det-cat-count-val').textContent=count;
+  const tbody=document.getElementById('tbl-cat-matieres');
+  tbody.innerHTML=MATIERES.filter((_,i)=>CATS[i%6][0]===code||rnd(0,3)===0).slice(0,count).map(m=>`<tr class="tr-click">
+    <td><span class="mono txt-a">${m.code}</span></td>
+    <td style="color:var(--t1);font-weight:500">${m.name}</td>
+    <td><span class="badge-solid ${m.type==='Consommable'?'amber':'blue'}">${m.type}</span></td>
+    <td class="mono txt-m">${code}/S-${rnd(1,3)}</td>
+    <td>${m.unit}</td>
+    <td><span class="txt-g" style="font-size:13px">✓</span></td></tr>`).join('');
+  goPage('detail-categorie');
+}
+
+/* ══════════ CHARTS ══════════ */
+const cfg={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#192035',borderColor:'rgba(255,255,255,.08)',borderWidth:1,titleColor:'#f0f4ff',bodyColor:'#7e8fa8',padding:10,cornerRadius:8}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#3d4f68',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#3d4f68',font:{size:10}}}}};
+const cfgNoAxes={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{color:'#7e8fa8',font:{size:10},boxWidth:9,padding:10}},tooltip:{backgroundColor:'#192035',borderColor:'rgba(255,255,255,.08)',borderWidth:1,titleColor:'#f0f4ff',bodyColor:'#7e8fa8',padding:10,cornerRadius:8}}};
+
+let dashChartsInit=false;
+function initDashCharts(){
+  if(dashChartsInit)return;dashChartsInit=true;
+  new Chart(document.getElementById('c-cat-pie'),{type:'doughnut',data:{labels:CATS.map(c=>c[1]),datasets:[{data:CATS.map(c=>c[2]),backgroundColor:CATS.map(c=>c[3]+'88'),borderColor:CATS.map(c=>c[3]),borderWidth:2,hoverOffset:6}]},options:cfgNoAxes});
+  new Chart(document.getElementById('c-activity'),{type:'line',data:{labels:['Oct','Nov','Déc','Jan','Fév','Mar'],datasets:[{data:[12,18,14,22,16,25],borderColor:'#52b7ff',backgroundColor:'rgba(82,183,255,.08)',fill:true,tension:.4,pointRadius:4,borderWidth:2}]},options:cfg});
+  new Chart(document.getElementById('c-mouv-type'),{type:'bar',data:{labels:['Entrées','Sorties','Transferts'],datasets:[{data:[85,42,7],backgroundColor:['#4ade9a88','#f8717188','#fbbf2488'],borderColor:['#4ade9a','#f87171','#fbbf24'],borderWidth:1.5,borderRadius:6}]},options:cfg});
+  new Chart(document.getElementById('c-top-mat'),{type:'bar',data:{labels:MATIERES.slice(0,8).map(m=>m.name.substring(0,12)),datasets:[{data:MATIERES.slice(0,8).map(m=>m.stock),backgroundColor:'#a78bfa66',borderColor:'#a78bfa',borderWidth:1.5,borderRadius:4}]},options:{...cfg,indexAxis:'y'}});
+}
+
+/* ══════════════════════════════════════
+   ★ MATIERE WIZARD
+══════════════════════════════════════ */
+let mStep=1;window._matData={};
+const DEPOTS_LIST=['BUR001 — Bureau Direction','BUR002 — Bureau Logistique','BUR003 — Bureau Recherche','DEP001 — Dépôt Principal','DEP002 — Dépôt Chimie','DEP003 — Dépôt Géologie','DEP004 — Dépôt Informatique'];
+const mSteps=[
+  {title:'Identification',sub:'Code, désignation, type et statut de la matière',
+   html:`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);padding:10px 16px;background:rgba(82,183,255,.11);border-left:3px solid var(--accent);border-radius:6px;margin-bottom:14px">IDENTIFICATION</div>
+<div class="fgrid"><div class="field"><div class="flbl"><span class="req-dot"></span> Code matière (court)</div><div class="iw"><svg class="ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg><input class="fi" id="mat-code" placeholder="Ex: ORD, BURE, LED20" oninput="updateMatRecap()"></div><div class="fhint"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Code court unique. Max 10 caractères</div></div>
+<div class="field"><div class="flbl"><span class="req-dot"></span> Libellé / Désignation</div><div class="iw"><svg class="ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg><input class="fi" id="mat-name" placeholder="Nom complet de la matière" oninput="updateMatRecap()"></div></div></div>
+<div class="fgrid" style="margin-top:14px"><div class="field"><div class="flbl"><span class="req-dot"></span> Type de matière</div><select class="fi fi-bare" id="mat-type" onchange="updateMatRecap()"><option value="">— Sélectionnez —</option><option value="Consommable">Consommable</option><option value="Réutilisable">Réutilisable (durable)</option></select><div class="fhint"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>Permet de distinguer les biens durables des consommables</div></div>
+<div class="field"><div class="flbl">Statut</div><div class="tog on" id="mat-actif" onclick="this.classList.toggle('on');updateMatRecap()"><div><div class="tog-lbl">Actif</div><div class="tog-sub">La matière peut être utilisée dans le système</div></div><div class="tsw"><div class="tth"></div></div></div></div></div>
+<div style="margin-top:14px"><div class="field"><div class="flbl">Description (optionnel)</div><textarea class="fi" id="mat-desc" placeholder="Informations complémentaires sur cette matière…" style="min-height:70px;padding-left:12px" oninput="updateMatRecap()"></textarea></div></div>
+<div style="margin-top:16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--purple);padding:10px 16px;background:rgba(167,139,250,.11);border-left:3px solid var(--purple);border-radius:6px;margin-bottom:10px">APERÇU EN DIRECT</div>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Code</span><span style="font-weight:600;color:var(--t3);font-style:italic" id="rc-code">—</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Désignation</span><span style="font-weight:600;color:var(--t3);font-style:italic" id="rc-name">—</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Type</span><span style="font-weight:600;color:var(--t3);font-style:italic" id="rc-type">—</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;font-size:12px"><span style="color:var(--t3);font-size:10.5px">Statut</span><span style="font-weight:600;color:var(--green)" id="rc-actif">✓ Actif</span></div></div>`},
+
+  {title:'Classification & Imputation',sub:'Rattachez la matière à une catégorie et un compte comptable',
+   html:`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--green);padding:10px 16px;background:rgba(74,222,154,.11);border-left:3px solid var(--green);border-radius:6px;margin-bottom:14px">CLASSIFICATION MATIÈRE</div>
+<div class="fgrid"><div class="field"><div class="flbl"><span class="req-dot"></span> Sous-catégorie</div><div style="display:flex;gap:6px;align-items:center"><select class="fi fi-bare" id="mat-subcat" onchange="onSubcatChange()" style="flex:1"><option value="">— Sélectionnez —</option><optgroup label="Produits Chimiques"><option value="PC|10.01|Solvants">10.01 — Solvants</option><option value="PC|10.02|Acides">10.02 — Acides</option><option value="PC|10.03|Bases">10.03 — Bases</option><option value="PC|10.04|Sels">10.04 — Sels</option></optgroup><optgroup label="Bureau & Logistique"><option value="BL|20.01|Papeterie">20.01 — Papeterie</option><option value="BL|20.02|Bureautique">20.02 — Bureautique</option></optgroup><optgroup label="Géologie"><option value="GEO|30.01|Instruments terrain">30.01 — Instruments de terrain</option></optgroup><optgroup label="Informatique"><option value="INFO|40.01|Ordinateurs">40.01 — Ordinateurs</option><option value="INFO|40.02|Accessoires">40.02 — Accessoires</option></optgroup><optgroup label="Biologie"><option value="BIO|50.01|Verrerie">50.01 — Verrerie</option></optgroup></select><div style="width:28px;height:28px;border-radius:6px;background:var(--surface3);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);flex-shrink:0" title="Ajouter" onclick="alert('Popup ajout sous-catégorie')">+</div></div></div>
+<div class="field"><div class="flbl">Catégorie</div><div style="padding:10px 12px;background:var(--surface3);border-radius:10px;border:1px solid var(--border);min-height:40px"><span id="mat-cat-display" style="font-size:12.5px;color:var(--t3);font-style:italic">Renseignée automatiquement</span></div><div class="fhint"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>Déduite de la sous-catégorie sélectionnée</div></div></div>
+<div style="margin-top:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--cyan);padding:10px 16px;background:rgba(34,211,238,.11);border-left:3px solid var(--cyan);border-radius:6px;margin-bottom:14px">IMPUTATION COMPTABLE</div>
+<div class="fgrid"><div class="field"><div class="flbl"><span class="req-dot"></span> Sous-compte</div><div style="display:flex;gap:6px;align-items:center"><select class="fi fi-bare" id="mat-souscompte" onchange="onSousCompteChange()" style="flex:1"><option value="">— Sélectionnez —</option><optgroup label="10 — Acquisitions et entrées"><option value="10.01|Acquisitions Cat. A">10.01.01 — Acquisitions Cat. A-1</option><option value="10.02|Acquisitions Cat. B">10.01.02 — Acquisitions Cat. A-2</option><option value="10.03|Acquisitions Cat. C">10.01.03 — Acquisitions Cat. A-3</option></optgroup><optgroup label="11 — Dotations et dons"><option value="11.01|Dotations Cat. A">11.01.01 — Dotations Cat. A-1</option></optgroup><optgroup label="20 — Sorties"><option value="20.01|Sorties Cat. A">20.01.01 — Sorties Cat. A-1</option></optgroup></select><div style="width:28px;height:28px;border-radius:6px;background:var(--surface3);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);flex-shrink:0" title="Ajouter" onclick="alert('Popup ajout sous-compte')">+</div></div><div class="fhint"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>Sous-compte d'imputation comptable de cette matière</div></div>
+<div class="field"><div class="flbl">Compte divisionnaire</div><div style="padding:10px 12px;background:var(--surface3);border-radius:10px;border:1px solid var(--border);min-height:40px"><span id="mat-compte-display" style="font-size:12.5px;color:var(--t3);font-style:italic">Renseigné automatiquement</span></div></div></div>`},
+
+  {title:'Stock & Récapitulatif',sub:'Paramètres de stock et résumé avant enregistrement',
+   html:`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--amber);padding:10px 16px;background:rgba(251,191,36,.11);border-left:3px solid var(--amber);border-radius:6px;margin-bottom:14px">STOCK (OPTIONNEL)</div>
+<div class="fgrid"><div class="field"><div class="flbl">Unité de mesure</div><select class="fi fi-bare" id="mat-unite"><option value="">— Sélectionnez —</option><option>Litre (L)</option><option>Kilogramme (Kg)</option><option>Pièce (u)</option><option>Rame</option><option>Boîte</option><option>Mètre (m)</option></select></div>
+<div class="field"><div class="flbl">Seuil minimum d'alerte</div><div class="iw"><svg class="ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><input class="fi" type="number" value="0"></div><div class="fhint"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>Alerte quand le stock passe sous ce seuil</div></div></div>
+<div class="fgrid" style="margin-top:14px"><div class="field"><div class="flbl">Dépôt de stockage initial</div><select class="fi fi-bare"><option value="">— Aucun (pas de stock initial) —</option>${DEPOTS_LIST.map(d=>'<option>'+d+'</option>').join('')}</select></div>
+<div class="field"><div class="flbl">Quantité initiale</div><div class="iw"><svg class="ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><input class="fi" type="number" value="0" id="mat-qty-init" oninput="calcMatVal()"></div></div></div>
+<div class="fgrid" style="margin-top:14px"><div class="field"><div class="flbl">Prix unitaire initial (F CFA)</div><div class="iw"><svg class="ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><input class="fi" type="number" value="0" id="mat-pu-init" oninput="calcMatVal()"></div></div>
+<div class="field"><div class="flbl">Valeur totale estimée</div><div style="padding:10px 12px;background:var(--surface3);border-radius:10px;border:1px solid var(--border);min-height:40px"><span style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--green)" id="mat-val-total">0 F CFA</span></div></div></div>
+<div style="margin-top:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);padding:10px 16px;background:rgba(82,183,255,.11);border-left:3px solid var(--accent);border-radius:6px;margin-bottom:10px">RÉCAPITULATIF COMPLET</div>
+<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Code</span><span style="font-weight:600;color:var(--accent)" id="rc2-code">—</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Désignation</span><span style="font-weight:600" id="rc2-name">—</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Type</span><span style="font-weight:600" id="rc2-type">—</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Statut</span><span style="font-weight:600;color:var(--green)" id="rc2-actif">✓ Actif</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Sous-catégorie</span><span style="font-weight:600" id="rc2-subcat">—</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--t3);font-size:10.5px">Catégorie</span><span style="font-weight:600" id="rc2-cat">—</span></div><div style="display:flex;justify-content:space-between;padding:9px 14px;font-size:12px"><span style="color:var(--t3);font-size:10.5px">Sous-compte</span><span style="font-weight:600" id="rc2-compte">—</span></div></div>`}
+];
+
+function renderMatStep(){
+  const s=mSteps[mStep-1];
+  document.getElementById('m-title').textContent=s.title;
+  document.getElementById('m-sub').textContent=s.sub;
+  document.getElementById('m-body').innerHTML=s.html;
+  document.getElementById('m-step-lbl').textContent='Étape '+mStep+' / 3';
+  document.getElementById('m-stp-fill').style.width=(mStep/3*100)+'%';
+  document.querySelectorAll('#m-stp .st').forEach((el,i)=>{
+    el.classList.remove('act','done','idle');
+    if(i+1<mStep)el.classList.add('done');
+    else if(i+1===mStep)el.classList.add('act');
+    else el.classList.add('idle');
+    const sb=el.querySelector('.sb');
+    if(sb)sb.textContent=i+1<mStep?'✓':i+1;
+  });
+  const nb=document.getElementById('m-next');
+  if(mStep===3){nb.innerHTML='<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Finaliser';nb.className='btn btn-g';}
+  else{nb.innerHTML='Suivant ›';nb.className='btn btn-p';}
+  document.getElementById('m-prev').style.opacity=mStep===1?'.35':'1';
+  if(mStep===3)fillRecap3();
+}
+function matStep(d){
+  const ns=mStep+d;if(ns<1||ns>3)return;
+  if(mStep===1){window._matData={code:document.getElementById('mat-code')?.value||'',name:document.getElementById('mat-name')?.value||'',type:document.getElementById('mat-type')?.value||'',actif:document.getElementById('mat-actif')?.classList.contains('on'),desc:document.getElementById('mat-desc')?.value||''};}
+  else if(mStep===2){window._matData=window._matData||{};window._matData.subcat=document.getElementById('mat-subcat')?.value||'';window._matData.catDisplay=document.getElementById('mat-cat-display')?.textContent||'';window._matData.souscompte=document.getElementById('mat-souscompte')?.value||'';window._matData.compteDisplay=document.getElementById('mat-compte-display')?.textContent||'';}
+  mStep=ns;renderMatStep();
+}
+function updateMatRecap(){
+  const code=document.getElementById('mat-code')?.value,name=document.getElementById('mat-name')?.value,type=document.getElementById('mat-type')?.value,actif=document.getElementById('mat-actif')?.classList.contains('on');
+  const rc=id=>{const e=document.getElementById(id);return e};
+  const c=rc('rc-code');if(c){c.textContent=code||'—';c.style.color=code?'var(--accent)':'var(--t3)';c.style.fontStyle=code?'normal':'italic';}
+  const n=rc('rc-name');if(n){n.textContent=name||'—';n.style.color=name?'var(--t1)':'var(--t3)';n.style.fontStyle=name?'normal':'italic';}
+  const t=rc('rc-type');if(t){t.textContent=type||'—';t.style.color=type?'var(--t1)':'var(--t3)';t.style.fontStyle=type?'normal':'italic';}
+  const a=rc('rc-actif');if(a){a.textContent=actif?'✓ Actif':'✕ Inactif';a.style.color=actif?'var(--green)':'var(--red)';}
+}
+function onSubcatChange(){
+  const v=document.getElementById('mat-subcat')?.value,d=document.getElementById('mat-cat-display');
+  if(v){const p=v.split('|'),catNames={'PC':'Produits Chimiques','BL':'Bureau & Logistique','GEO':'Géologie','INFO':'Informatique','BIO':'Biologie','MAT':'Matériaux'};d.textContent=catNames[p[0]]||p[0];d.style.color='var(--t1)';d.style.fontStyle='normal';d.style.fontWeight='600';}
+  else{d.textContent='Renseignée automatiquement';d.style.color='var(--t3)';d.style.fontStyle='italic';d.style.fontWeight='400';}
+}
+function onSousCompteChange(){
+  const v=document.getElementById('mat-souscompte')?.value,d=document.getElementById('mat-compte-display');
+  if(v){const p=v.split('|');d.textContent=p[0]+' — '+p[1];d.style.color='var(--t1)';d.style.fontStyle='normal';d.style.fontWeight='600';}
+  else{d.textContent='Renseigné automatiquement';d.style.color='var(--t3)';d.style.fontStyle='italic';d.style.fontWeight='400';}
+}
+function calcMatVal(){
+  const q=parseFloat(document.getElementById('mat-qty-init')?.value)||0;
+  const p=parseFloat(document.getElementById('mat-pu-init')?.value)||0;
+  const el=document.getElementById('mat-val-total');
+  if(el)el.textContent=(q*p>0?q*p:0).toLocaleString('fr-FR')+' F CFA';
+}
+function fillRecap3(){
+  const d=window._matData||{};
+  const s=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v||'—';};
+  s('rc2-code',d.code);s('rc2-name',d.name);s('rc2-type',d.type);
+  const a=document.getElementById('rc2-actif');if(a){a.textContent=d.actif?'✓ Actif':'✕ Inactif';a.style.color=d.actif?'var(--green)':'var(--red)';}
+  s('rc2-subcat',d.subcat?d.subcat.split('|')[2]:'');
+  s('rc2-cat',d.catDisplay&&d.catDisplay!=='Renseignée automatiquement'?d.catDisplay:'');
+  s('rc2-compte',d.souscompte?d.souscompte.split('|')[0]:'');
+}
+
+/* ══════════ INIT ══════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(initDashCharts,100);
+  renderMatStep();
+});
+</script>
+<footer style="display:none">École normale supérieure des mines et de la géologie — Système de comptabilité des matières — 2026</footer>
+</body>
+</html>

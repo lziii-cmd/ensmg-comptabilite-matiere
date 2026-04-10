@@ -1,0 +1,192 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Réforme {{ operation.code }} | ENSMG{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Accueil</a>
+  &rsaquo; <a href="/documents/">Documents &amp; Registres</a>
+  &rsaquo; <a href="/documents/reformes/">Réformes &amp; Destructions</a>
+  &rsaquo; {{ operation.code }}
+</div>
+{% endblock %}
+
+{% block content_title %}<h1>Réforme / Destruction — {{ operation.code }}</h1>{% endblock %}
+
+{% block content %}
+<style>
+  #content, #content-main { max-width: none !important; width: 100% !important; }
+
+  .rd-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: 22px 26px; margin-bottom: 20px;
+  }
+  .rd-card-title {
+    font-size: 11px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .08em; color: #6b7280; margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 1px solid #f3f4f6;
+  }
+  .rd-meta-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+  .rd-meta-item label {
+    display: block; font-size: 10px; text-transform: uppercase;
+    letter-spacing: .06em; color: #9ca3af; margin-bottom: 3px;
+  }
+  .rd-meta-item span {
+    font-size: 14px; font-weight: 600; color: #111827;
+  }
+  .badge-depot {
+    display: inline-block; background: #dbeafe; color: #1e40af;
+    border-radius: 10px; padding: 2px 10px; font-size: 12px; font-weight: 600;
+  }
+  .rd-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .rd-table th {
+    background: #f9fafb; font-size: 11px; text-transform: uppercase;
+    letter-spacing: .05em; font-weight: 700; color: #6b7280;
+    padding: 7px 12px; border-bottom: 2px solid #e5e7eb; text-align: left;
+  }
+  .rd-table td {
+    padding: 9px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: middle;
+  }
+  .rd-table tbody tr:last-child td { border-bottom: none; }
+  .rd-table tfoot td {
+    padding: 9px 12px; font-weight: 700; background: #f9fafb;
+    border-top: 2px solid #e5e7eb;
+  }
+
+  /* Boutons PV */
+  .rd-pv-row {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;
+  }
+  .btn-pv {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 28px; border-radius: 8px; font-size: 14px;
+    font-weight: 700; text-decoration: none; border: 2px solid;
+    transition: all .15s;
+  }
+  .btn-pv .pv-icon { font-size: 22px; }
+  .btn-pv .pv-info { display: flex; flex-direction: column; }
+  .btn-pv .pv-title { font-size: 13px; font-weight: 700; }
+  .btn-pv .pv-sub   { font-size: 11px; font-weight: 400; opacity: .75; margin-top: 1px; }
+
+  .btn-pvr {
+    background: #fff7ed; border-color: #fdba74; color: #9a3412;
+  }
+  .btn-pvr:hover { background: #ffedd5; border-color: #fb923c; color: #7c2d12; }
+
+  .btn-pvd {
+    background: #fef2f2; border-color: #fca5a5; color: #7f1d1d;
+  }
+  .btn-pvd:hover { background: #fee2e2; border-color: #f87171; color: #450a0a; }
+
+  .rd-back {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: #4b5563; font-size: 13px; text-decoration: none;
+    margin-bottom: 16px;
+  }
+  .rd-back:hover { color: #1e3a5f; }
+</style>
+
+<a href="/documents/reformes/" class="rd-back">
+  ← Retour à la liste
+</a>
+
+<!-- Informations de l'opération -->
+<div class="rd-card">
+  <div class="rd-card-title">Informations de l'opération</div>
+  <div class="rd-meta-grid">
+    <div class="rd-meta-item">
+      <label>Code</label>
+      <span>{{ operation.code }}</span>
+    </div>
+    <div class="rd-meta-item">
+      <label>Date</label>
+      <span>{{ operation.date_sortie|date:"d/m/Y" }}</span>
+    </div>
+    <div class="rd-meta-item">
+      <label>Dépôt</label>
+      <span><span class="badge-depot">{{ operation.depot.identifiant }} — {{ operation.depot.nom }}</span></span>
+    </div>
+    <div class="rd-meta-item">
+      <label>Type</label>
+      <span>{{ operation.get_type_sortie_display }}</span>
+    </div>
+    {% if operation.motif_principal %}
+    <div class="rd-meta-item" style="grid-column: 1 / -1">
+      <label>Motif</label>
+      <span>{{ operation.motif_principal }}</span>
+    </div>
+    {% endif %}
+    {% if operation.commentaire %}
+    <div class="rd-meta-item" style="grid-column: 1 / -1">
+      <label>Observations</label>
+      <span style="font-weight: 400; color: #374151;">{{ operation.commentaire }}</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Liste des matières -->
+<div class="rd-card">
+  <div class="rd-card-title">Matières concernées ({{ nb_lignes }} article{% if nb_lignes != 1 %}s{% endif %})</div>
+  <table class="rd-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Code</th>
+        <th>Désignation</th>
+        <th>Unité</th>
+        <th style="text-align:right">Quantité</th>
+        <th style="text-align:right">Prix unitaire</th>
+        <th style="text-align:right">Valeur totale</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lg in lignes %}
+      <tr>
+        <td style="color:#9ca3af">{{ forloop.counter }}</td>
+        <td><strong>{{ lg.matiere.code_court }}</strong></td>
+        <td>{{ lg.matiere.designation }}</td>
+        <td>{{ lg.matiere.unite|default:"—" }}</td>
+        <td style="text-align:right">{{ lg.quantite }}</td>
+        <td style="text-align:right">{% if lg.prix_unitaire %}{{ lg.prix_unitaire }}{% else %}—{% endif %}</td>
+        <td style="text-align:right">{% if lg.total_ligne %}{{ lg.total_ligne }}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    {% if total_valeur %}
+    <tfoot>
+      <tr>
+        <td colspan="6" style="text-align:right">Total :</td>
+        <td style="text-align:right">{{ total_valeur }}</td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>
+
+<!-- Documents PDF -->
+<div class="rd-card">
+  <div class="rd-card-title">Générer les documents</div>
+  <div class="rd-pv-row">
+    <a href="/documents/pv-reforme/{{ operation.pk }}/" target="_blank" class="btn-pv btn-pvr">
+      <span class="pv-icon">📋</span>
+      <span class="pv-info">
+        <span class="pv-title">PV de Réforme</span>
+        <span class="pv-sub">Procès-verbal constatant l'état des matières</span>
+      </span>
+    </a>
+    <a href="/documents/pv-vente-destruction/{{ operation.pk }}/" target="_blank" class="btn-pv btn-pvd">
+      <span class="pv-icon">🗑️</span>
+      <span class="pv-info">
+        <span class="pv-title">PV de Vente / Destruction</span>
+        <span class="pv-sub">Procès-verbal de sortie définitive</span>
+      </span>
+    </a>
+  </div>
+</div>
+
+{% endblock %}

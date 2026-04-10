@@ -1,0 +1,1758 @@
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ title|default:"Administration" }} | École normale supérieure des mines et de la géologie{% endblock %}
+
+{% block dark-mode-vars %}
+{# Désactiver le dark_mode.css de Django qui interfère avec notre thème #}
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'admin/css/ensmg_custom.css' %}">
+<style>
+  html { color-scheme: light !important; }
+  /* Scroll horizontal : laisser html et body scroller normalement */
+  html, body { overflow-x: auto !important; }
+  /* Zone de contenu principale — pleine largeur disponible avec marges latérales */
+  #container { width: 100% !important; box-sizing: border-box !important; }
+  #content { overflow-x: auto !important; min-width: 0 !important; width: 100% !important; padding-left: 28px !important; padding-right: 28px !important; box-sizing: border-box !important; }
+  #content-main { overflow-x: auto !important; min-width: 0 !important; width: 100% !important; }
+  /* ── Marges latérales symétriques : tout s'aligne au même bord ── */
+  #content { padding-left: 24px !important; padding-right: 24px !important; }
+  #content-main, #changelist, #toolbar, ul.messagelist { padding-left: 0 !important; padding-right: 0 !important; margin-left: 0 !important; margin-right: 0 !important; box-sizing: border-box !important; }
+  /* Tableaux changelist : scroll dédié */
+  .results { overflow-x: auto !important; display: block !important; }
+  #result_list { min-width: max-content; width: 100% !important; }
+  /* Tables responsives */
+  table { table-layout: auto; }
+  /* ── Réduction taille cellules pour tout afficher à 100% zoom ── */
+  #result_list td, #result_list th { padding: 6px 9px !important; font-size: 12px !important; }
+  #result_list thead th { padding: 7px 9px !important; font-size: 10px !important; }
+  /* ── Titre + bouton Ajouter sur la même ligne (pattern header action) ── */
+  #ensmg-page-header { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 16px !important; gap: 16px !important; }
+  #ensmg-page-header h1 { margin: 0 !important; font-size: 18px !important; flex: 1 !important; }
+  #ensmg-page-header ul.object-tools { margin: 0 !important; padding: 0 !important; list-style: none !important; flex-shrink: 0 !important; display: flex !important; gap: 8px !important; }
+  #ensmg-page-header ul.object-tools li { margin: 0 !important; }
+  ul.object-tools { margin-top: 0 !important; }
+  /* ── Réduction générale ── */
+  #content > h1 { font-size: 18px !important; margin-bottom: 16px !important; }
+  .paginator { font-size: 11px !important; }
+  #action-bar, .actions { padding: 6px 0 !important; }
+  /* Forcer couleurs claires - résout l'invisibilité du texte causée par dark_mode.css */
+  a, a:link, a:visited { color: #2a4f80; }
+  a:hover { color: #b8962e; }
+  /* ── Bouton Ajouter — changelist ── */
+  a.addlink {
+    background: #1e3a5f !important; color: #fff !important;
+    padding: 7px 16px !important; border-radius: 6px !important;
+    font-weight: 700 !important; font-size: 12px !important;
+    text-decoration: none !important; display: inline-flex !important;
+    align-items: center !important; gap: 6px !important;
+  }
+  a.addlink:hover { background: #152a47 !important; color: #fff !important; }
+  /* ── Bouton Ajouter — detail view ── */
+  .ensmg-btn-add {
+    background: #1e3a5f !important; color: #fff !important;
+    border-color: #152a47 !important;
+  }
+  .ensmg-btn-add:hover { background: #152a47 !important; color: #fff !important; }
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="{% static 'js/exercices_switcher.js' %}"></script>
+{% endblock %}
+
+{# ══════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════ #}
+{% block nav-sidebar %}
+<nav id="nav-sidebar" class="ensmg-sidebar-root">
+
+  <a class="ensmg-sb-logo" href="{% url 'admin:index' %}">
+    <div class="ensmg-sb-badge">EM</div>
+    <div>
+      <div class="ensmg-sb-name">ENSMG</div>
+      <span class="ensmg-sb-sub">Mines &amp; Géologie</span>
+    </div>
+  </a>
+
+  <div class="ensmg-sb-nav">
+
+    {# ── Tableau de bord ── #}
+    <a href="{% url 'admin:index' %}" class="ensmg-sb-link" id="sb-dashboard">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Tableau de bord</span>
+    </a>
+
+    {# ── Exercices & Planification ── #}
+    <div class="ensmg-sb-group">Exercices &amp; Planification</div>
+
+    <a href="/admin/core/exercice/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Exercices comptables</span>
+    </a>
+
+    {# ── Catalogue des matières ── #}
+    <div class="ensmg-sb-group">Catalogue des matières</div>
+
+    <a href="/admin/categories/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Catégories</span>
+    </a>
+
+    <a href="/admin/sous-categories/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Sous-catégories</span>
+    </a>
+
+    <a href="/admin/catalog/matiere/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Matières</span>
+    </a>
+
+    <a href="/admin/comptes-imputation/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Comptes d'imputation</span>
+    </a>
+
+    {# ── Entrées ── #}
+    <div class="ensmg-sb-group">Entrées</div>
+
+    <a href="/admin/purchasing/achat/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Achat</span>
+    </a>
+
+    <a href="/admin/purchasing/don/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Don</span>
+    </a>
+
+    <a href="/admin/purchasing/legsentry/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Legs</span>
+    </a>
+
+    <a href="/admin/purchasing/dotation/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Dotation</span>
+    </a>
+
+    {# ── Prêts & Retours ── #}
+    <div class="ensmg-sb-group" style="font-size:10px;padding-top:6px;">Prêts &amp; Retours</div>
+
+    <a href="/admin/purchasing/pret/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Prêts accordés</span>
+    </a>
+
+    <a href="/admin/purchasing/retourfournisseur/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Retours fournisseurs</span>
+    </a>
+
+    <a href="/admin/purchasing/externalstockentry/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Entrées externes</span>
+    </a>
+
+    {# ── Gestion des stocks ── #}
+    <div class="ensmg-sb-group">Gestion des stocks</div>
+
+    <a href="/admin/inventory/stockcourant/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Stock courant (par dépôt)</span>
+    </a>
+
+    <a href="/admin/inventory/stockcourantproxy/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Stock actuel (tous dépôts)</span>
+    </a>
+
+    <a href="/admin/inventory/mouvementstock/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Mouvements de stock</span>
+    </a>
+
+    <a href="/admin/inventory/operationsortie/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Sorties de stock</span>
+    </a>
+
+    <a href="/admin/inventory/operationtransfert/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Transferts inter-dépôts</span>
+    </a>
+
+    {# ── Sorties définitives ── #}
+    <div class="ensmg-sb-group">Sorties définitives</div>
+
+    <a href="/admin/inventory/operationsortie/?type_sortie=CONSOMMATION_2E_GROUPE" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Sortie Définitive (2e groupe)</span>
+    </a>
+
+    <a href="/admin/inventory/operationsortie/?type_sortie=REFORME_DESTRUCTION" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Réforme</span>
+    </a>
+
+    <a href="/admin/inventory/operationsortie/?type_sortie=PERTE_VOL_DEFICIT" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Destruction</span>
+    </a>
+
+    <a href="/admin/inventory/operationsortie/?type_sortie=VENTE" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Vente</span>
+    </a>
+
+    <a href="/admin/inventory/sortiecertificatadmin/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Certificat administratif</span>
+    </a>
+
+    <a href="/admin/inventory/sortiefingestion/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Fin de gestion</span>
+    </a>
+
+    {# ── Référentiels & Tiers ── #}
+    <div class="ensmg-sb-group">Référentiels &amp; Tiers</div>
+
+    <a href="/admin/core/fournisseur/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Fournisseurs</span>
+    </a>
+
+    <a href="/admin/core/donateur/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Donateurs</span>
+    </a>
+
+    <a href="/admin/depots/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Dépôts / Sites</span>
+    </a>
+
+    <a href="/admin/services/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M12 2v2M4.93 4.93l1.41 1.41M2 12h2M4.93 19.07l1.41-1.41M12 20v2M19.07 19.07l-1.41-1.41M22 12h-2"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Services</span>
+    </a>
+
+    <a href="/admin/core/unite/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Unités de mesure</span>
+    </a>
+
+    {# ── Documents & Registres ── #}
+    <div class="ensmg-sb-group">Documents &amp; Registres</div>
+
+    <a href="/documents/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Tous les documents</span>
+    </a>
+
+    {# ── Registres comptables ── #}
+    <div class="ensmg-sb-group" style="font-size:10px;padding-top:6px;">Registres comptables</div>
+
+    <a href="/documents/livre-journal/" class="ensmg-sb-link" target="_blank">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Livre journal</span>
+    </a>
+
+    <a href="/documents/grand-journal/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Grand Journal des Matières</span>
+    </a>
+
+    <a href="/documents/grand-livre-comptes/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Grand Livre des Comptes</span>
+    </a>
+
+    <a href="/documents/grand-livre-journaux/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Grand Livre des Journaux</span>
+    </a>
+
+    <a href="/documents/balance-generale/" class="ensmg-sb-link" target="_blank">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Balance générale</span>
+    </a>
+
+    <a href="/documents/releve-recapitulatif/" class="ensmg-sb-link" target="_blank">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Relevé récapitulatif</span>
+    </a>
+
+    {# ── Inventaires & Fiches ── #}
+    <div class="ensmg-sb-group" style="font-size:10px;padding-top:6px;">Inventaires &amp; Fiches</div>
+
+    <a href="/documents/fiches-stock/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Fiches de stock</span>
+    </a>
+
+    <a href="/documents/fiches-inventaire/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Fiches d'inventaire</span>
+    </a>
+
+    <a href="/admin/inventory/ficheaffectation/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Fiches d'affectation</span>
+    </a>
+
+    <a href="/documents/pv-recensement-index/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      </span>
+      <span class="ensmg-sb-text">PV de recensement</span>
+    </a>
+
+    {# ── Réformes & Sorties définitives ── #}
+    <div class="ensmg-sb-group" style="font-size:10px;padding-top:6px;">Réformes &amp; Sorties</div>
+
+    <a href="/documents/reformes/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Réformes &amp; Destructions</span>
+    </a>
+
+    <a href="/documents/certificats-admin/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Certificats administratifs</span>
+    </a>
+
+    {# ── Comptes de fin d'exercice ── #}
+    <div class="ensmg-sb-group" style="font-size:10px;padding-top:6px;">Comptes de fin d&apos;exercice</div>
+
+    <a href="/documents/comptes-gestion/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Comptes de gestion</span>
+    </a>
+
+    <a href="/documents/compte-principal/" class="ensmg-sb-link" target="_blank">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Compte principal</span>
+    </a>
+
+    <a href="/documents/compte-central/" class="ensmg-sb-link" target="_blank">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Compte central</span>
+    </a>
+
+    {# ── Administration ── #}
+    <div class="ensmg-sb-group">Administration</div>
+
+    <a href="/admin/auth/user/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Utilisateurs</span>
+    </a>
+
+    <a href="/admin/auth/group/" class="ensmg-sb-link">
+      <span class="ensmg-sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </span>
+      <span class="ensmg-sb-text">Groupes &amp; Droits</span>
+    </a>
+
+  </div>
+
+  <div class="ensmg-sb-user">
+    <div class="ensmg-sb-avatar">{{ user.username|slice:":1"|upper }}</div>
+    <div style="overflow:hidden;">
+      <div class="ensmg-sb-uname">{{ user.get_full_name|default:user.username }}</div>
+      <div class="ensmg-sb-urole">{% if user.is_superuser %}Super Admin{% else %}Gestionnaire{% endif %}</div>
+    </div>
+  </div>
+
+</nav>
+{% endblock %}
+
+{# ══════════════════════════════════════════════════════
+   HEADER – Gauche : toggle + barre de recherche
+══════════════════════════════════════════════════════ #}
+{% block branding %}
+<button class="ensmg-toggle" id="ensmgSidebarToggle" title="Ouvrir/fermer le menu">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+
+{# ── Barre de recherche globale ── #}
+<div class="ensmg-search-wrap" id="ensmgSearchWrap">
+  <svg class="ensmg-search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <input class="ensmg-search-input" id="ensmgSearchInput" type="text" placeholder="Rechercher…" autocomplete="off" spellcheck="false">
+  <kbd class="ensmg-search-kbd">Ctrl K</kbd>
+  <button class="ensmg-topbar-clr" id="ensmgSearchClr" tabindex="-1" title="Effacer">✕</button>
+  <div class="ensmg-global-results" id="ensmgGlobalResults"></div>
+</div>
+{% endblock %}
+
+{# ══════════════════════════════════════════════════════
+   HEADER – Droite : icônes compactes
+══════════════════════════════════════════════════════ #}
+{% block nav-global %}
+
+<div style="flex:1;min-width:4px;"></div>
+
+{# ── Sélecteur d'exercices (icône calendrier + badge) ── #}
+<div id="xrcToolbar" data-action="{% url 'core:set_exercices_selection' %}" style="position:relative;">
+  <details id="xrcDetails" style="position:static;">
+    <summary class="ensmg-icon-btn" title="Sélectionner les exercices" style="list-style:none;outline:none;cursor:pointer;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span class="ensmg-xrc-badge" id="xrcCount">{% if exercices_selected_ids %}{{ exercices_selected_ids|length }}{% else %}0{% endif %}</span>
+    </summary>
+    <div class="ensmg-xrc-dropdown">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6;">
+        <span style="font-weight:700;font-size:13px;color:#1f2937;">Exercices comptables</span>
+        <div style="display:flex;gap:5px;">
+          <button id="xrcAll" type="button" style="background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;padding:3px 9px;border-radius:4px;font-size:11px;cursor:pointer;">Tous</button>
+          <button id="xrcNone" type="button" style="background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;padding:3px 9px;border-radius:4px;font-size:11px;cursor:pointer;">Aucun</button>
+        </div>
+      </div>
+      <div id="xrcList" style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px;max-height:200px;overflow-y:auto;">
+        {% for ex in exercices_all %}
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 8px;border-radius:6px;border:1px solid #f3f4f6;font-size:13px;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+            <input type="checkbox" value="{{ ex.id }}" {% if exercices_selected_ids and ex.id|stringformat:"s" in exercices_selected_ids %}checked{% endif %} style="accent-color:#1e3a5f;width:14px;height:14px;flex-shrink:0;">
+            <span><strong>{{ ex.code }}</strong>
+              <span style="font-size:11px;margin-left:5px;font-weight:600;color:{% if ex.statut == 'OUVERT' %}#059669{% else %}#dc2626{% endif %};">{{ ex.statut }}</span>
+            </span>
+          </label>
+        {% empty %}
+          <div style="color:#9ca3af;font-size:12px;text-align:center;padding:10px;">Aucun exercice.</div>
+        {% endfor %}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #f3f4f6;">
+        <span style="font-size:11px;color:{% if exercices_label %}#1e3a5f{% else %}#9ca3af{% endif %};font-weight:600;">
+          {% if exercices_label %}{{ exercices_label }}{% else %}Aucun actif{% endif %}
+        </span>
+        <button id="xrcApply" type="button" style="background:#1e3a5f;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;">Appliquer</button>
+      </div>
+    </div>
+  </details>
+  {# Label exercice sélectionné — affiché à côté de l'icône #}
+  {% if exercices_label %}
+  <span class="ensmg-xrc-label">{{ exercices_label }}</span>
+  {% endif %}
+</div>
+
+{# ── Bouton thème clair / sombre ── #}
+<button class="ensmg-icon-btn" id="ensmgThemeToggle" title="Changer le thème (Ctrl+Shift+D)">
+  <svg id="ensmgThemeSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  <svg id="ensmgThemeMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+</button>
+
+{# ── Divider ── #}
+<div class="ensmg-hdr-sep"></div>
+
+{# ── Notifications ── #}
+<div class="ensmg-notif-wrap" id="ensmgNotifWrap">
+  <button class="ensmg-icon-btn" id="ensmgNotifBtn" title="Notifications">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    <span class="ensmg-notif-badge" id="ensmgNotifBadge" style="display:none;">0</span>
+  </button>
+  <div class="ensmg-notif-dd" id="ensmgNotifDd">
+    <div class="ensmg-notif-hdr">
+      <span>Notifications</span>
+      <span class="ensmg-notif-count" id="ensmgNotifCount">0</span>
+    </div>
+    <div class="ensmg-notif-list" id="ensmgNotifList">
+      <div class="ensmg-notif-empty">Chargement…</div>
+    </div>
+  </div>
+</div>
+
+{# ── Divider ── #}
+<div class="ensmg-hdr-sep"></div>
+
+{# ── Menu utilisateur — avatar seul, dropdown conservé ── #}
+<div class="ensmg-user-menu" id="ensmgUserMenu">
+  <button class="ensmg-avatar-btn" id="ensmgUserBtn" title="{{ user.get_full_name|default:user.username }}">
+    <div class="ensmg-header-avatar">{{ user.username|slice:":1"|upper }}</div>
+  </button>
+
+    <div class="ensmg-user-dropdown">
+      {# En-tête gradient #}
+      <div class="ensmg-dd-head">
+        <div class="ensmg-dd-head-avatar">{{ user.username|slice:":1"|upper }}</div>
+        <div>
+          <div class="ensmg-dd-head-name">{{ user.get_full_name|default:user.username }}</div>
+          <div class="ensmg-dd-head-email">{{ user.email|default:"—" }}</div>
+        </div>
+      </div>
+
+      <div class="ensmg-dd-sep"></div>
+
+      {# Profil – lien vers la page d'édition de l'utilisateur #}
+      <a href="{% url 'admin:auth_user_change' user.pk %}" class="ensmg-dd-item">
+        <span class="ensmg-dd-ico">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        Mon profil
+      </a>
+
+      {% url 'admin:password_change' as url_pwd %}
+      {% if url_pwd %}
+        <a href="{{ url_pwd }}" class="ensmg-dd-item">
+          <span class="ensmg-dd-ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </span>
+          Changer le mot de passe
+        </a>
+      {% endif %}
+
+      {% if user.is_superuser %}
+        <a href="{% url 'admin:auth_user_changelist' %}" class="ensmg-dd-item">
+          <span class="ensmg-dd-ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </span>
+          Gestion des utilisateurs
+        </a>
+      {% endif %}
+
+      <div class="ensmg-dd-sep"></div>
+
+      {# Django 5 exige POST+CSRF pour logout (GET retourne 405) #}
+      <form method="POST" action="{% url 'admin:logout' %}" style="margin:0;padding:0;display:block;">
+        {% csrf_token %}
+        <button type="submit" class="ensmg-dd-item ensmg-dd-logout" style="width:100%;cursor:pointer;border:none;text-align:left;font-family:inherit;">
+          <span class="ensmg-dd-ico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </span>
+          Déconnexion
+        </button>
+      </form>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block userlinks %}{% endblock %}
+
+{% block content %}
+{{ block.super }}
+{% if custom_totals %}
+<div class="total-footer">
+  {% for k, v in custom_totals.items %}
+    <span class="xrc-badge"><strong>{{ k }}</strong>&nbsp;: {{ v }}</span>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block footer %}
+<div id="footer">École normale supérieure des mines et de la géologie &mdash; Système de comptabilité des matières &mdash; {% now "Y" %}</div>
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   NOUVEAU HEADER — icônes compactes
+═══════════════════════════════════════════════════════ */
+
+/* ── Bouton icône générique (notifications, exercices…) ── */
+.ensmg-icon-btn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  background: none; border: 1px solid #e5e7eb; border-radius: 9px;
+  color: #6b7280; cursor: pointer; transition: all .15s;
+  flex-shrink: 0;
+}
+.ensmg-icon-btn:hover { background: #f3f4f6; border-color: #d1d5db; color: #1f2937; }
+
+/* ── Séparateur vertical ── */
+.ensmg-hdr-sep { width: 1px; height: 26px; background: #e5e7eb; flex-shrink: 0; margin: 0 2px; }
+
+/* ── Search bar ── */
+.ensmg-search-wrap {
+  position: relative; display: flex; align-items: center;
+  flex: 1; max-width: 320px; min-width: 160px;
+}
+.ensmg-search-ico {
+  position: absolute; left: 10px; color: #9ca3af; pointer-events: none; flex-shrink: 0;
+}
+.ensmg-search-input {
+  width: 100%; background: #f3f4f6; border: 1px solid #e5e7eb;
+  border-radius: 9px; padding: 7px 60px 7px 32px;
+  font-size: 13px; color: #374151; outline: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.ensmg-search-input::placeholder { color: #9ca3af; }
+.ensmg-search-input:focus {
+  background: #fff; border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+.ensmg-search-kbd {
+  position: absolute; right: 26px;
+  background: #e5e7eb; border: 1px solid #d1d5db; border-radius: 4px;
+  padding: 1px 5px; font-size: 10px; color: #6b7280;
+  font-family: inherit; line-height: 1.5; pointer-events: none;
+  white-space: nowrap;
+}
+.ensmg-search-input:focus ~ .ensmg-search-kbd { display: none; }
+
+/* ── Exercices dropdown ── */
+.ensmg-xrc-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 16px; height: 16px; background: #1e3a5f; color: #fff;
+  border-radius: 8px; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; border: 2px solid #fff; line-height: 1;
+}
+.ensmg-xrc-label {
+  background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+  padding: 3px 8px; border-radius: 7px; font-size: 11px; font-weight: 600;
+  white-space: nowrap; margin-left: 4px;
+}
+.ensmg-xrc-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 9999;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  box-shadow: 0 10px 36px rgba(0,0,0,.15); padding: 14px; min-width: 270px;
+}
+#xrcToolbar { display: flex; align-items: center; }
+
+/* ── Avatar bouton (juste le cercle) ── */
+.ensmg-avatar-btn {
+  background: none; border: none; padding: 0; cursor: pointer;
+  display: flex; align-items: center; border-radius: 50%; transition: opacity .15s;
+}
+.ensmg-avatar-btn:hover { opacity: .85; }
+
+/* ── User menu ─────────────────────────────────────────── */
+.ensmg-user-menu { position: relative; }
+
+.ensmg-user-dropdown {
+  display: none; position: absolute; top: calc(100% + 8px); right: 0;
+  z-index: 9999; background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,.18); min-width: 250px; overflow: hidden;
+}
+.ensmg-user-menu.open .ensmg-user-dropdown { display: block; animation: ddFadeIn .15s ease; }
+@keyframes ddFadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+.ensmg-dd-head {
+  display: flex; align-items: center; gap: 12px; padding: 16px;
+  background: linear-gradient(135deg, #1a2640 0%, #2a4f80 100%);
+}
+.ensmg-dd-head-avatar {
+  width: 44px; height: 44px; background: #b8962e; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 18px; color: #152a47; flex-shrink: 0;
+}
+.ensmg-dd-head-name { font-weight: 700; font-size: 13px; color: #fff; }
+.ensmg-dd-head-email { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; }
+
+.ensmg-dd-sep { height: 1px; background: #f3f4f6; margin: 4px 0; }
+
+.ensmg-dd-item {
+  display: flex !important; align-items: center !important; gap: 10px !important; padding: 10px 16px !important;
+  font-size: 13px !important; color: #374151 !important; text-decoration: none !important;
+  transition: background .12s !important; font-weight: 500 !important; background: transparent !important;
+}
+.ensmg-dd-item:hover { background: #f9fafb !important; color: #1f2937 !important; }
+.ensmg-dd-ico { color: #9ca3af !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; }
+.ensmg-dd-logout { color: #dc2626 !important; }
+.ensmg-dd-logout .ensmg-dd-ico { color: #dc2626 !important; }
+.ensmg-dd-logout:hover { background: #fef2f2 !important; }
+/* Bouton logout stylé comme un lien (form > button) */
+button.ensmg-dd-item { background: transparent !important; border: none !important; }
+</style>
+
+<script>
+(function () {
+  'use strict';
+
+  var SW  = 260;   // sidebar width px
+  var SWC = 64;    // collapsed width px
+  var HH  = 64;    // header height px
+  var KEY = 'ensmg_sb';
+  var body = document.body;
+
+  /* ═══════════════════════════════════════════════════
+     LAYOUT ENGINE
+  ═══════════════════════════════════════════════════ */
+  function applyLayout() {
+    var collapsed = body.classList.contains('sb-collapsed');
+    var mobile    = window.innerWidth <= 900;
+    var w = collapsed ? SWC : SW;
+
+    var sidebar   = document.getElementById('nav-sidebar');
+    var container = document.getElementById('container');
+    var header    = document.getElementById('header');
+
+    if (sidebar) {
+      sidebar.style.cssText = [
+        'position:fixed', 'left:0', 'top:0',
+        'width:' + (mobile ? SW : w) + 'px',
+        'height:100vh', 'z-index:300',
+        'background:#1a2640', 'display:flex',
+        'flex-direction:column', 'overflow-y:auto',
+        'overflow-x:hidden', 'box-shadow:2px 0 10px rgba(0,0,0,.22)',
+        'transition:width .25s ease', 'visibility:visible'
+      ].join(' !important;') + ' !important';
+      if (mobile) {
+        sidebar.style.transform = body.classList.contains('sb-open') ? 'translateX(0)' : 'translateX(-100%)';
+        sidebar.style.transition = 'transform .25s ease';
+      }
+    }
+    if (container && !mobile) {
+      container.style.setProperty('margin-left', w + 'px', 'important');
+      container.style.setProperty('padding-top', HH + 'px', 'important');
+      container.style.setProperty('max-width', 'calc(100vw - ' + w + 'px)', 'important');
+      container.style.setProperty('overflow-x', 'auto', 'important');
+    } else if (container && mobile) {
+      container.style.setProperty('margin-left', '0px', 'important');
+      container.style.setProperty('padding-top', HH + 'px', 'important');
+    }
+    if (header) {
+      header.style.setProperty('position', 'fixed', 'important');
+      header.style.setProperty('top', '0', 'important');
+      header.style.setProperty('left', (mobile ? 0 : w) + 'px', 'important');
+      header.style.setProperty('right', '0', 'important');
+      header.style.setProperty('height', HH + 'px', 'important');
+      header.style.setProperty('z-index', '200', 'important');
+      header.style.setProperty('transition', 'left .25s ease', 'important');
+    }
+    /* overflow-x géré par CSS — ne pas écraser avec inline style */
+  }
+
+  if (localStorage.getItem(KEY) === '1') body.classList.add('sb-collapsed');
+  applyLayout();
+  document.addEventListener('DOMContentLoaded', applyLayout);
+  window.addEventListener('resize', applyLayout);
+
+  /* ═══════════════════════════════════════════════════
+     DOM READY
+  ═══════════════════════════════════════════════════ */
+  document.addEventListener('DOMContentLoaded', function () {
+
+    /* ─── Toggle sidebar ─── */
+    var btn = document.getElementById('ensmgSidebarToggle');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        if (window.innerWidth <= 900) { body.classList.toggle('sb-open'); }
+        else {
+          body.classList.toggle('sb-collapsed');
+          localStorage.setItem(KEY, body.classList.contains('sb-collapsed') ? '1' : '0');
+        }
+        applyLayout();
+        syncCollapsed();
+      });
+    }
+    document.addEventListener('click', function (e) {
+      if (window.innerWidth > 900) return;
+      var sb = document.getElementById('nav-sidebar');
+      var b2 = document.getElementById('ensmgSidebarToggle');
+      if (body.classList.contains('sb-open') && sb && !sb.contains(e.target) && b2 && !b2.contains(e.target)) {
+        body.classList.remove('sb-open'); applyLayout();
+      }
+    });
+
+    /* ─── Menu utilisateur ─── */
+    var userBtn  = document.getElementById('ensmgUserBtn');
+    var userMenu = document.getElementById('ensmgUserMenu');
+    if (userBtn && userMenu) {
+      userBtn.addEventListener('click', function (e) { e.stopPropagation(); userMenu.classList.toggle('open'); });
+      document.addEventListener('click', function (e) {
+        if (userMenu && !userMenu.contains(e.target)) userMenu.classList.remove('open');
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RECHERCHE GLOBALE HEADER — Ctrl+K pour focus, X pour effacer
+    ═══════════════════════════════════════════════════ */
+    (function () {
+      var gInput = document.getElementById('ensmgSearchInput');
+      var gClr   = document.getElementById('ensmgSearchClr');
+      var gRes   = document.getElementById('ensmgGlobalResults');
+      if (!gInput) return;
+
+      /* Ctrl+K / Cmd+K → focus */
+      document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          gInput.focus();
+          gInput.select();
+        }
+        if (e.key === 'Escape' && document.activeElement === gInput) {
+          gInput.blur();
+          if (gRes) gRes.classList.remove('open');
+        }
+      });
+
+      /* Bouton X — effacer */
+      if (gClr) {
+        gClr.addEventListener('click', function () {
+          gInput.value = '';
+          gInput.focus();
+          if (gClr) gClr.classList.remove('visible');
+          if (gRes) { gRes.classList.remove('open'); gRes.innerHTML = ''; }
+        });
+      }
+
+      /* Afficher/masquer X selon contenu */
+      gInput.addEventListener('input', function () {
+        if (gClr) gClr.classList.toggle('visible', !!gInput.value);
+      });
+    })();
+
+    /* ═══════════════════════════════════════════════════
+       BARRE DE RECHERCHE — LIVE SEARCH + bouton manuel
+    ═══════════════════════════════════════════════════ */
+    var searchBar  = document.getElementById('searchbar');
+    var searchForm = document.getElementById('changelist-search');
+    if (searchBar && searchForm) {
+      if (!searchBar.placeholder) searchBar.placeholder = 'Rechercher…';
+      /* RESTAURER FOCUS après rechargement */
+      if (searchBar.value) {
+        var pos = searchBar.value.length;
+        searchBar.focus();
+        try { searchBar.setSelectionRange(pos, pos); } catch(e) {}
+      }
+      /* Entrée = soumettre */
+      searchBar.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); searchForm.submit(); }
+      });
+      /* ── Live search : soumettre automatiquement après pause de frappe ── */
+      var _liveSearchTimer = null;
+      searchBar.addEventListener('input', function () {
+        clearTimeout(_liveSearchTimer);
+        var val = searchBar.value;
+        /* Déclencher si au moins 2 caractères ou si on vide le champ */
+        _liveSearchTimer = setTimeout(function () {
+          if (val.length >= 2 || val.length === 0) {
+            searchForm.submit();
+          }
+        }, 600);  /* 600ms de pause avant soumission */
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════
+       FORMATAGE NOMBRES — supprimer les zéros décimaux inutiles
+    ═══════════════════════════════════════════════════ */
+    (function formatTableNumbers() {
+      var cells = document.querySelectorAll('#result_list td');
+      cells.forEach(function (td) {
+        var text = td.textContent.trim();
+        /* Ex: "5.000" ou "123.000000" → "5" ou "123" */
+        /* Ex: "5.300" → "5.3" */
+        if (/^-?\d+\.\d+$/.test(text)) {
+          var num = parseFloat(text);
+          if (!isNaN(num)) {
+            /* Supprimer les zéros trailing */
+            var formatted = num.toLocaleString('fr-FR', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 3
+            });
+            /* Si la valeur est un entier pur, ne pas afficher de décimale */
+            if (Number.isInteger(num)) {
+              td.textContent = num.toLocaleString('fr-FR');
+            } else {
+              td.textContent = formatted;
+            }
+          }
+        }
+        /* Ex: "1 500,000 FCFA" → "1 500 FCFA" (avec unité) */
+        var matchUnit = text.match(/^(-?[\d\s]+[,.]0+)\s*([A-Z]+)$/);
+        if (matchUnit) {
+          var numPart = matchUnit[1].replace(/[,.]0+$/, '').trim();
+          td.textContent = numPart + ' ' + matchUnit[2];
+        }
+      });
+    })();
+
+    /* ═══════════════════════════════════════════════════
+       LIGNE TOTAL EN BAS DES TABLEAUX (item 7)
+    ═══════════════════════════════════════════════════ */
+    (function addTotalRow() {
+      var table = document.getElementById('result_list');
+      if (!table) return;
+      var headers = table.querySelectorAll('thead th');
+      var rows    = table.querySelectorAll('tbody tr:not(.add-row)');
+      if (!rows.length || headers.length < 2) return;
+
+      /* Identifier les colonnes numériques */
+      var numCols = [];
+      headers.forEach(function (th, idx) {
+        numCols.push({ idx: idx, sum: 0, hasNum: false });
+      });
+
+      rows.forEach(function (tr) {
+        var tds = tr.querySelectorAll('td');
+        tds.forEach(function (td, idx) {
+          if (!numCols[idx]) return;
+          var text = td.textContent.trim().replace(/\s/g, '').replace(',', '.');
+          var num = parseFloat(text);
+          if (!isNaN(num) && isFinite(num)) {
+            numCols[idx].sum += num;
+            numCols[idx].hasNum = true;
+          }
+        });
+      });
+
+      var hasAnyTotal = numCols.some(function (c) { return c.hasNum; });
+      if (!hasAnyTotal) return;
+
+      var tfoot = table.querySelector('tfoot') || table.createTFoot();
+      var tr = document.createElement('tr');
+      tr.className = 'ensmg-total-row';
+
+      headers.forEach(function (th, idx) {
+        var td = document.createElement('td');
+        if (idx === 0) {
+          td.textContent = 'Total';
+          td.style.fontWeight = '700';
+          td.style.color = '#1e3a5f';
+        } else if (numCols[idx] && numCols[idx].hasNum) {
+          var s = numCols[idx].sum;
+          td.textContent = Number.isInteger(s)
+            ? s.toLocaleString('fr-FR')
+            : s.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+          td.style.textAlign = 'right';
+        }
+        tr.appendChild(td);
+      });
+      tfoot.appendChild(tr);
+    })();
+
+    /* ═══════════════════════════════════════════════════
+       FILTRES HORIZONTAUX (au-dessus du tableau)
+    ═══════════════════════════════════════════════════ */
+    transformFilterBar();
+    function transformFilterBar() {
+      var filterPanel = document.getElementById('changelist-filter');
+      if (!filterPanel) return;
+
+      /* Trouver le conteneur principal de la liste */
+      var changelist = document.getElementById('changelist');
+      var toolbar    = document.getElementById('toolbar');
+      if (!changelist && !toolbar) return;
+
+      var bar = document.createElement('div');
+      bar.className = 'ensmg-filter-bar';
+      bar.id = 'ensmgFilterBar';
+
+      /* Label */
+      var barLabel = document.createElement('span');
+      barLabel.className = 'ensmg-fb-label';
+      barLabel.textContent = 'Filtres :';
+      bar.appendChild(barLabel);
+
+      /* Chercher les filtres : format h3+ul OU details+ul (Django 5) */
+      var hasFilters = false;
+
+      /* Format classique : <h3>Par X</h3><ul>... */
+      var allH3 = filterPanel.querySelectorAll('h3');
+      allH3.forEach(function (h3) {
+        var ul = h3.nextElementSibling;
+        /* Chercher le ul même s'il n'est pas directement adjacent */
+        if (!ul || ul.tagName !== 'UL') {
+          var next = h3.nextSibling;
+          while (next) {
+            if (next.nodeType === 1 && next.tagName === 'UL') { ul = next; break; }
+            if (next.nodeType === 1) break;
+            next = next.nextSibling;
+          }
+        }
+        if (!ul || ul.tagName !== 'UL') return;
+
+        var title = h3.textContent.trim().replace(/^Par\s+/i, '').replace(/^By\s+/i, '').replace(/^Filtrer par\s+/i, '');
+        var items  = ul.querySelectorAll('li');
+        if (!items.length) return;
+        hasFilters = true;
+        bar.appendChild(_buildChip(bar, title, items));
+      });
+
+      /* Format Django 5 : <details><summary>Par X</summary><ul>... */
+      var allDetails = filterPanel.querySelectorAll('details');
+      allDetails.forEach(function (det) {
+        var summary = det.querySelector('summary');
+        var ul = det.querySelector('ul');
+        if (!summary || !ul) return;
+        var title = summary.textContent.trim().replace(/^Par\s+/i, '').replace(/^By\s+/i, '').replace(/^Filtrer par\s+/i, '');
+        var items  = ul.querySelectorAll('li');
+        if (!items.length) return;
+        hasFilters = true;
+        bar.appendChild(_buildChip(bar, title, items));
+      });
+
+      if (!hasFilters) return;
+
+      /* Fermer au clic extérieur */
+      document.addEventListener('click', function () {
+        bar.querySelectorAll('.ensmg-fc.open').forEach(function (c) { c.classList.remove('open'); });
+      });
+
+      /* Insérer la bar AVANT le toolbar (au-dessus de la barre de recherche) */
+      var insertParent = toolbar ? toolbar.parentNode : (changelist || document.getElementById('content-main'));
+      var insertRef    = toolbar || (changelist ? changelist.firstElementChild : null);
+      if (insertParent && insertRef) {
+        insertParent.insertBefore(bar, insertRef);
+      } else if (insertParent) {
+        insertParent.prepend(bar);
+      }
+
+      /* Cacher le panneau d'origine Django */
+      filterPanel.style.display = 'none';
+    }
+
+    function _buildChip(bar, title, items) {
+      var selLi   = null;
+      items.forEach(function(li) { if (li.classList.contains('selected')) selLi = li; });
+      var selA    = selLi ? selLi.querySelector('a') : null;
+      var selText = selA ? selA.textContent.trim() : 'Tous';
+      var isFiltered = selLi && !/^(tous|tout|all)$/i.test(selText.trim());
+
+      var chip = document.createElement('div');
+      chip.className = 'ensmg-fc' + (isFiltered ? ' ensmg-fc--on' : '');
+      chip.innerHTML =
+        '<span class="ensmg-fc__lbl">' + _esc(title) + ' : </span>' +
+        '<span class="ensmg-fc__val">' + _esc(selText) + '</span>' +
+        '<svg class="ensmg-fc__arr" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+
+      var dd = document.createElement('div');
+      dd.className = 'ensmg-fc__dd';
+
+      /* ── Barre de recherche si > 3 choix (item 11) ── */
+      var optElements = [];
+      if (items.length > 3) {
+        dd.classList.add('ensmg-fc__dd--search');
+        var searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'ensmg-fc__search-input';
+        searchInput.placeholder = 'Rechercher…';
+        searchInput.addEventListener('input', function (e) {
+          e.stopPropagation();
+          var q = searchInput.value.toLowerCase();
+          optElements.forEach(function (opt) {
+            var match = opt.textContent.toLowerCase().indexOf(q) >= 0;
+            opt.classList.toggle('ensmg-fc__opt--hidden', !match);
+          });
+        });
+        searchInput.addEventListener('click', function (e) { e.stopPropagation(); });
+        dd.appendChild(searchInput);
+      }
+
+      items.forEach(function (li) {
+        var a = li.querySelector('a');
+        if (!a) return;
+        var opt = document.createElement('a');
+        opt.href        = a.href;
+        opt.className   = 'ensmg-fc__opt' + (li.classList.contains('selected') ? ' sel' : '');
+        opt.textContent = a.textContent.trim();
+        dd.appendChild(opt);
+        optElements.push(opt);
+      });
+      chip.appendChild(dd);
+
+      chip.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('.ensmg-fc__dd')) return;
+        e.stopPropagation();
+        var wasOpen = chip.classList.contains('open');
+        bar.querySelectorAll('.ensmg-fc.open').forEach(function (c) { c.classList.remove('open'); });
+        if (!wasOpen) {
+          chip.classList.add('open');
+          /* Focus sur la barre de recherche si présente */
+          var si = dd.querySelector('.ensmg-fc__search-input');
+          if (si) setTimeout(function () { si.focus(); }, 50);
+        }
+      });
+      return chip;
+    }
+    function _esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ─── Lien actif dans sidebar ─── */
+    var path  = window.location.pathname;
+    var links = document.querySelectorAll('.ensmg-sb-link');
+    var db    = document.getElementById('sb-dashboard');
+    links.forEach(function (link) {
+      if (link === db) return;
+      try {
+        var lp = new URL(link.href, window.location.origin).pathname;
+        if (lp.length > 1 && path.startsWith(lp)) link.classList.add('active');
+      } catch (e) {}
+    });
+    if (db) {
+      try {
+        var dp = new URL(db.href, window.location.origin).pathname;
+        if (path === dp || path === dp.replace(/\/$/, '')) db.classList.add('active');
+      } catch (e) {}
+    }
+
+    /* ─── Bouton "Ajouter un nouveau" sur toutes les pages ─── */
+    (function addNewButton() {
+      var path = window.location.pathname;
+
+      /* Page détail /admin/{app}/{model}/{pk}/detail/ ou change /{pk}/change/ */
+      var match = path.match(/^\/admin\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(change|detail)\/$/);
+      if (match) {
+        var appLabel  = match[1];
+        var modelName = match[2];
+        var addUrl    = '/admin/' + appLabel + '/' + modelName + '/add/';
+
+        /* ── Page DÉTAIL : insérer dans .dv-actions ── */
+        var actionsEl = document.querySelector('.dv-actions');
+        if (actionsEl) {
+          var existing = actionsEl.querySelector('.ensmg-btn-add');
+          if (!existing) {
+            var btn = document.createElement('a');
+            btn.href      = addUrl;
+            btn.className = 'dv-btn ensmg-btn-add';
+            btn.innerHTML =
+              '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+              '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ajouter';
+            actionsEl.insertBefore(btn, actionsEl.firstChild);
+          }
+        }
+
+        /* ── Page MODIFICATION (change_form) : ajouter dans object-tools ── */
+        var toolsEl = document.querySelector('ul.object-tools');
+        if (toolsEl && !actionsEl) {
+          var liExists = toolsEl.querySelector('.ensmg-add-li');
+          if (!liExists) {
+            var li = document.createElement('li');
+            li.className = 'ensmg-add-li';
+            var btn2 = document.createElement('a');
+            btn2.href = addUrl;
+            btn2.className = 'addlink';
+            btn2.textContent = '+ Ajouter un nouveau';
+            li.appendChild(btn2);
+            toolsEl.insertBefore(li, toolsEl.firstChild);
+          }
+        }
+      }
+
+      /* ── Pages CHANGELIST : rendre le bouton "Ajouter" plus visible ── */
+      var addLink = document.querySelector('a.addlink');
+      if (addLink && !match) {
+        /* Ajouter icône + si pas déjà présent */
+        var txt = addLink.textContent.trim();
+        if (txt.charAt(0) !== '+') {
+          addLink.innerHTML =
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+            '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> ' + txt;
+        }
+      }
+    })();
+
+    /* ─── Bouton "Ajouter" aligné avec le titre de page (pattern header action) ─── */
+    (function moveAddBtnToTitle() {
+      var objectTools = document.querySelector('ul.object-tools');
+      /* Uniquement sur les pages changelist */
+      if (!objectTools) return;
+      if (document.getElementById('change-form')) return;
+
+      /* Trouver le h1 du contenu principal */
+      var h1 = document.querySelector('#content > h1, #content-main > h1, #content h1');
+      if (!h1) return;
+
+      /* Créer un wrapper flex autour du h1 */
+      var header = document.createElement('div');
+      header.id = 'ensmg-page-header';
+
+      /* Insérer le wrapper à la place du h1 */
+      h1.parentNode.insertBefore(header, h1);
+      header.appendChild(h1);
+      header.appendChild(objectTools);
+    })();
+
+    /* ─── Rows clickable in changelist ─── */
+    (function initRowClick() {
+      var resultList = document.getElementById('result_list');
+      if (!resultList) return;
+      var rows = resultList.querySelectorAll('tbody tr');
+      rows.forEach(function(row) {
+        /* Chercher le lien _detail_link (1er <a> de la ligne) */
+        var link = row.querySelector('td a');
+        if (!link) return;
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function(e) {
+          var target = e.target;
+          /* Ignorer les clics sur checkbox, input, bouton, ou lien cliqué directement */
+          if (target.tagName === 'INPUT' || target.tagName === 'BUTTON'
+              || target.tagName === 'A' || target.closest('button')
+              || target.closest('a')) {
+            return;
+          }
+          window.location.href = link.href;
+        });
+      });
+    })();
+
+    /* ─── Sidebar collapsed : masquer textes ─── */
+    function syncCollapsed() {
+      var collapsed = body.classList.contains('sb-collapsed');
+      document.querySelectorAll('.ensmg-sb-text, .ensmg-sb-name, .ensmg-sb-sub, .ensmg-sb-group, .ensmg-sb-uname, .ensmg-sb-urole').forEach(function (el) {
+        el.style.display = collapsed ? 'none' : '';
+      });
+      document.querySelectorAll('.ensmg-sb-logo').forEach(function (el) { el.style.justifyContent = collapsed ? 'center' : ''; });
+      document.querySelectorAll('.ensmg-sb-link').forEach(function (el) {
+        el.style.justifyContent = collapsed ? 'center' : '';
+        el.style.padding        = collapsed ? '10px 0' : '';
+      });
+      document.querySelectorAll('.ensmg-sb-user').forEach(function (el) { el.style.justifyContent = collapsed ? 'center' : ''; });
+    }
+    syncCollapsed();
+
+    /* ═══════════════════════════════════════════════════
+       NOTIFICATIONS
+    ═══════════════════════════════════════════════════ */
+    (function() {
+      var btn  = document.getElementById('ensmgNotifBtn');
+      var dd   = document.getElementById('ensmgNotifDd');
+      var wrap = document.getElementById('ensmgNotifWrap');
+      var badge = document.getElementById('ensmgNotifBadge');
+      var list  = document.getElementById('ensmgNotifList');
+      var countEl = document.getElementById('ensmgNotifCount');
+      if (!btn || !dd) return;
+
+      /* Toggle dropdown */
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        wrap.classList.toggle('open');
+        if (wrap.classList.contains('open')) fetchNotifications();
+      });
+      document.addEventListener('click', function(e) {
+        if (wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+      });
+
+      function markAsRead(notifId, callback) {
+        fetch('/admin/api/notifications/' + notifId + '/mark-read/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+          }
+        }).then(callback).catch(function(e) { console.error(e); if (callback) callback(); });
+      }
+
+      function fetchNotifications() {
+        fetch('/admin/api/notifications/')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var items = data.notifications || [];
+            var unreadCount = data.unread_count || 0;
+            countEl.textContent = unreadCount;
+            if (unreadCount > 0) {
+              badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+              badge.style.display = 'flex';
+            } else {
+              badge.style.display = 'none';
+            }
+            if (!items.length) {
+              list.innerHTML = '<div class="ensmg-notif-empty">Aucune notification</div>';
+              return;
+            }
+            list.innerHTML = items.map(function(n) {
+              var isUnread = !n.lue;
+              var style = isUnread ? 'font-weight: bold;' : '';
+              return '<a href="javascript:void(0);" class="ensmg-notif-item ensmg-ni--' + (n.type_notif || 'info') + '" style="' + style + '" data-notif-id="' + n.id + '" data-detail-url="' + (n.detail_url || '#') + '">'
+                + '<span class="ensmg-ni-ico">🔔</span>'
+                + '<div class="ensmg-ni-body">'
+                + '<div class="ensmg-ni-title">' + n.titre + '</div>'
+                + '<div class="ensmg-ni-sub">' + (n.created_at || '') + '</div>'
+                + '</div></a>';
+            }).join('');
+            // Add click handlers
+            list.querySelectorAll('.ensmg-notif-item').forEach(function(item) {
+              item.addEventListener('click', function(e) {
+                e.preventDefault();
+                var notifId = this.getAttribute('data-notif-id');
+                var detailUrl = this.getAttribute('data-detail-url');
+                markAsRead(notifId, function() {
+                  if (detailUrl) window.location.href = detailUrl;
+                });
+              });
+            });
+          })
+          .catch(function() {
+            list.innerHTML = '<div class="ensmg-notif-empty">Erreur de chargement</div>';
+          });
+      }
+
+      /* Charger le badge au démarrage */
+      fetch('/admin/api/notifications/')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var unreadCount = data.unread_count || 0;
+          if (unreadCount > 0) {
+            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+            badge.style.display = 'flex';
+          }
+        })
+        .catch(function() {});
+    })();
+
+  });
+
+})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   DARK MODE TOGGLE
+   - Restaure le thème sauvegardé dès le premier instant (évite le flash)
+   - Ctrl+Shift+D comme raccourci
+═══════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  var DARK = 'dark-mode';
+  var KEY  = 'ensmg_theme';
+
+  /* ── Appliquer le thème ET synchroniser les icônes ── */
+  function applyTheme(dark) {
+    document.body.classList.toggle(DARK, dark);
+    var sun  = document.getElementById('ensmgThemeSun');
+    var moon = document.getElementById('ensmgThemeMoon');
+    if (sun)  sun.style.display  = dark ? 'none' : '';
+    if (moon) moon.style.display = dark ? ''     : 'none';
+    var btn = document.getElementById('ensmgThemeToggle');
+    if (btn) btn.title = dark ? 'Passer en mode clair (Ctrl+Shift+D)' : 'Passer en mode sombre (Ctrl+Shift+D)';
+  }
+
+  /* ── Restaurer la préférence sauvegardée ── */
+  var saved = localStorage.getItem(KEY);
+  if (saved === 'light') {
+    /* L'utilisateur a explicitement choisi le mode clair */
+    applyTheme(false);
+  } else {
+    /* Par défaut (première visite ou préférence dark) : mode sombre */
+    applyTheme(true);
+  }
+
+  /* ── Brancher le bouton une fois le DOM prêt ── */
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('ensmgThemeToggle');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var isDark = document.body.classList.toggle(DARK);
+        localStorage.setItem(KEY, isDark ? 'dark' : 'light');
+        applyTheme(isDark);
+      });
+    }
+    applyTheme(document.body.classList.contains(DARK));
+  });
+
+  /* ── Raccourci Ctrl+Shift+D ── */
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+      e.preventDefault();
+      var isDark = document.body.classList.toggle(DARK);
+      localStorage.setItem(KEY, isDark ? 'dark' : 'light');
+      applyTheme(isDark);
+    }
+  });
+})();
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WIZARD FORMS — Navigation étape par étape
+   v2 : robuste, utilise style.display au lieu de classes CSS
+═══════════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function () {
+  'use strict';
+
+  /* ── Exclure les pages non-formulaire ── */
+  if (document.getElementById('result_list')) return;   /* liste */
+  if (document.querySelector('.dv-wrapper'))  return;   /* détail */
+
+  var contentMain = document.getElementById('content-main');
+  if (!contentMain) return;
+
+  /* ── Collecter les étapes : fieldsets principaux + groupes inline ──
+     On prend fieldset ET .inline-group ; on exclut seulement ceux qui
+     sont IMBRIQUÉS dans un autre inline-group (inlines dans inlines).   */
+  var allFs = contentMain.querySelectorAll('fieldset, .inline-group');
+  var fieldsets = [];
+  for (var fi = 0; fi < allFs.length; fi++) {
+    var el = allFs[fi];
+    /* Remonter les ancêtres : exclure si déjà dans un inline-group parent */
+    var ancestor = el.parentNode;
+    var inInline = false;
+    while (ancestor && ancestor !== contentMain) {
+      if (ancestor.classList &&
+          (ancestor.classList.contains('inline-group') ||
+           ancestor.classList.contains('inline-related'))) {
+        inInline = true; break;
+      }
+      ancestor = ancestor.parentNode;
+    }
+    if (!inInline) fieldsets.push(el);
+  }
+
+  if (fieldsets.length < 1) return;   /* pas de fieldset du tout */
+
+  document.body.classList.add('ensmg-wizard-active');
+
+  var currentStep = 0;
+  var total = fieldsets.length;
+  var multiStep = total >= 2;   /* navigation Précédent/Suivant seulement si ≥ 2 étapes */
+
+  /* ── Référence au formulaire (pour y soumettre) ── */
+  var theForm = contentMain.querySelector('form');
+
+  /* ══════════════════════════════════════════════════════
+     GRILLE 2 COLONNES — envelopper les form-rows de chaque fieldset
+  ══════════════════════════════════════════════════════ */
+  fieldsets.forEach(function (fs) {
+    /* Les inline-groups ont leur propre mise en page — ne pas les envelopper */
+    if (fs.classList && fs.classList.contains('inline-group')) return;
+
+    var rows = fs.querySelectorAll('.form-row');
+    if (!rows.length) return;
+
+    var grid = document.createElement('div');
+    grid.className = 'ensmg-wz-grid';
+
+    /* Insérer le grid après le h2 (ou au début du fieldset) */
+    var h2 = fs.querySelector('h2');
+    var insertPoint = h2 ? h2.nextSibling : fs.firstChild;
+    fs.insertBefore(grid, insertPoint);
+
+    /* Déplacer chaque form-row dans le grid et détecter pleine largeur */
+    for (var r = 0; r < rows.length; r++) {
+      var row = rows[r];
+      var hasTextarea    = !!row.querySelector('textarea');
+      var hasSelectMulti = !!row.querySelector('select[multiple]');
+      var hasRadioGroup  = row.querySelectorAll('input[type="radio"]').length > 1;
+      var hasCheckGroup  = row.querySelectorAll('input[type="checkbox"]').length > 1;
+      var hasManyInputs  = row.querySelectorAll('input:not([type="hidden"]), select').length > 2;
+      if (hasTextarea || hasSelectMulti || hasRadioGroup || hasCheckGroup || hasManyInputs) {
+        row.classList.add('wz-full');
+      }
+      grid.appendChild(row);
+    }
+  });
+
+  /* ══════════════════════════════════════════════════════
+     STRUCTURE WIZARD v2 — Stepper horizontal + Dark card
+  ══════════════════════════════════════════════════════ */
+
+  /* ─ Escape helper ─ */
+  function _esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  /* ─ Collect step titles ─ */
+  var stepTitles = [];
+  fieldsets.forEach(function (fs, i) {
+    var h2  = fs.querySelector('h2');
+    var lbl = h2 ? h2.textContent.trim() : ('\u00c9tape ' + (i + 1));
+    lbl = lbl.replace(/\s*\(\d+\)\s*$/, '').trim() || ('\u00c9tape ' + (i + 1));
+    stepTitles.push(lbl);
+  });
+
+  /* ─ Container principal ─ */
+  var wzContainer = document.createElement('div');
+  wzContainer.className = 'ensmg-wz-container';
+  wzContainer.id        = 'ensmgWzContainer';
+
+  /* ─ Stepper horizontal ─ */
+  var stepper = document.createElement('div');
+  stepper.className = 'ensmg-wz-stepper';
+
+  var stepItems = [];
+  fieldsets.forEach(function (fs, i) {
+    var step = document.createElement('div');
+    step.className = 'ensmg-wz-step ensmg-wz-step-inactive';
+    step.innerHTML =
+      '<div class="ensmg-wz-step-bubble">' + (i + 1) + '</div>' +
+      '<div class="ensmg-wz-step-texts">' +
+        '<div class="ensmg-wz-step-eyebrow">\u00c9tape ' + (i + 1) + '</div>' +
+        '<div class="ensmg-wz-step-name">' + _esc(stepTitles[i]) + '</div>' +
+      '</div>';
+    if (multiStep) {
+      step.addEventListener('click', (function (idx) {
+        return function () { goTo(idx); };
+      })(i));
+    }
+    stepper.appendChild(step);
+    stepItems.push(step);
+  });
+
+  /* ─ Progress bar ─ */
+  var progressWrap = document.createElement('div');
+  progressWrap.className = 'ensmg-wz-progress';
+  var progressFill = document.createElement('div');
+  progressFill.className = 'ensmg-wz-progress-fill';
+  progressWrap.appendChild(progressFill);
+
+  /* ─ Form card ─ */
+  var formCard = document.createElement('div');
+  formCard.className = 'ensmg-wz-card';
+
+  var cardHeader = document.createElement('div');
+  cardHeader.className = 'ensmg-wz-card-header';
+
+  var cardBody = document.createElement('div');
+  cardBody.className = 'ensmg-wz-card-body';
+
+  var cardFooter = document.createElement('div');
+  cardFooter.className = 'ensmg-wz-card-footer';
+
+  /* Footer left: save button */
+  var footerLeft = document.createElement('div');
+  footerLeft.className = 'ensmg-wz-footer-left';
+
+  var btnSave = document.createElement('button');
+  btnSave.type      = 'button';
+  btnSave.className = 'ensmg-wz-btn ensmg-wz-btn-save';
+  btnSave.innerHTML =
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+    '<path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>' +
+    '</svg>\u00a0Enregistrer';
+  btnSave.addEventListener('click', function () {
+    var realSave = contentMain.querySelector(
+      '.submit-row input[name="_save"], .submit-row button[name="_save"], ' +
+      '.submit-row input[type="submit"], .submit-row button[type="submit"]'
+    );
+    if (realSave) { realSave.click(); }
+    else if (theForm) { theForm.submit(); }
+  });
+  footerLeft.appendChild(btnSave);
+
+  /* Footer right: step indicator + prev + next */
+  var footerRight = document.createElement('div');
+  footerRight.className = 'ensmg-wz-footer-right';
+
+  var stepIndicator = null;
+  var btnPrev = null;
+  var btnNext = null;
+
+  if (multiStep) {
+    stepIndicator = document.createElement('div');
+    stepIndicator.className = 'ensmg-wz-step-indicator';
+    footerRight.appendChild(stepIndicator);
+
+    btnPrev = document.createElement('button');
+    btnPrev.type      = 'button';
+    btnPrev.className = 'ensmg-wz-btn ensmg-wz-btn-ghost';
+    btnPrev.innerHTML =
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+      '<polyline points="15 18 9 12 15 6"/></svg>\u00a0Pr\u00e9c\u00e9dent';
+    btnPrev.addEventListener('click', function () { goTo(currentStep - 1); });
+    footerRight.appendChild(btnPrev);
+
+    btnNext = document.createElement('button');
+    btnNext.type      = 'button';
+    btnNext.className = 'ensmg-wz-btn ensmg-wz-btn-primary';
+    btnNext.innerHTML =
+      'Suivant\u00a0<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+      '<polyline points="9 18 15 12 9 6"/></svg>';
+    btnNext.addEventListener('click', function () { goTo(currentStep + 1); });
+    footerRight.appendChild(btnNext);
+  }
+
+  cardFooter.appendChild(footerLeft);
+  cardFooter.appendChild(footerRight);
+
+  formCard.appendChild(cardHeader);
+  formCard.appendChild(cardBody);
+  formCard.appendChild(cardFooter);
+
+  wzContainer.appendChild(stepper);
+  wzContainer.appendChild(progressWrap);
+  wzContainer.appendChild(formCard);
+
+  /* ─ Insérer le container à la place du premier fieldset ─ */
+  fieldsets[0].parentNode.insertBefore(wzContainer, fieldsets[0]);
+
+  /* ─ Déplacer les fieldsets dans le cardBody ─ */
+  fieldsets.forEach(function (fs) { cardBody.appendChild(fs); });
+
+  /* ─ Masquer le submit-row natif de Django ─ */
+  var submitRow = contentMain.querySelector('.submit-row');
+  if (submitRow) { submitRow.style.display = 'none'; }
+
+  /* ══════════════════════════════════════════════════════
+     FONCTIONS DE NAVIGATION
+  ══════════════════════════════════════════════════════ */
+  var STEP_ICONS = [
+    /* 0: général/info */
+    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
+    /* 1: document/facture */
+    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+    /* 2: liste/lignes */
+    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>',
+    /* 3+: paramètres */
+    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+  ];
+
+  function getStepIcon(idx) {
+    return STEP_ICONS[Math.min(idx, STEP_ICONS.length - 1)];
+  }
+
+  function updateCardHeader(idx) {
+    var title = stepTitles[idx] || ('\u00c9tape ' + (idx + 1));
+    cardHeader.innerHTML =
+      '<div class="ensmg-wz-card-icon">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">' +
+          getStepIcon(idx) +
+        '</svg>' +
+      '</div>' +
+      '<div class="ensmg-wz-card-header-text">' +
+        '<h2>' + _esc(title) + '</h2>' +
+        '<p>\u00c9tape ' + (idx + 1) + ' sur ' + total + '</p>' +
+      '</div>';
+  }
+
+  function showStep(idx) {
+    fieldsets[idx].style.display = '';
+    fieldsets[idx].style.animation = 'none';
+    void fieldsets[idx].offsetHeight;
+    fieldsets[idx].style.animation = '';
+  }
+  function hideStep(idx) {
+    fieldsets[idx].style.display = 'none';
+  }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= total) return;
+    hideStep(currentStep);
+    currentStep = idx;
+    showStep(currentStep);
+    updateUI();
+    wzContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function updateUI() {
+    /* Stepper items */
+    stepItems.forEach(function (item, i) {
+      item.classList.remove('ensmg-wz-step-active', 'ensmg-wz-step-done', 'ensmg-wz-step-inactive');
+      var bubble = item.querySelector('.ensmg-wz-step-bubble');
+      if (i < currentStep) {
+        item.classList.add('ensmg-wz-step-done');
+        bubble.textContent = '\u2713';
+      } else if (i === currentStep) {
+        item.classList.add('ensmg-wz-step-active');
+        bubble.textContent = i + 1;
+      } else {
+        item.classList.add('ensmg-wz-step-inactive');
+        bubble.textContent = i + 1;
+      }
+    });
+
+    /* Progress bar */
+    progressFill.style.width = (((currentStep + 1) / total) * 100) + '%';
+
+    /* Card header */
+    updateCardHeader(currentStep);
+
+    if (!multiStep) { btnSave.style.display = ''; return; }
+
+    var isFirst = currentStep === 0;
+    var isLast  = currentStep === total - 1;
+
+    if (stepIndicator) stepIndicator.textContent = (currentStep + 1) + '\u00a0/\u00a0' + total;
+    if (btnPrev) { btnPrev.disabled = isFirst; }
+    if (btnNext) btnNext.style.display = isLast ? 'none' : '';
+    btnSave.style.display = isLast ? '' : 'none';
+  }
+
+  /* ── État initial ── */
+  for (var k = 0; k < fieldsets.length; k++) {
+    if (!multiStep || k === 0) { showStep(k); } else { hideStep(k); }
+  }
+  /* Déclencher l'animation de la progress bar */
+  setTimeout(function () { updateUI(); }, 50);
+});
+</script>
+{% endblock %}

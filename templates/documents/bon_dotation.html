@@ -1,0 +1,222 @@
+{% extends "documents/_base.html" %}
+
+{% block titre_page %}Bon de Dotation — {{ numero_bon }}{% endblock %}
+{% block numero_doc %}{{ numero_bon }}{% endblock %}
+{% block titre_doc %}Bon de Dotation{% endblock %}
+
+{% block sous_titre %}
+<p class="small italic center" style="margin-top:2px;">
+  Matières distribuées à titre de dotation — Article 15 du Règlement de Comptabilité des Matières
+</p>
+{% endblock %}
+
+{% block extra_style %}
+<style>
+  .infos-grille {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 20px;
+    margin-bottom: 14px;
+    font-size: 10.5pt;
+    border: 1px solid #000;
+    padding: 8px 12px;
+    background: #fafafa;
+  }
+  .infos-grille .champ {
+    display: flex;
+    gap: 6px;
+  }
+  .infos-grille .label {
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .badge-1er {
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: #14532d;
+    padding: 1px 6px;
+    background: #dcfce7;
+    border-radius: 4px;
+    border: 1px solid #86efac;
+  }
+  .badge-2e {
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: #7c3d12;
+    padding: 1px 6px;
+    background: #ffedd5;
+    border-radius: 4px;
+    border: 1px solid #fdba74;
+  }
+
+  .obs-bloc {
+    margin: 12px 0;
+    font-size: 10pt;
+  }
+  .obs-bloc label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .obs-bloc .contenu {
+    border: 1px solid #000;
+    min-height: 30px;
+    padding: 5px 8px;
+  }
+
+  .note-bas {
+    margin-top: 8px;
+    font-size: 8.5pt;
+    font-style: italic;
+    color: #444;
+  }
+
+  /* Signatures — 3 blocs */
+  .signatures-3 {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 28px;
+    font-size: 10pt;
+  }
+  .signatures-3 .sig-bloc {
+    text-align: center;
+    width: 30%;
+  }
+  .signatures-3 .sig-titre {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 9pt;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 2px;
+  }
+  .signatures-3 .sig-sous-titre {
+    font-size: 8.5pt;
+    font-style: italic;
+    color: #444;
+    margin-bottom: 40px;
+  }
+  .signatures-3 .sig-ligne {
+    border-top: 1px solid #000;
+    padding-top: 2px;
+    font-size: 8.5pt;
+    color: #444;
+  }
+</style>
+{% endblock %}
+
+{% block contenu %}
+
+{# ═══════ INFORMATIONS BÉNÉFICIAIRE ═══════ #}
+<div class="infos-grille">
+  <div class="champ">
+    <span class="label">Bénéficiaire :</span>
+    <span>{{ beneficiaire }}</span>
+  </div>
+  <div class="champ">
+    <span class="label">Date :</span>
+    <span>{{ date_doc|date:"d/m/Y" }}</span>
+  </div>
+  <div class="champ">
+    <span class="label">Service :</span>
+    <span>{{ service }}</span>
+  </div>
+  <div class="champ">
+    <span class="label">Dépôt source :</span>
+    <span>{{ depot }}</span>
+  </div>
+  {% if document_ref and document_ref != "—" %}
+  <div class="champ">
+    <span class="label">Réf. document :</span>
+    <span>{{ document_ref }}</span>
+  </div>
+  {% endif %}
+  <div class="champ">
+    <span class="label">Nature :</span>
+    <span>{{ type_dotation }}</span>
+  </div>
+</div>
+
+{# ═══════ TABLEAU DES ARTICLES ═══════ #}
+<table>
+  <thead>
+    <tr>
+      <th style="width:6%">N°</th>
+      <th style="width:8%">Code</th>
+      <th style="width:30%">Désignation</th>
+      <th style="width:16%">Groupe</th>
+      <th style="width:7%">Unité</th>
+      <th style="width:8%">Quantité</th>
+      <th style="width:11%">Prix unitaire</th>
+      <th style="width:14%">Montant (F CFA)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ligne in lignes %}
+    <tr>
+      <td class="center">{{ forloop.counter }}</td>
+      <td class="center">{{ ligne.code }}</td>
+      <td>{{ ligne.designation }}</td>
+      <td class="center">
+        {% if ligne.is_immo %}
+          <span class="badge-1er">1er groupe</span>
+        {% else %}
+          <span class="badge-2e">2e groupe</span>
+        {% endif %}
+      </td>
+      <td class="center">{{ ligne.unite }}</td>
+      <td class="center">{{ ligne.quantite }}</td>
+      <td class="num">{{ ligne.prix_unit }}</td>
+      <td class="num">{{ ligne.total }}</td>
+    </tr>
+    {% endfor %}
+    {# Lignes vides #}
+    {% for _ in empty_rows %}
+    <tr>
+      <td class="center">{{ forloop.counter|add:nb_lignes }}</td>
+      <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="ligne-total">
+      <td colspan="7" class="right bold">VALEUR TOTALE DE LA DOTATION :</td>
+      <td class="num bold">{{ total_valeur_str }}</td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="note-bas">
+  <strong>1er groupe</strong> (biens durables) : les matières font l'objet d'une fiche d'affectation individuelle — le patrimoine reste inscrit dans les livres de l'établissement.&nbsp;
+  <strong>2e groupe</strong> (consommables) : sortie définitive du stock.
+</div>
+
+{# ═══════ OBSERVATIONS ═══════ #}
+{% if observations %}
+<div class="obs-bloc">
+  <label>Observations :</label>
+  <div class="contenu">{{ observations }}</div>
+</div>
+{% endif %}
+
+{# ═══════ SIGNATURES ═══════ #}
+<div class="signatures-3">
+  <div class="sig-bloc">
+    <div class="sig-titre">Le Bénéficiaire</div>
+    <div class="sig-sous-titre">Certifie avoir reçu les matières<br>ci-dessus désignées</div>
+    <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+  </div>
+  <div class="sig-bloc">
+    <div class="sig-titre">Le Gestionnaire de Dépôt</div>
+    <div class="sig-sous-titre">Certifie la sortie du stock<br>et la remise au bénéficiaire</div>
+    <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+  </div>
+  <div class="sig-bloc">
+    <div class="sig-titre">Le Comptable des Matières</div>
+    <div class="sig-sous-titre">Visa et enregistrement<br>comptable</div>
+    <div class="sig-ligne">Nom, Qualité &amp; Signature</div>
+  </div>
+</div>
+
+{% endblock %}

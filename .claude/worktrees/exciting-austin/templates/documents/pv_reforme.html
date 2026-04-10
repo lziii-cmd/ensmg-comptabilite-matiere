@@ -1,0 +1,103 @@
+{% extends "documents/_base.html" %}
+
+{% block titre_doc %}PROCÈS-VERBAL DE RÉFORME{% endblock %}
+{% block sous_titre %}<div class="numero">Opération n°{{ operation_numero }}</div>{% endblock %}
+
+{% block contenu %}
+
+<div class="infos-bloc">
+  <div class="info-item">
+    <span class="label">Exercice:</span>
+    <span>{{ exercice_label }}</span>
+  </div>
+  <div class="info-item">
+    <span class="label">Date:</span>
+    <span>{{ date_operation|date:"d/m/Y" }}</span>
+  </div>
+  <div class="info-item">
+    <span class="label">Dépôt:</span>
+    <span>{{ depot_label }}</span>
+  </div>
+</div>
+
+<hr class="separateur-leger">
+
+<div class="mt-md">
+  <p><strong>Commission de réforme constituée:</strong></p>
+  <ul style="margin-left: 20px; margin-top: 6px;">
+    {% for membre in commission_membres %}
+    <li>{{ membre }}</li>
+    {% empty %}
+    <li>À spécifier</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<hr class="separateur-leger">
+
+<p style="text-align: center; font-weight: bold; margin: 10px 0;">
+  Matières réformées
+</p>
+
+{# Tableau des matières réformées #}
+<table style="font-size: 9.5pt;">
+  <thead>
+    <tr>
+      <th style="width:8%;">N°</th>
+      <th style="width:15%;">Code</th>
+      <th style="width:35%;">Désignation</th>
+      <th style="width:10%;">Quantité</th>
+      <th style="width:12%;">Unité</th>
+      <th style="width:20%;">Motif</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in lignes %}
+    <tr>
+      <td class="center">{{ forloop.counter }}</td>
+      <td>{{ item.code_court }}</td>
+      <td>{{ item.designation }}</td>
+      <td class="num">{{ item.quantite }}</td>
+      <td class="center">{{ item.unite }}</td>
+      <td>{{ item.motif_reforme|default:"Usure" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6" class="center">Aucune matière réformée</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<hr class="separateur-leger">
+
+<div class="observations">
+  <label>Motifs généraux et observations:</label>
+  <div class="contenu" style="min-height: 60px;">
+    {{ observations|default:"Néant" }}
+  </div>
+</div>
+
+<div class="mt-md">
+  <p><strong>Décision:</strong></p>
+  <div style="margin-top: 6px; font-weight: bold;">
+    {% if decision %}{{ decision }}{% else %}À autoriser par la Direction{% endif %}
+  </div>
+</div>
+
+<div class="signatures" style="margin-top: 40px;">
+  <div class="signature-bloc">
+    <div class="titre-sig">Commission</div>
+    <div class="ligne-sig"></div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Chef de Dépôt</div>
+    <div class="ligne-sig"></div>
+  </div>
+  <div class="signature-bloc">
+    <div class="titre-sig">Directeur</div>
+    <div class="ligne-sig"></div>
+  </div>
+</div>
+
+{% endblock %}

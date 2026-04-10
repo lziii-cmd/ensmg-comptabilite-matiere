@@ -1,0 +1,74 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ titre_page }} | ENSMG{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Accueil</a>
+  &rsaquo; <a href="/documents/">Documents &amp; Registres</a>
+  &rsaquo; {{ titre_page }}
+</div>
+{% endblock %}
+
+{% block content_title %}<h1>{{ titre_page }}</h1>{% endblock %}
+
+{% block content %}
+<style>
+  .pv-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: 24px 28px; max-width: 560px;
+  }
+  .pv-desc { font-size: 13px; color: #4b5563; margin-bottom: 20px; line-height: 1.6; }
+  .pv-select-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .pv-select-row label { font-weight: 600; font-size: 13px; min-width: 80px; }
+  .pv-select-row select {
+    border: 1px solid #d1d5db; border-radius: 6px;
+    padding: 6px 10px; font-size: 13px; color: #1e3a5f;
+    background: #f9fafb; min-width: 260px;
+  }
+  .btn-generate {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1e3a5f; color: #fff; border: none; border-radius: 6px;
+    padding: 9px 20px; font-size: 13px; font-weight: 700;
+    cursor: pointer; text-decoration: none;
+  }
+  .btn-generate:hover { background: #1e40af; color: #fff; }
+</style>
+
+<div class="pv-card">
+  <div class="pv-desc">
+    Le <strong>Procès-Verbal de Recensement</strong> est un document officiel qui liste toutes les matières
+    en stock avec leur quantité théorique. Il est utilisé lors des opérations de recensement physique
+    pour comparer les quantités comptables aux quantités réellement constatées.
+  </div>
+
+  <div class="pv-select-row">
+    <label>Exercice :</label>
+    <select id="exSelect">
+      {% for ex in exercices %}
+      <option value="{{ ex.pk }}" {% if ex.pk == exercice.pk %}selected{% endif %}>
+        {{ ex.annee }} — {{ ex.code }}{% if ex.statut == "OUVERT" %} [EN COURS]{% endif %}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <a href="/documents/pv-recensement/exercice/{{ exercice.pk }}/"
+     id="btnGenerate" class="btn-generate" target="_blank">
+    📋 Générer le PV de recensement (PDF)
+  </a>
+</div>
+
+<script>
+(function(){
+  var sel = document.getElementById('exSelect');
+  var btn = document.getElementById('btnGenerate');
+  sel.addEventListener('change', function(){
+    btn.href = '/documents/pv-recensement/exercice/' + sel.value + '/';
+  });
+})();
+</script>
+{% endblock %}

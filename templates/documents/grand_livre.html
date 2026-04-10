@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>{{ titre_doc }} — {{ exercice.code }}</title>
+<style>
+/* ════════════════════════════════════════════
+   MISE EN PAGE — A4 paysage avec marges
+════════════════════════════════════════════ */
+@page {
+  size: A4 landscape;
+  margin: 1.8cm 1.5cm 2cm 1.5cm;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 9.5pt;
+  color: #000;
+  line-height: 1.3;
+}
+
+/* ════════════════════════════════════════════
+   EN-TÊTE OFFICIEL — 3 colonnes
+════════════════════════════════════════════ */
+.page-entete {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 4px;
+}
+.pe-left, .pe-center, .pe-right {
+  display: table-cell;
+  vertical-align: top;
+  padding: 0 4px;
+}
+.pe-left  { width: 32%; font-size: 8.5pt; line-height: 1.5; }
+.pe-center { width: 36%; text-align: center; }
+.pe-right { width: 32%; font-size: 8.5pt; line-height: 1.7; text-align: left; }
+
+.pe-left .rep    { font-weight: bold; font-size: 9pt; text-transform: uppercase; }
+.pe-left .devise { font-style: italic; font-size: 8pt; }
+.pe-left .sep    { border-top: 1px solid #000; margin: 3px 0; }
+.pe-left .min    { font-size: 8pt; }
+.pe-left .etab   { font-weight: bold; font-size: 9pt; text-transform: uppercase; }
+.pe-left .serv   { font-size: 8pt; }
+
+.pe-center .titre-gl {
+  font-size: 13pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-decoration: underline;
+  letter-spacing: .5px;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.pe-center .modele {
+  font-size: 8pt;
+  font-style: italic;
+}
+
+.pe-right table { border-collapse: collapse; width: 100%; }
+.pe-right td {
+  border: 1px solid #000;
+  padding: 3px 6px;
+  font-size: 8.5pt;
+  vertical-align: middle;
+}
+.pe-right td.pe-rlabel {
+  background: #d9d9d9;
+  font-weight: bold;
+  width: 40%;
+  white-space: nowrap;
+}
+.pe-right td.pe-rval {
+  font-weight: 600;
+}
+
+.hr-double {
+  border: none;
+  border-top: 3px double #000;
+  margin: 5px 0 6px 0;
+}
+
+/* ════════════════════════════════════════════
+   TABLEAU PRINCIPAL — Modèle N°7 CDM
+════════════════════════════════════════════ */
+table.gl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+  margin-top: 2px;
+}
+
+/* En-têtes */
+table.gl thead tr.hdr-group th {
+  background: #d9d9d9;
+  border: 1px solid #000;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  padding: 3px 2px;
+  font-size: 7.5pt;
+  line-height: 1.25;
+}
+table.gl thead tr.hdr-cols th {
+  background: #efefef;
+  border: 1px solid #000;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  padding: 3px 2px;
+  font-size: 7pt;
+  line-height: 1.2;
+}
+
+/* Cellules corps */
+table.gl tbody td {
+  border: 1px solid #000;
+  padding: 4px 4px;
+  vertical-align: middle;
+  min-height: 22px;
+}
+table.gl tbody td.num  { text-align: right;  font-variant-numeric: tabular-nums; }
+table.gl tbody td.ctr  { text-align: center; }
+table.gl tbody td.lib  { text-align: left;   }
+
+/* Ligne SI */
+table.gl tbody tr.row-si td {
+  background: #f5f5f5;
+  font-style: italic;
+  font-weight: 600;
+}
+
+/* Ligne total */
+table.gl tfoot tr.row-total td {
+  background: #d9d9d9;
+  font-weight: bold;
+  border: 1.5px solid #000;
+  border-top: 2px solid #000;
+  padding: 4px 4px;
+}
+table.gl tfoot tr.row-total td.num { text-align: right; }
+
+/* Largeurs colonnes */
+.c-date  { width: 52px; }
+.c-bon   { width: 50px; }
+.c-lib   { } /* flex restant */
+.c-ent   { width: 52px; }
+.c-sor   { width: 52px; }
+.c-pu    { width: 68px; }
+.c-exist { width: 55px; }
+.c-mont  { width: 76px; }
+.c-prov  { width: 52px; }
+.c-ret   { width: 60px; }
+
+/* ════════════════════════════════════════════
+   SIGNATURES
+════════════════════════════════════════════ */
+.signatures {
+  display: table;
+  width: 100%;
+  margin-top: 18px;
+  font-size: 8.5pt;
+}
+.sig-cell {
+  display: table-cell;
+  text-align: center;
+  width: 33.3%;
+  padding: 0 8px;
+}
+.sig-titre {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 8pt;
+  border-bottom: 1px solid #000;
+  padding-bottom: 2px;
+  margin-bottom: 28px;
+}
+.sig-ligne {
+  border-top: 1px solid #000;
+  padding-top: 2px;
+  font-style: italic;
+  font-size: 7.5pt;
+}
+
+/* ════════════════════════════════════════════
+   PIED DE PAGE
+════════════════════════════════════════════ */
+.pied {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 7pt;
+  color: #555;
+  border-top: 1px solid #aaa;
+  padding-top: 4px;
+}
+
+/* ════════════════════════════════════════════
+   AFFICHAGE ÉCRAN
+════════════════════════════════════════════ */
+@media screen {
+  body { background: #e5e7eb; padding: 20px; }
+  .page-wrap {
+    background: #fff;
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 2cm 1.5cm 2cm 1.5cm;
+    box-shadow: 0 4px 24px rgba(0,0,0,.18);
+    border-radius: 4px;
+  }
+}
+@media print {
+  .page-wrap { padding: 0; }
+  .no-print  { display: none !important; }
+  body { font-size: 8.5pt !important; }
+  table.gl { font-size: 7.5pt !important; }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+{# ════ BOUTON IMPRESSION (écran uniquement) ════ #}
+<div class="no-print" style="text-align:right;margin-bottom:12px;">
+  <button onclick="window.print()"
+    style="background:#1e3a5f;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;">
+    🖨 Imprimer / PDF
+  </button>
+</div>
+
+{# ════ EN-TÊTE OFFICIEL ════ #}
+<div class="page-entete">
+
+  <div class="pe-left">
+    <div class="rep">République du Sénégal</div>
+    <div class="devise">Un Peuple – Un But – Une Foi</div>
+    <div class="sep"></div>
+    <div class="min">Ministère de l'Éducation</div>
+    <div class="etab">École Normale Supérieure des Mines et de la Géologie</div>
+    <div class="serv">Comptabilité des Matières — École normale supérieure des mines et de la géologie</div>
+  </div>
+
+  <div class="pe-center">
+    <div class="titre-gl">{{ titre_doc }}</div>
+    <div class="modele">{{ modele_ref }}</div>
+  </div>
+
+  <div class="pe-right">
+    <table>
+      {% for label, val in entete_droite %}
+      <tr>
+        <td class="pe-rlabel">{{ label }}</td>
+        <td class="pe-rval">{{ val }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+</div>
+
+<hr class="hr-double">
+
+{# ════ TABLEAU GRAND LIVRE ════ #}
+<table class="gl">
+  <thead>
+    {# Rangée 1 : groupes #}
+    <tr class="hdr-group">
+      <th rowspan="2" class="c-date">Date</th>
+      <th rowspan="2" class="c-bon">N° Bon</th>
+      <th rowspan="2" class="c-lib">Origine des entrées et destinations des sorties</th>
+      <th class="c-ent">Entrées</th>
+      <th class="c-sor">Sorties<br>définitives</th>
+      <th rowspan="2" class="c-pu">Prix<br>Unitaire<br>(F CFA)</th>
+      <th rowspan="2" class="c-exist">Existant</th>
+      <th rowspan="2" class="c-mont">Montant de<br>l'existant<br>(F CFA)</th>
+      <th class="c-prov">Pour mémoire<br>sorties<br>provisoires</th>
+      <th class="c-ret">Date de retour<br>des matières<br>sorties prov.</th>
+    </tr>
+    {# Rangée 2 : sous-libellés #}
+    <tr class="hdr-cols">
+      <th class="c-ent">Nbre d'unités</th>
+      <th class="c-sor">Nbre d'unités</th>
+      <th class="c-prov">Nbre d'unités</th>
+      <th class="c-ret">Date prévue</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {# ── Ligne SI ── #}
+    <tr class="row-si">
+      <td class="ctr c-date">{{ si_date|date:"d/m/Y" }}</td>
+      <td class="ctr c-bon">SI</td>
+      <td class="lib c-lib">Balance d'entrée (Stock Initial)</td>
+      <td class="num c-ent">{% if si_qte %}{{ si_qte|floatformat:"-2" }}{% else %}—{% endif %}</td>
+      <td class="ctr c-sor">—</td>
+      <td class="num c-pu">{% if si_pu %}{{ si_pu|floatformat:"-2" }}{% else %}—{% endif %}</td>
+      <td class="num c-exist">{{ si_qte|floatformat:"-2" }}</td>
+      <td class="num c-mont">{{ si_val|floatformat:"-2" }}</td>
+      <td class="ctr c-prov">—</td>
+      <td class="ctr c-ret">—</td>
+    </tr>
+
+    {# ── Mouvements ── #}
+    {% for l in lignes %}{% if not l.is_initial %}
+    <tr>
+      <td class="ctr c-date small">{{ l.date|date:"d/m/Y" }}</td>
+      <td class="ctr c-bon small">{{ l.piece }}</td>
+      <td class="lib c-lib small">{{ l.libelle }}</td>
+      {# Entrées #}
+      <td class="num c-ent">{% if l.ent_qte is not None %}{{ l.ent_qte|floatformat:"-2" }}{% else %}{% endif %}</td>
+      {# Sorties définitives #}
+      <td class="num c-sor">{% if l.sor_def_qte is not None %}{{ l.sor_def_qte|floatformat:"-2" }}{% else %}{% endif %}</td>
+      {# Prix unitaire (CUMP) #}
+      <td class="num c-pu">{{ l.ex_cump|floatformat:"-2" }}</td>
+      {# Existant #}
+      <td class="num c-exist">{{ l.ex_qte|floatformat:"-2" }}</td>
+      {# Montant existant #}
+      <td class="num c-mont">{{ l.ex_val|floatformat:"-2" }}</td>
+      {# Sorties provisoires (prêts) #}
+      <td class="num c-prov">{% if l.sor_prov_qte is not None %}{{ l.sor_prov_qte|floatformat:"-2" }}{% else %}{% endif %}</td>
+      {# Date de retour prévu #}
+      <td class="ctr c-ret small">{% if l.date_retour %}{{ l.date_retour|date:"d/m/Y" }}{% endif %}</td>
+    </tr>
+    {% endif %}{% endfor %}
+
+    {% if not lignes %}
+    <tr>
+      <td colspan="10" style="text-align:center;font-style:italic;padding:16px;color:#666;">
+        Aucun mouvement enregistré pour cette période.
+      </td>
+    </tr>
+    {% endif %}
+  </tbody>
+
+  <tfoot>
+    <tr class="row-total">
+      <td colspan="3" style="text-align:right;font-weight:bold;padding-right:8px;">TOTAL</td>
+      <td class="num">{{ total_ent_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ total_sor_def_qte|floatformat:"-2" }}</td>
+      <td></td>
+      <td class="num">{{ solde_final_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ solde_final_val|floatformat:"-2" }}</td>
+      <td class="num">{{ total_sor_prov_qte|floatformat:"-2" }}</td>
+      <td></td>
+    </tr>
+  </tfoot>
+</table>
+
+{# ════ SIGNATURES ════ #}
+<div class="signatures">
+  <div class="sig-cell">
+    <div class="sig-titre">Le Comptable des Matières</div>
+    <div class="sig-ligne">Nom &amp; Signature</div>
+  </div>
+  <div class="sig-cell">
+    <div class="sig-titre">Le Chef de Service</div>
+    <div class="sig-ligne">Visa &amp; Signature</div>
+  </div>
+  <div class="sig-cell">
+    <div class="sig-titre">Le Directeur</div>
+    <div class="sig-ligne">Visa &amp; Signature</div>
+  </div>
+</div>
+
+{# ════ PIED ════ #}
+<div class="pied">
+  Système de Comptabilité des Matières — École normale supérieure des mines et de la géologie &nbsp;|&nbsp;
+  Édité le {{ date_doc|date:"d/m/Y" }} &nbsp;|&nbsp;
+  Exercice {{ exercice.annee }}
+</div>
+
+</div>{# /page-wrap #}
+</body>
+</html>

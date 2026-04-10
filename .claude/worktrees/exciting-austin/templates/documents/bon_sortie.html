@@ -1,0 +1,286 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bon de Sortie Définitive - Modèle n°2</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000;
+        }
+        
+        .document {
+            width: 100%;
+            max-width: 210mm;
+        }
+        
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
+            border-collapse: collapse;
+        }
+        
+        .header-cell {
+            display: table-cell;
+            width: 33.33%;
+            padding: 5px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 10pt;
+        }
+        
+        .header-left {
+            text-align: left;
+            font-weight: normal;
+        }
+        
+        .header-right {
+            text-align: right;
+            font-weight: normal;
+        }
+        
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 13pt;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+        
+        .info-bar {
+            margin-bottom: 15px;
+            padding: 5px;
+            border: 1px solid #000;
+            background-color: #f9f9f9;
+            font-size: 10pt;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            font-size: 10pt;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        td {
+            vertical-align: top;
+        }
+        
+        .numeric {
+            text-align: right;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .signature-section {
+            display: table;
+            width: 100%;
+            margin-top: 20px;
+            table-layout: fixed;
+        }
+        
+        .signature-cell {
+            display: table-cell;
+            width: 33.33%;
+            padding: 10px;
+            border: 1px solid #000;
+            vertical-align: top;
+            font-size: 9pt;
+            text-align: center;
+        }
+        
+        .sig-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+            font-size: 9pt;
+        }
+        
+        .sig-content {
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .sig-line {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 9pt;
+        }
+        
+        .notes {
+            font-size: 8pt;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+        
+        .empty-row {
+            height: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-cell header-left">
+                <strong>REPUBLIQUE DU SENEGAL</strong><br/>
+                MINISTERE<br/>
+                SERVICE
+            </div>
+            <div class="header-cell">
+                <strong>BON DE SORTIE DEFINITIVE</strong><br/>
+                <strong>DE L'EXISTANT N°{{ op.code }}</strong><br/>
+                <span style="font-size: 9pt;">(1)</span>
+            </div>
+            <div class="header-cell header-right">
+                Modèle n°2<br/>
+                Instruction générale<br/>
+                Art 12a, 12c, 19a<br/>
+                Année budgétaire {{ op.date_sortie.year }}
+            </div>
+        </div>
+        
+        <!-- INFO BAR -->
+        <div class="info-bar">
+            <strong>Dépôt:</strong> {{ op.depot.nom }}<br/>
+            <strong>Date:</strong> {% if op.date_sortie %}{{ op.date_sortie|date:"d/m/Y" }}{% else %}—{% endif %}
+            {% if op.motif_principal %}<br/><strong>Motif:</strong> {{ op.motif_principal }}{% endif %}
+        </div>
+        
+        <!-- MAIN TABLE -->
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="3" style="text-align:center;">DÉSIGNATION DES MATIÈRES</th>
+                    <th colspan="2" style="text-align:center;">QUANTITÉ<br/><span style="font-size: 9pt;">(3)</span></th>
+                    <th rowspan="2" style="width: 12%;">PRIX<br/>UNITAIRE<br/>(F CFA)</th>
+                    <th rowspan="2" style="width: 12%;">MONTANT<br/>(F CFA)</th>
+                    <th rowspan="2" style="width: 14%;">Observations</th>
+                </tr>
+                <tr>
+                    <th style="width: 10%; font-size: 9pt;">N° compte<br/>nomenclature<br/>(2)</th>
+                    <th style="width: 20%; font-size: 9pt;">NATURE DES<br/>MATIÈRES</th>
+                    <th style="width: 16%; font-size: 9pt;">Spécification<br/>des matières</th>
+                    <th style="width: 10%; font-size: 9pt;">Nombre<br/>d'unités</th>
+                    <th style="width: 6%; font-size: 9pt;">Nature<br/>de l'unité</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in op.lignes.all %}
+                <tr>
+                    <td class="center">{{ ligne.matiere.sous_compte.code }}</td>
+                    <td>{{ ligne.matiere.designation }}</td>
+                    <td>{{ ligne.matiere.code_court }}</td>
+                    <td class="numeric">{{ ligne.quantite }}</td>
+                    <td class="center">{{ ligne.matiere.unite.symbole }}</td>
+                    <td class="numeric">{% if ligne.prix_unitaire %}{{ ligne.prix_unitaire|floatformat:0 }}{% else %}—{% endif %}</td>
+                    <td class="numeric">{% if ligne.total_ligne %}{{ ligne.total_ligne|floatformat:0 }}{% else %}—{% endif %}</td>
+                    <td>{{ ligne.commentaire|default:"" }}</td>
+                </tr>
+                {% endfor %}
+                {% for i in empty_rows %}
+                <tr class="empty-row">
+                    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                    <td>&nbsp;</td><td>&nbsp;</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold;">
+                    <td colspan="3" class="center">TOTAUX</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">{{ op.total_quantite|default:"" }}</td>
+                    <td style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td style="border-top: 2px solid #000;">&nbsp;</td>
+                    <td class="numeric" style="border-top: 2px solid #000;">{{ op.total_valeur|default:""|floatformat:0 }}</td>
+                    <td style="border-top: 2px solid #000;">&nbsp;</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <!-- SIGNATURE SECTIONS -->
+        <div class="signature-section">
+            <div class="signature-cell">
+                <div class="sig-title">CERTIFICATIONS</div>
+                <div class="sig-content">
+                    Arrêté le présent bon à <strong>{{ op.total_quantite|default:"" }}</strong> unités représentant une valeur de <strong>{{ op.total_valeur|default:""|floatformat:0 }}</strong> francs<br/><br/>
+                    Je certifie la sortie définitive
+                </div>
+                <div class="sig-line">
+                    A ————————— le —————————<br/><br/>
+                    <strong>L'Administrateur des matières</strong><br/>
+                    (Timbre et signature)
+                </div>
+            </div>
+            <div class="signature-cell">
+                <div class="sig-title">DIMINUTION DES PRISES EN CHARGE</div>
+                <div class="sig-content">
+                    Le comptable des matières, Soussigné, déclare ce jour, diminuer mes prises en charges de <strong>{{ op.total_quantite|default:"" }}</strong> unités représentant une valeur de <strong>{{ op.total_valeur|default:""|floatformat:0 }}</strong>
+                </div>
+                <div class="sig-line">
+                    A ————————— le —————————<br/><br/>
+                    <strong>Le comptable des matières</strong><br/>
+                    <span style="font-size: 9pt;">(5) Timbre et signature</span>
+                </div>
+            </div>
+            <div class="signature-cell">
+                <div class="sig-title">RECIPISSE</div>
+                <div class="sig-content">
+                    Je soussigné<br/><br/>
+                    Reconnais avoir reçu les matières portées au présent bon
+                </div>
+                <div class="sig-line">
+                    A ————————— le —————————<br/><br/>
+                    <strong>Le Réceptionniste</strong><br/>
+                    <span style="font-size: 9pt;">(5) Timbre et signature</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NOTES -->
+        <div class="notes">
+            <p><strong>(1)</strong> Numérotation ininterrompue par exercice budgétaire et par magasin</p>
+            <p><strong>(2)</strong> Dans l'ordre numérique de la nomenclature</p>
+            <p><strong>(3)</strong> Litre, kg, m, mètre carré, etc.</p>
+            <p><strong>(5)</strong> Timbre et signature</p>
+            <p><strong>Bon à établir en 03 exemplaires</strong></p>
+        </div>
+    </div>
+</body>
+</html>

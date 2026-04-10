@@ -1,0 +1,42 @@
+{% extends 'v2/base.html' %}
+{% block page_title %}Catégories — ENSMG{% endblock %}
+{% block page_title_short %}Catégories{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'frontend:dashboard' %}">Accueil</a>
+<span class="bread-sep">›</span><span class="bread-cur">Catégories</span>
+{% endblock %}
+
+{% block content %}
+<div class="pi">
+  <div class="ph au">
+    <div class="ph-left"><div class="ph-title">Catégories</div><div class="ph-sub">Classification des matières du catalogue</div></div>
+    <div class="ph-right"><a href="{% url 'admin:catalog_categorie_add' %}" class="btn btn-p"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Ajouter</a></div>
+  </div>
+  {% with colors="#52b7ff,#4ade9a,#fbbf24,#a78bfa,#fb923c,#22d3ee,#f472b6" %}
+  <div class="g3 au d1">
+    {% for cat in categories %}
+    {% with ci=forloop.counter0 %}
+    <a href="{% url 'frontend:categorie_detail' cat.pk %}" class="cat-card">
+      <div class="cat-card-top">
+        <div class="cat-card-ico" style="background:rgba(82,183,255,.15);border:1px solid rgba(82,183,255,.3)">📁</div>
+        <div>
+          <div class="cat-card-name">{{ cat.libelle }}</div>
+          <div class="cat-card-count">{{ cat.nb_matieres }} matière{{ cat.nb_matieres|pluralize }}</div>
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:10.5px;color:var(--t2)">{{ cat.code }}</span>
+          <span class="mono" style="font-size:10px;color:var(--t3)">{{ cat.nb_matieres }} articles</span>
+        </div>
+        <div class="cat-card-bar"><div class="cat-card-fill" style="width:{{ cat.nb_matieres }}%;background:var(--accent)"></div></div>
+      </div>
+    </a>
+    {% endwith %}
+    {% empty %}
+    <div class="s3"><div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg><div class="empty-state-text">Aucune catégorie trouvée</div></div></div>
+    {% endfor %}
+  </div>
+  {% endwith %}
+</div>
+{% endblock %}

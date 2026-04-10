@@ -1,0 +1,280 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ titre_page }} | ENSMG{% endblock %}
+
+{# ══ Fil d'Ariane — identique aux pages admin ══════════════════════ #}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Accueil</a>
+  &rsaquo; <a href="/documents/">Documents &amp; Registres</a>
+  &rsaquo; {{ titre_page }}
+</div>
+{% endblock %}
+
+{# ══ Titre de la page (h1) ══════════════════════════════════════════ #}
+{% block content_title %}<h1>{{ titre_page }}</h1>{% endblock %}
+
+{# ══ Contenu principal ══════════════════════════════════════════════ #}
+{% block content %}
+{# Bouton "PDF Complet" en haut à droite — style Django admin object-tools #}
+<ul class="object-tools">
+  <li>
+    <a href="{{ url_complet }}?exercice={{ exercice.pk }}" target="_blank" class="addlink">
+      📄 {{ label_complet }}
+    </a>
+  </li>
+</ul>
+
+<style>
+  /* ── Élargir la zone de contenu Django admin ── */
+  #content, #content-main, .content, #main,
+  #content-wrapper, .content-wrapper {
+    max-width: none !important;
+    width: 100% !important;
+  }
+  /* ── Toolbar ── */
+  .gl-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .gl-toolbar-left  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1; }
+
+  .gl-select-exercice {
+    display: flex; align-items: center; gap: 6px;
+    background: #f9fafb; border: 1px solid #d1d5db;
+    border-radius: 6px; padding: 5px 10px;
+    font-size: 13px; font-weight: 600; color: #374151;
+  }
+  .gl-select-exercice select {
+    border: none; background: transparent;
+    font-size: 13px; font-weight: 600; color: #1e3a5f;
+    outline: none; cursor: pointer;
+    min-width: 240px;
+  }
+
+  .gl-search {
+    display: flex; align-items: center;
+    border: 1px solid #d1d5db; border-radius: 6px;
+    background: #fff; overflow: hidden; height: 32px;
+  }
+  .gl-search input {
+    border: none; outline: none; padding: 0 10px;
+    font-size: 13px; width: 220px; height: 100%;
+  }
+  .gl-search-icon {
+    padding: 0 8px; color: #9ca3af; display: flex; align-items: center;
+  }
+
+  /* ── Stats ── */
+  .gl-stats {
+    display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .gl-stat {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 10px 16px; min-width: 120px;
+  }
+  .gl-stat-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
+  .gl-stat-value { font-size: 20px; font-weight: 800; color: #1e3a5f; margin-top: 2px; }
+  .gl-stat-value.green { color: #059669; }
+
+  /* ── Tableau — reprend le style Django admin result_list ── */
+  #gl-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #ddd;
+    font-size: 13px;
+  }
+  #gl-table thead tr {
+    background: #1e3a5f;
+  }
+  #gl-table thead th {
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 11px;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,.1);
+    vertical-align: middle;
+  }
+  #gl-table thead th:last-child { border-right: none; }
+  #gl-table thead th.right { text-align: right; }
+
+  #gl-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background .12s;
+  }
+  #gl-table tbody tr:hover { background: #eff6ff !important; }
+  #gl-table tbody tr:nth-child(even) { background: #f9fafb; }
+
+  #gl-table tbody td {
+    padding: 8px 10px;
+    vertical-align: middle;
+    color: #374151;
+    border-right: 1px solid #f3f4f6;
+  }
+  #gl-table tbody td:last-child { border-right: none; }
+  #gl-table tbody td.right { text-align: right; font-variant-numeric: tabular-nums; }
+  #gl-table tbody td.center { text-align: center; }
+
+  .code-badge {
+    display: inline-block;
+    background: #dbeafe; color: #1e40af;
+    border-radius: 4px; padding: 2px 7px;
+    font-size: 11px; font-weight: 700; font-family: monospace;
+  }
+  .code-badge.compte { background: #fef3c7; color: #92400e; }
+
+  .type-badge {
+    display: inline-block; border-radius: 10px;
+    padding: 2px 8px; font-size: 11px; font-weight: 600; color: #fff;
+  }
+  .type-C { background: #b45309; }
+  .type-R { background: #1e6b3a; }
+
+  .mvt-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 28px; height: 20px; border-radius: 10px;
+    font-size: 11px; font-weight: 700; padding: 0 6px;
+  }
+  .mvt-pill.has { background: #dcfce7; color: #15803d; }
+  .mvt-pill.none { background: #f3f4f6; color: #9ca3af; }
+
+  .gl-row-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: #2a4f80 !important; font-size: 12px;
+    text-decoration: none !important;
+  }
+  .gl-row-link:hover { color: #1e3a5f !important; text-decoration: underline !important; }
+
+  .gl-empty {
+    text-align: center; padding: 40px; color: #9ca3af;
+    font-style: italic; font-size: 14px;
+  }
+
+  .tab-desc {
+    font-size: 12px; color: #6b7280; margin-bottom: 16px;
+    background: #f0f9ff; border-left: 3px solid #2a4f80;
+    padding: 8px 12px; border-radius: 0 6px 6px 0;
+  }
+</style>
+
+{% with exercice=exercice exercices=exercices %}
+
+{# ── Description ── #}
+<p class="tab-desc">
+  {{ description }}
+  {% if cta_text %}{{ cta_text }}{% else %}Cliquez sur une ligne pour ouvrir le document correspondant.{% endif %}
+</p>
+
+{# ── Toolbar : sélecteur exercice + recherche ── #}
+<div class="gl-toolbar">
+  <div class="gl-toolbar-left">
+
+    {# Sélecteur exercice #}
+    <form method="get" style="display:inline-flex;align-items:center;">
+      <div class="gl-select-exercice">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Exercice :
+        <select name="exercice" onchange="this.form.submit()">
+          {% for ex in exercices %}
+            <option value="{{ ex.pk }}" {% if ex.pk == exercice.pk %}selected{% endif %}>
+              {{ ex.annee }} — {{ ex.code }}{% if ex.statut == 'OUVERT' %} [EN COURS]{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+
+    {# Recherche live #}
+    <div class="gl-search">
+      <span class="gl-search-icon">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input type="text" id="glSearch" placeholder="Rechercher…" oninput="glFilter()" autocomplete="off">
+    </div>
+
+    {% if type_filter %}
+    <select id="glTypeFilter" onchange="glFilter()" style="border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;font-size:12px;">
+      <option value="">Tous types</option>
+      <option value="C">Consommable</option>
+      <option value="R">Réutilisable</option>
+    </select>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ── Stats ── #}
+<div class="gl-stats">
+  <div class="gl-stat">
+    <div class="gl-stat-label">Total</div>
+    <div class="gl-stat-value" id="statTotal">{{ rows|length }}</div>
+  </div>
+  <div class="gl-stat">
+    <div class="gl-stat-label">Avec mouvements</div>
+    <div class="gl-stat-value green" id="statAvec">{{ nb_avec }}</div>
+  </div>
+  <div class="gl-stat">
+    <div class="gl-stat-label">Exercice actif</div>
+    <div class="gl-stat-value" style="font-size:15px;color:#2a4f80;">{{ exercice.code }}</div>
+  </div>
+</div>
+
+{# ── Tableau ── #}
+{% if rows %}
+<table id="gl-table">
+  <thead>
+    <tr>
+      {% for col in colonnes %}
+      <th {% if col.right %}class="right"{% endif %} {% if col.width %}style="width:{{ col.width }}"{% endif %}>{{ col.label }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody id="glTbody">
+    {% for row in rows %}
+    <tr onclick="window.open('{{ row.url }}', '_blank')"
+        data-search="{{ row.search_text|lower }}"
+        {% if row.type_filter %}data-type="{{ row.type_filter }}"{% endif %}>
+      {% for cell in row.cells %}
+      <td {% if cell.right %}class="right"{% elif cell.center %}class="center"{% endif %}>
+        {{ cell.html|safe }}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="gl-empty">Aucune donnée disponible pour cet exercice.</div>
+{% endif %}
+
+{% endwith %}
+
+<script>
+function glFilter() {
+  var q    = (document.getElementById('glSearch').value || '').toLowerCase();
+  var tf   = document.getElementById('glTypeFilter');
+  var type = tf ? tf.value : '';
+  var rows = document.querySelectorAll('#glTbody tr');
+  var vis  = 0;
+  rows.forEach(function(tr) {
+    var s = (tr.getAttribute('data-search') || '');
+    var t = (tr.getAttribute('data-type')   || '');
+    var ok = (!q || s.indexOf(q) >= 0) && (!type || t === type);
+    tr.style.display = ok ? '' : 'none';
+    if (ok) vis++;
+  });
+  var el = document.getElementById('statTotal');
+  if (el) el.textContent = vis;
+}
+</script>
+{% endblock %}

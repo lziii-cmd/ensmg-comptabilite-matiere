@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: ensmg-comptabilite-matieres
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: PYTHON_VERSION
+        value: "3.12"

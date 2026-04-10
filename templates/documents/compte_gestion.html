@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>{{ titre_doc }} — {{ exercice.code }}</title>
+<style>
+/* ══════════════════════════════════════
+   PAGE — A4 paysage
+══════════════════════════════════════ */
+@page {
+  size: A4 landscape;
+  margin: 1.2cm 1.4cm 1.5cm 1.4cm;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 8.5pt;
+  color: #000;
+  line-height: 1.3;
+}
+
+/* ── EN-TÊTE ── */
+.entete { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.entete td { vertical-align: top; padding: 0; }
+.col-g { width: 38%; padding-right: 6px; }
+.col-c { width: 24%; text-align: center; padding: 0 4px; }
+.col-d { width: 38%; padding-left: 6px; text-align: right; }
+
+.col-g .rep   { font-weight: bold; font-size: 9.5pt; text-transform: uppercase; }
+.col-g .art   { font-size: 8pt; margin-top: 1px; }
+.col-g hr     { border: none; border-top: 1px solid #000; margin: 3px 0; }
+.col-g .min   { font-size: 8pt; border-bottom: 1px dotted #000; padding-bottom: 1px; margin-bottom: 2px; }
+.col-g .svc   { font-size: 8pt; }
+
+.col-c .titre-principal { font-size: 12.5pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; letter-spacing: 0.5px; line-height: 1.2; }
+.col-c .sous-titre { font-size: 7.5pt; margin-top: 3px; font-style: italic; }
+.col-c .modele-ref { font-size: 7.5pt; font-weight: bold; margin-top: 3px; }
+
+.col-d .info-ligne { font-size: 8pt; border-bottom: 1px dotted #000; padding: 2px 0; margin-bottom: 2px; }
+.col-d .info-val { font-weight: bold; }
+
+.sep-double { border: none; border-top: 3px double #000; margin: 5px 0 4px 0; }
+
+/* ══════════════════════════════════════
+   TABLEAU PRINCIPAL (11 colonnes données)
+   N°Cpt | Désig | Unité |
+   SI_Q | SI_V |
+   ENT_Q | ENT_V |
+   SOR_Q | SOR_V |
+   PROV_Q |
+   SF_Q | SF_V
+══════════════════════════════════════ */
+table.cg {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 7pt;
+  margin-top: 2px;
+}
+
+/* ── En-têtes groupe ── */
+table.cg thead tr.row-h1 th {
+  border: 1px solid #000;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  padding: 3px 2px;
+  font-size: 7pt;
+  background: #d9d9d9;
+  line-height: 1.2;
+}
+/* ── En-têtes sous-colonnes ── */
+table.cg thead tr.row-h2 th {
+  border: 1px solid #000;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  padding: 2px 2px;
+  font-size: 6pt;
+  background: #f0f0f0;
+  font-style: italic;
+  line-height: 1.1;
+}
+
+/* ── Ligne matière ── */
+table.cg tbody tr.row-mat td {
+  border: 1px solid #000;
+  padding: 2px 3px;
+  vertical-align: middle;
+  height: 17px;
+}
+/* ── Ligne de sous-total (SC) ── */
+table.cg tbody tr.row-sc td {
+  border: 1px solid #000;
+  padding: 2px 4px;
+  font-weight: bold;
+  font-size: 6.5pt;
+  background: #edf2f7 !important;
+}
+/* ── Ligne CD ── */
+table.cg tbody tr.row-cd td {
+  border: 1px solid #000;
+  padding: 3px 4px;
+  font-weight: bold;
+  font-size: 7pt;
+  background: #d6e4f0 !important;
+}
+/* ── Ligne CP ── */
+table.cg tbody tr.row-cp td {
+  border: 2px solid #000;
+  padding: 3px 4px;
+  font-weight: bold;
+  font-size: 7pt;
+  background: #1e3a5f !important;
+  color: #fff !important;
+}
+/* ── Total général ── */
+table.cg tfoot tr td {
+  border: 2px solid #000;
+  border-top: 2.5px solid #000;
+  font-weight: bold;
+  padding: 3px 4px;
+  font-size: 7pt;
+  background: #f0f0f0 !important;
+}
+table.cg td.num  { text-align: right; font-variant-numeric: tabular-nums; }
+table.cg td.ctr  { text-align: center; }
+table.cg td.lbl  { text-align: right; padding-right: 5px; }
+
+/* Largeurs colonnes */
+.c-cpt  { width: 52px; }
+.c-des  { /* flex */ }
+.c-unt  { width: 30px; }
+.c-qty  { width: 44px; }
+.c-val  { width: 64px; }
+.c-prov { width: 40px; }
+
+/* ── SIGNATURES ── */
+.signatures { display: table; width: 100%; margin-top: 12px; font-size: 7.5pt; }
+.sig-cell { display: table-cell; text-align: center; padding: 0 8px; }
+.sig-titre { font-weight: bold; text-transform: uppercase; font-size: 7pt; border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 20px; }
+.sig-ligne { border-top: 1px solid #000; padding-top: 2px; font-style: italic; font-size: 6.5pt; }
+
+.pied { margin-top: 4px; text-align: center; font-size: 6pt; color: #555; border-top: 1px solid #aaa; padding-top: 2px; }
+
+@media screen {
+  body { background: #d1d5db; padding: 20px; }
+  .page-wrap {
+    background: #fff; max-width: 1200px; margin: 0 auto;
+    padding: 1.2cm 1.4cm; box-shadow: 0 4px 28px rgba(0,0,0,.20); border-radius: 3px;
+  }
+  .no-print { text-align: right; margin-bottom: 12px; }
+}
+@media print {
+  .page-wrap { padding: 0; }
+  .no-print { display: none !important; }
+  body { font-size: 7.5pt !important; }
+  table.cg { font-size: 6.5pt !important; }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<div class="no-print" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+  <a href="/documents/" style="color:#1e3a5f;text-decoration:none;font-weight:600;font-size:14px;">← Retour</a>
+  <button onclick="window.print()" style="background:#1e3a5f;color:#fff;border:none;border-radius:5px;padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;">🖨 Imprimer / PDF</button>
+</div>
+
+{# ══ EN-TÊTE ══ #}
+<table class="entete">
+  <tr>
+    <td class="col-g">
+      <div class="rep">République du Sénégal</div>
+      <div class="art">Un Peuple – Un But – Une Foi</div>
+      <hr>
+      <div class="min">Ministère de l'Éducation</div>
+      <div class="svc">École normale supérieure des mines et de la géologie</div>
+    </td>
+    <td class="col-c">
+      <div class="titre-principal">{{ titre_doc }}</div>
+      <div class="sous-titre">{{ sous_titre }}</div>
+      <div class="modele-ref">{{ modele_ref }}</div>
+    </td>
+    <td class="col-d">
+      <div class="info-ligne">Exercice :&nbsp;<span class="info-val">{{ exercice.annee }}</span></div>
+      <div class="info-ligne">Période :&nbsp;<span class="info-val">{{ exercice.date_debut|date:"d/m/Y" }} – {{ exercice.date_fin|date:"d/m/Y" }}</span></div>
+      <div class="info-ligne">Dépôt :&nbsp;<span class="info-val">{{ depot_label }}</span></div>
+      <div class="info-ligne">Édité le :&nbsp;<span class="info-val">{{ date_doc|date:"d/m/Y" }}</span></div>
+    </td>
+  </tr>
+</table>
+<hr class="sep-double">
+
+{# ══ TABLEAU ══ #}
+<table class="cg">
+  <thead>
+    <tr class="row-h1">
+      <th class="c-cpt" rowspan="2">N° Compte<br>nomenclature</th>
+      <th class="c-des" rowspan="2">Désignation des matières</th>
+      <th class="c-unt" rowspan="2">Unité</th>
+      <th colspan="2">STOCK INITIAL</th>
+      <th colspan="2">ENTRÉES</th>
+      <th colspan="2">SORTIES DÉFINITIVES</th>
+      <th class="c-prov" rowspan="2">Sort.<br>Prov.<br>(qté)</th>
+      <th colspan="2">STOCK FINAL</th>
+    </tr>
+    <tr class="row-h2">
+      <th class="c-qty">Quantité</th>
+      <th class="c-val">Valeur (F CFA)</th>
+      <th class="c-qty">Quantité</th>
+      <th class="c-val">Valeur (F CFA)</th>
+      <th class="c-qty">Quantité</th>
+      <th class="c-val">Valeur (F CFA)</th>
+      <th class="c-qty">Quantité</th>
+      <th class="c-val">Valeur (F CFA)</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for s_cp in sections %}
+    {# ── Ligne Compte Principal ── #}
+    <tr class="row-cp">
+      <td class="ctr">{{ s_cp.cp.code }}</td>
+      <td colspan="2">{{ s_cp.cp.libelle|upper }}</td>
+      <td class="num">{{ s_cp.totaux.si_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ s_cp.totaux.si_val|floatformat:"0" }}</td>
+      <td class="num">{{ s_cp.totaux.ent_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ s_cp.totaux.ent_val|floatformat:"0" }}</td>
+      <td class="num">{{ s_cp.totaux.sor_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ s_cp.totaux.sor_val|floatformat:"0" }}</td>
+      <td class="num">{{ s_cp.totaux.prov_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ s_cp.totaux.sf_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ s_cp.totaux.sf_val|floatformat:"0" }}</td>
+    </tr>
+
+      {% for s_cd in s_cp.cds %}
+      {# ── Ligne Compte Divisionnaire ── #}
+      <tr class="row-cd">
+        <td class="ctr">{{ s_cd.cd.code }}</td>
+        <td colspan="2">{{ s_cd.cd.libelle }}</td>
+        <td class="num">{{ s_cd.totaux.si_qte|floatformat:"-2" }}</td>
+        <td class="num">{{ s_cd.totaux.si_val|floatformat:"0" }}</td>
+        <td class="num">{{ s_cd.totaux.ent_qte|floatformat:"-2" }}</td>
+        <td class="num">{{ s_cd.totaux.ent_val|floatformat:"0" }}</td>
+        <td class="num">{{ s_cd.totaux.sor_qte|floatformat:"-2" }}</td>
+        <td class="num">{{ s_cd.totaux.sor_val|floatformat:"0" }}</td>
+        <td class="num">{{ s_cd.totaux.prov_qte|floatformat:"-2" }}</td>
+        <td class="num">{{ s_cd.totaux.sf_qte|floatformat:"-2" }}</td>
+        <td class="num">{{ s_cd.totaux.sf_val|floatformat:"0" }}</td>
+      </tr>
+
+        {% for s_sc in s_cd.scs %}
+          {# ── Lignes matières ── #}
+          {% for ligne in s_sc.lignes %}
+          <tr class="row-mat">
+            <td class="ctr c-cpt">{{ ligne.compte_code }}</td>
+            <td class="c-des" style="padding-left:16px;">
+              <span style="font-size:6pt;color:#666;">[{{ ligne.code_court }}]</span>
+              {{ ligne.designation }}
+            </td>
+            <td class="ctr c-unt">{{ ligne.unite }}</td>
+            <td class="num c-qty">{% if ligne.si_qte %}{{ ligne.si_qte|floatformat:"-2" }}{% endif %}</td>
+            <td class="num c-val">{% if ligne.si_val %}{{ ligne.si_val|floatformat:"0" }}{% endif %}</td>
+            <td class="num c-qty">{% if ligne.ent_qte %}{{ ligne.ent_qte|floatformat:"-2" }}{% endif %}</td>
+            <td class="num c-val">{% if ligne.ent_val %}{{ ligne.ent_val|floatformat:"0" }}{% endif %}</td>
+            <td class="num c-qty">{% if ligne.sor_qte %}{{ ligne.sor_qte|floatformat:"-2" }}{% endif %}</td>
+            <td class="num c-val">{% if ligne.sor_val %}{{ ligne.sor_val|floatformat:"0" }}{% endif %}</td>
+            <td class="num c-prov">{% if ligne.prov_qte %}{{ ligne.prov_qte|floatformat:"-2" }}{% endif %}</td>
+            <td class="num c-qty">{{ ligne.sf_qte|floatformat:"-2" }}</td>
+            <td class="num c-val">{{ ligne.sf_val|floatformat:"0" }}</td>
+          </tr>
+          {% endfor %}
+
+          {# ── Sous-total Sous-Compte ── #}
+          <tr class="row-sc">
+            <td class="ctr">{{ s_sc.sc.code }}</td>
+            <td colspan="2">Sous-total — {{ s_sc.sc.libelle }}</td>
+            <td class="num">{{ s_sc.totaux.si_qte|floatformat:"-2" }}</td>
+            <td class="num">{{ s_sc.totaux.si_val|floatformat:"0" }}</td>
+            <td class="num">{{ s_sc.totaux.ent_qte|floatformat:"-2" }}</td>
+            <td class="num">{{ s_sc.totaux.ent_val|floatformat:"0" }}</td>
+            <td class="num">{{ s_sc.totaux.sor_qte|floatformat:"-2" }}</td>
+            <td class="num">{{ s_sc.totaux.sor_val|floatformat:"0" }}</td>
+            <td class="num">{{ s_sc.totaux.prov_qte|floatformat:"-2" }}</td>
+            <td class="num">{{ s_sc.totaux.sf_qte|floatformat:"-2" }}</td>
+            <td class="num">{{ s_sc.totaux.sf_val|floatformat:"0" }}</td>
+          </tr>
+        {% endfor %}{# /scs #}
+
+      {% endfor %}{# /cds #}
+
+    {% empty %}
+    <tr>
+      <td colspan="12" class="ctr" style="padding:14px;font-style:italic;">
+        Aucune donnée disponible pour ce dépôt / cet exercice.
+      </td>
+    </tr>
+    {% endfor %}{# /sections #}
+  </tbody>
+
+  <tfoot>
+    <tr>
+      <td colspan="3" class="lbl">TOTAL GÉNÉRAL</td>
+      <td class="num">{{ grand_total.si_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ grand_total.si_val|floatformat:"0" }}</td>
+      <td class="num">{{ grand_total.ent_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ grand_total.ent_val|floatformat:"0" }}</td>
+      <td class="num">{{ grand_total.sor_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ grand_total.sor_val|floatformat:"0" }}</td>
+      <td class="num">{{ grand_total.prov_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ grand_total.sf_qte|floatformat:"-2" }}</td>
+      <td class="num">{{ grand_total.sf_val|floatformat:"0" }}</td>
+    </tr>
+  </tfoot>
+</table>
+
+{# ══ SIGNATURES ══ #}
+<div class="signatures">
+  <div class="sig-cell" style="width:30%">
+    <div class="sig-titre">Le Gestionnaire du Dépôt</div>
+    <div class="sig-ligne">Nom &amp; Signature</div>
+  </div>
+  <div class="sig-cell" style="width:30%">
+    <div class="sig-titre">Le Comptable des Matières</div>
+    <div class="sig-ligne">Visa &amp; Signature</div>
+  </div>
+  <div class="sig-cell" style="width:40%">
+    <div class="sig-titre">Le Directeur</div>
+    <div class="sig-ligne">Approbation &amp; Cachet</div>
+  </div>
+</div>
+
+<div class="pied">
+  Comptabilité des Matières — ENSMG &nbsp;|&nbsp; {{ titre_doc }} — Dépôt : {{ depot_label }} &nbsp;|&nbsp;
+  Exercice {{ exercice.annee }} &nbsp;|&nbsp; Édité le {{ date_doc|date:"d/m/Y" }}
+</div>
+
+</div>
+</body>
+</html>
